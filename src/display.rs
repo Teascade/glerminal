@@ -9,10 +9,11 @@ pub struct Display {
 }
 
 impl Display {
-    pub fn new() -> Display {
+    pub fn new<T: Into<String>>(title: T) -> Display {
+        let title = title.into();
         let events_loop = EventsLoop::new();
         let window = WindowBuilder::new()
-            .with_title("title")
+            .with_title(title)
             .with_dimensions(1280, 720);
         let context = ContextBuilder::new()
             .with_vsync(true);
@@ -27,7 +28,7 @@ impl Display {
                 panic!(err);
             }
             gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
-            gl::ClearColor(1.0, 1.0, 1.0, 1.0);
+            gl::ClearColor(0.5, 0.3, 0.7, 1.0);
         }
 
         Display {
