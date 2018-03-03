@@ -6,3 +6,4 @@ authors = ["squealer"]
 [dependencies]
 glutin = "*"
 gl = "*"
+libc = "*"
