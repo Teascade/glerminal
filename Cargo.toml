@@ -1,0 +1,8 @@
+[package]
+name = "adragaria-remastered"
+version = "0.1.0"
+authors = ["squealer"]
+
+[dependencies]
+glutin = "*"
+gl = "*"
