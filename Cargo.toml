@@ -8,3 +8,4 @@ glutin = "*"
 gl = "*"
 libc = "*"
 png = "*"
+sfl_parser = { git = "https://github.com/Teascade/slf_parser" }

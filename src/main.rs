@@ -2,11 +2,11 @@ extern crate gl;
 extern crate glutin;
 extern crate libc;
 extern crate png;
+extern crate sfl_parser;
 
 mod display;
 mod renderer;
 mod font;
-mod sfl_parser;
 
 use display::Display;
 use font::Font;
