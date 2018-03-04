@@ -7,3 +7,4 @@ authors = ["squealer"]
 glutin = "*"
 gl = "*"
 libc = "*"
+png = "*"

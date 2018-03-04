@@ -1,4 +1,3 @@
-
 use glutin::{ContextBuilder, DeviceId, ElementState, Event, EventsLoop, GlContext, GlWindow,
              KeyboardInput, VirtualKeyCode, WindowBuilder, WindowEvent};
 use gl;
@@ -15,12 +14,11 @@ impl Display {
         let window = WindowBuilder::new()
             .with_title(title)
             .with_dimensions(1280, 720);
-        let context = ContextBuilder::new()
-            .with_vsync(true);
+        let context = ContextBuilder::new().with_vsync(true);
         let gl_window;
         match GlWindow::new(window, context, &events_loop) {
             Ok(window) => gl_window = window,
-            Err(err) => panic!(err)
+            Err(err) => panic!(err),
         }
 
         unsafe {
@@ -29,6 +27,8 @@ impl Display {
             }
             gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
             gl::ClearColor(0.5, 0.3, 0.7, 1.0);
+            gl::Enable(gl::BLEND);
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         }
 
         Display {
@@ -42,19 +42,15 @@ impl Display {
 
         self.window.swap_buffers().unwrap();
 
-        self.events_loop.poll_events(|event|
-            match event {
-                Event::WindowEvent {event, ..} => {
-                    match event {
-                        WindowEvent::Closed  =>  {
-                            running = false;
-                        }
-                        _ => ()
-                    }
-                },
-                _ => ()
-            }
-        );
+        self.events_loop.poll_events(|event| match event {
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::Closed => {
+                    running = false;
+                }
+                _ => (),
+            },
+            _ => (),
+        });
         running
     }
 }
