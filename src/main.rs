@@ -11,9 +11,6 @@ mod font;
 use display::Display;
 use font::Font;
 
-// TODO: Use png-module to load the png font image.
-// TODO: Try to use .fnt and make renderer use that font
-
 fn main() {
     let mut display: Display = Display::new("Hello, World!");
 
