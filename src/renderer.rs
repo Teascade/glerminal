@@ -10,6 +10,8 @@ use font::Font;
 static VERT_SHADER: &'static str = include_str!("shaders/vert_shader.glsl");
 static FRAG_SHADER: &'static str = include_str!("shaders/frag_shader.glsl");
 
+pub type Matrix4 = [f32; 16];
+
 pub struct Renderable {
     vao: u32,
     count: i32,
@@ -18,9 +20,7 @@ pub struct Renderable {
 
 impl Renderable {
     pub fn new_box(program: u32, font: Font, character: char) -> Renderable {
-        let vertex_buffer = vec![
-            -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5
-        ];
+        let vertex_buffer = vec![0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0];
         let char_data;
         match font.get_character(character) {
             Ok(data) => char_data = data,
@@ -75,11 +75,63 @@ pub fn create_program() -> u32 {
     }
 }
 
-pub fn draw(program: u32, renderable: &Renderable) {
+pub fn update_viewport(dimensions: (u32, u32)) {
+    let (width, height) = dimensions;
+    unsafe {
+        gl::Viewport(0, 0, width as i32, height as i32);
+    }
+}
+
+pub fn create_proj_matrix(dimensions: (f32, f32), aspect_ratio: f32) -> Matrix4 {
+    let (width, height) = dimensions;
+    let true_width = height * aspect_ratio;
+    let true_height = width / aspect_ratio;
+    let mut overflow_width = 0f32;
+    let mut overflow_height = 0f32;
+    if true_width < width {
+        overflow_width = (width - true_width) / true_width;
+    } else {
+        overflow_height = (height - true_height) / true_height;
+    }
+    let left = 0.0 - overflow_width / 2 as f32;
+    let top = 0.0 - overflow_height / 2 as f32;
+    let right = 1.0 + overflow_width / 2 as f32;
+    let bottom = 1.0 + overflow_height / 2 as f32;
+
+    let far = 1.0;
+    let near = -1.0;
+    [
+        2.0 / (right - left),
+        0.0,
+        0.0,
+        -(right + left) / (right - left),
+        0.0,
+        2.0 / (top - bottom),
+        0.0,
+        -(top + bottom) / (top - bottom),
+        0.0,
+        0.0,
+        -2.0 / (far - near),
+        -(far + near) / (far - near),
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+    ]
+}
+
+pub fn draw(program: u32, proj_matrix: Matrix4, renderable: &Renderable) {
     unsafe {
         gl::UseProgram(program);
         gl::BindTexture(gl::TEXTURE_2D, renderable.texture);
         gl::BindVertexArray(renderable.vao);
+
+        let loc = gl::GetUniformLocation(
+            program,
+            CString::new("proj_mat".to_string()).unwrap().as_ptr() as *const i8,
+        ) as i32;
+        gl::UniformMatrix4fv(loc, 1, gl::TRUE, proj_matrix.as_ptr());
+
         gl::DrawArrays(gl::TRIANGLES, 0, renderable.count);
     }
 }
