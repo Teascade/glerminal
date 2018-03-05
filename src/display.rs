@@ -3,11 +3,12 @@ use gl;
 
 use renderer;
 use renderer::Matrix4;
+use std::cell::{Cell, RefCell};
 
 pub struct Display {
-    pub proj_matrix: Matrix4,
+    pub proj_matrix: Cell<Matrix4>,
     window: GlWindow,
-    events_loop: EventsLoop,
+    events_loop: RefCell<EventsLoop>,
     aspect_ratio: f32,
 }
 
@@ -41,35 +42,39 @@ impl Display {
 
         Display {
             window: gl_window,
-            events_loop: events_loop,
+            events_loop: RefCell::new(events_loop),
             aspect_ratio: aspect_ratio,
-            proj_matrix: proj_matrix,
+            proj_matrix: Cell::new(proj_matrix),
         }
     }
 
-    pub fn refresh(&mut self) -> bool {
+    pub fn refresh(&self) -> bool {
         let mut running = true;
 
         let mut dimensions: Option<(u32, u32)> = None;
 
         self.window.swap_buffers().unwrap();
 
-        self.events_loop.poll_events(|event| match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::Closed => {
-                    running = false;
-                }
-                WindowEvent::Resized(width, height) => {
-                    dimensions = Some((width, height));
-                }
+        self.events_loop
+            .borrow_mut()
+            .poll_events(|event| match event {
+                Event::WindowEvent { event, .. } => match event {
+                    WindowEvent::Closed => {
+                        running = false;
+                    }
+                    WindowEvent::Resized(width, height) => {
+                        dimensions = Some((width, height));
+                    }
+                    _ => (),
+                },
                 _ => (),
-            },
-            _ => (),
-        });
+            });
 
         if let Some((width, height)) = dimensions {
-            self.proj_matrix =
-                renderer::create_proj_matrix((width as f32, height as f32), self.aspect_ratio);
+            self.proj_matrix.set(renderer::create_proj_matrix(
+                (width as f32, height as f32),
+                self.aspect_ratio,
+            ));
             renderer::update_viewport((width, height));
         }
 

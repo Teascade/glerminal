@@ -1,5 +1,6 @@
 use renderer::Mesh;
 use font::Font;
+use terminal::Terminal;
 
 struct TermCursor {
     x: i32,
@@ -15,10 +16,10 @@ pub struct TextBuffer {
 }
 
 impl TextBuffer {
-    pub fn new(program: u32, dimensions: (i32, i32), font: &Font) -> Result<TextBuffer, String> {
+    pub fn new(terminal: &Terminal, dimensions: (i32, i32)) -> Result<TextBuffer, String> {
         let (width, height) = dimensions;
         let chars = vec![' '; (width * height) as usize];
-        match Mesh::new(program, dimensions, font) {
+        match Mesh::new(terminal.get_program(), dimensions, &terminal.font) {
             Ok(mesh) => Ok(TextBuffer {
                 chars,
                 height,
