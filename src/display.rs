@@ -1,5 +1,4 @@
-use glutin::{ContextBuilder, DeviceId, ElementState, Event, EventsLoop, GlContext, GlWindow,
-             KeyboardInput, VirtualKeyCode, WindowBuilder, WindowEvent};
+use glutin::{ContextBuilder, Event, EventsLoop, GlContext, GlWindow, WindowBuilder, WindowEvent};
 use gl;
 
 use renderer;
@@ -33,7 +32,7 @@ impl Display {
                 panic!(err);
             }
             gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
-            gl::ClearColor(0.5, 0.3, 0.7, 1.0);
+            gl::ClearColor(0.14, 0.19, 0.28, 1.0);
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         };

@@ -6,49 +6,108 @@ use std::str::from_utf8;
 use std::ffi::{CStr, CString};
 
 use font::Font;
+use text_buffer::TextBuffer;
 
 static VERT_SHADER: &'static str = include_str!("shaders/vert_shader.glsl");
 static FRAG_SHADER: &'static str = include_str!("shaders/frag_shader.glsl");
 
 pub type Matrix4 = [f32; 16];
 
-pub struct Renderable {
+pub struct Mesh {
     vao: u32,
+    tex_coords_vbo: u32,
     count: i32,
     texture: u32,
 }
 
-impl Renderable {
-    pub fn new_box(program: u32, font: Font, character: char) -> Renderable {
-        let vertex_buffer = vec![0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0];
-        let char_data;
-        match font.get_character(character) {
-            Ok(data) => char_data = data,
-            Err(error) => panic!(error),
+impl Mesh {
+    pub fn new(program: u32, dimensions: (i32, i32), font: &Font) -> Result<Mesh, String> {
+        let (width, height) = dimensions;
+
+        if width <= 0 || height <= 0 {
+            return Err("Invalid dimensions; width or height is <= 0".to_owned());
         }
-        let tex_coords = vec![
-            char_data.x1,
-            char_data.y2,
-            char_data.x2,
-            char_data.y2,
-            char_data.x1,
-            char_data.y1,
-            char_data.x2,
-            char_data.y1,
-            char_data.x1,
-            char_data.y1,
-            char_data.x2,
-            char_data.y2,
-        ];
-        let vbo_pos = create_vbo(vertex_buffer);
-        let vbo_tex = create_vbo(tex_coords);
+
+        let mut vertex_buffer = Vec::new();
+
+        let character_width = 1.0 / width as f32;
+        let character_height = 1.0 / height as f32;
+        for y in 0..height {
+            for x in 0..width {
+                let x_off = x as f32 * character_width;
+                let y_off = y as f32 * character_height;
+                let mut single_character_vbuff = vec![
+                    x_off,
+                    y_off + character_height,
+                    x_off + character_width,
+                    y_off + character_height,
+                    x_off,
+                    y_off,
+                    x_off + character_width,
+                    y_off,
+                    x_off,
+                    y_off,
+                    x_off + character_width,
+                    y_off + character_height,
+                ];
+                vertex_buffer.append(&mut single_character_vbuff);
+            }
+        }
+
+        let tex_coords = vec![0.0; (width * height * 12) as usize];
+
+        let vbo_pos = create_vbo(vertex_buffer, false);
+        let vbo_tex = create_vbo(tex_coords, true);
         let vao = create_vao(program, vbo_pos, vbo_tex);
 
-        let tex = create_texture(font.image_buffer, font.width, font.height);
-        Renderable {
+        let tex = create_texture(&font.image_buffer, font.width, font.height);
+        Ok(Mesh {
             vao: vao,
-            count: 6,
+            tex_coords_vbo: vbo_tex,
+            count: width * height * 6,
             texture: tex,
+        })
+    }
+
+    pub fn update_tex_coords(&self, text_buffer: &TextBuffer, font: &Font) {
+        if (text_buffer.height * text_buffer.width) as usize != text_buffer.chars.len() {
+            panic!("Given TextBuffer height/width do not math chars.len()");
+        }
+
+        let mut tex_coords: Vec<f32> = Vec::new();
+
+        for y in 0..text_buffer.height {
+            for x in 0..text_buffer.width {
+                let char_data;
+                match font.get_character(text_buffer.get_character(x, y)) {
+                    Ok(data) => char_data = data,
+                    Err(error) => panic!(error),
+                }
+                let mut char_tex_coords = vec![
+                    char_data.x1,
+                    char_data.y2,
+                    char_data.x2,
+                    char_data.y2,
+                    char_data.x1,
+                    char_data.y1,
+                    char_data.x2,
+                    char_data.y1,
+                    char_data.x1,
+                    char_data.y1,
+                    char_data.x2,
+                    char_data.y2,
+                ];
+
+                tex_coords.append(&mut char_tex_coords);
+            }
+        }
+
+        let data_length = (tex_coords.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
+        let data_pointer = tex_coords.as_ptr() as *const c_void;
+
+        unsafe {
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.tex_coords_vbo);
+            gl::BufferData(gl::ARRAY_BUFFER, data_length, data_pointer, gl::STREAM_DRAW);
         }
     }
 }
@@ -120,7 +179,7 @@ pub fn create_proj_matrix(dimensions: (f32, f32), aspect_ratio: f32) -> Matrix4 
     ]
 }
 
-pub fn draw(program: u32, proj_matrix: Matrix4, renderable: &Renderable) {
+pub fn draw(program: u32, proj_matrix: Matrix4, renderable: &Mesh) {
     unsafe {
         gl::UseProgram(program);
         gl::BindTexture(gl::TEXTURE_2D, renderable.texture);
@@ -136,7 +195,7 @@ pub fn draw(program: u32, proj_matrix: Matrix4, renderable: &Renderable) {
     }
 }
 
-pub fn create_texture(pixels: Vec<u8>, width: u32, height: u32) -> u32 {
+pub fn create_texture(pixels: &[u8], width: u32, height: u32) -> u32 {
     unsafe {
         let mut tex = 0;
         gl::GenTextures(1, &mut tex);
@@ -148,7 +207,6 @@ pub fn create_texture(pixels: Vec<u8>, width: u32, height: u32) -> u32 {
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
 
-        let pixels: &[u8] = pixels.as_slice();
         let data_pointer = pixels.as_ptr() as *const c_void;
         gl::TexImage2D(
             gl::TEXTURE_2D,
@@ -166,7 +224,7 @@ pub fn create_texture(pixels: Vec<u8>, width: u32, height: u32) -> u32 {
     }
 }
 
-fn create_vbo(vertex_buffer: Vec<f32>) -> u32 {
+fn create_vbo(vertex_buffer: Vec<f32>, stream: bool) -> u32 {
     unsafe {
         let mut vbo = 0;
         gl::GenBuffers(1, &mut vbo);
@@ -175,7 +233,16 @@ fn create_vbo(vertex_buffer: Vec<f32>) -> u32 {
 
         let data_length = (vertex_data.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
         let data_pointer = vertex_data.as_ptr() as *const c_void;
-        gl::BufferData(gl::ARRAY_BUFFER, data_length, data_pointer, gl::STATIC_DRAW);
+        gl::BufferData(
+            gl::ARRAY_BUFFER,
+            data_length,
+            data_pointer,
+            if stream {
+                gl::STREAM_DRAW
+            } else {
+                gl::STATIC_DRAW
+            },
+        );
         vbo
     }
 }

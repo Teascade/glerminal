@@ -7,34 +7,33 @@ extern crate sfl_parser;
 mod display;
 mod renderer;
 mod font;
+mod text_buffer;
+mod terminal;
 
-use display::Display;
-use font::Font;
+use terminal::Terminal;
 
 use std::time::{Duration, SystemTime};
 
 fn main() {
-    let mut display: Display = Display::new("Hello, World!", (720, 720));
-
-    let font = Font::load(
-        "fonts/vcr_osd_mono_regular_48.png",
-        "fonts/vcr_osd_mono_regular_48.sfl",
-    );
+    let mut terminal;
+    match Terminal::new((1280, 720), (80, 25)) {
+        Ok(term) => terminal = term,
+        Err(error) => panic!(format!("Failed to initialize terminal: {}", error)),
+    }
 
     let mut last_time = SystemTime::now();
     let mut frames = 0;
 
-    let program = renderer::create_program();
-    let renderable_box = renderer::Renderable::new_box(program, font, 'ä');
+    terminal.write("Hello, World!");
+    terminal.swap_buffers();
 
-    while display.refresh() {
-        renderer::clear();
-        renderer::draw(program, display.proj_matrix, &renderable_box);
+    while terminal.refresh() {
+        terminal.draw();
 
         frames += 1;
 
         if last_time + Duration::new(1, 0) < SystemTime::now() {
-            display.set_title(&format!("Hello, World! FPS: {}", frames));
+            terminal.set_title(format!("Hello, World! FPS: {}", frames));
             frames = 0;
             last_time = SystemTime::now();
         }
