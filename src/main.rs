@@ -10,13 +10,16 @@ mod font;
 mod text_buffer;
 mod terminal;
 
-use terminal::Terminal;
+use terminal::TerminalBuilder;
 use text_buffer::TextBuffer;
 
 use std::time::{Duration, SystemTime};
 
 fn main() {
-    let mut terminal = Terminal::new((1280, 720));
+    let mut terminal = TerminalBuilder::new()
+        .with_title("Testi!")
+        .with_dimensions((1280, 720))
+        .build();
     let mut text_buffer;
     match TextBuffer::new(&terminal, (80, 25)) {
         Ok(buffer) => text_buffer = buffer,

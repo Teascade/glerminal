@@ -13,7 +13,11 @@ pub struct Display {
 }
 
 impl Display {
-    pub fn new<T: Into<String>>(title: T, dimensions: (u32, u32)) -> Display {
+    pub fn new<T: Into<String>>(
+        title: T,
+        dimensions: (u32, u32),
+        clear_color: (f32, f32, f32, f32),
+    ) -> Display {
         let (width, height) = dimensions;
         let aspect_ratio = width as f32 / height as f32;
         let title = title.into();
@@ -29,11 +33,12 @@ impl Display {
         }
 
         unsafe {
+            let (r, g, b, a) = clear_color;
             if let Err(err) = gl_window.make_current() {
                 panic!(err);
             }
             gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
-            gl::ClearColor(0.14, 0.19, 0.28, 1.0);
+            gl::ClearColor(r, g, b, a);
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         };
