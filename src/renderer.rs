@@ -4,6 +4,7 @@ use std::os::raw::c_void;
 use std::ptr;
 use std::str::from_utf8;
 use std::ffi::{CStr, CString};
+use std::cell::Cell;
 
 use font::Font;
 use text_buffer::TextBuffer;
@@ -15,8 +16,9 @@ pub type Matrix4 = [f32; 16];
 
 pub struct Mesh {
     vao: u32,
-    tex_coords_vbo: u32,
-    count: i32,
+    vbo_pos: u32,
+    vbo_tex: u32,
+    count: Cell<i32>,
     texture: u32,
 }
 
@@ -63,8 +65,9 @@ impl Mesh {
         let tex = create_texture(&font.image_buffer, font.width, font.height);
         Ok(Mesh {
             vao: vao,
-            tex_coords_vbo: vbo_tex,
-            count: width * height * 6,
+            vbo_pos: vbo_pos,
+            vbo_tex: vbo_tex,
+            count: Cell::new(width * height * 6),
             texture: tex,
         })
     }
@@ -74,12 +77,56 @@ impl Mesh {
             panic!("Given TextBuffer height/width do not math chars.len()");
         }
 
+        // Create new position veretex buffer
+        let mut vertex_buffer = Vec::new();
+
+        let character_width = 1.0 / text_buffer.width as f32;
+        let character_height = 1.0 / text_buffer.height as f32;
+        for y in 0..text_buffer.height {
+            for x in 0..text_buffer.width {
+                let character = text_buffer.get_character(x, y);
+                if character == ' ' {
+                    continue;
+                }
+                let char_data;
+                match font.get_character(character) {
+                    Ok(data) => char_data = data,
+                    Err(error) => panic!(error),
+                }
+                let width = character_width * (char_data.width as f32 / font.size as f32);
+                let height = character_height * (char_data.height as f32 / font.line_height as f32);
+
+                let x_off = x as f32 * character_width;
+                let y_off = y as f32 * character_height;
+                let mut single_character_vbuff = vec![
+                    x_off,
+                    y_off + character_height,
+                    x_off + width,
+                    y_off + character_height,
+                    x_off,
+                    y_off + character_height - height,
+                    x_off + width,
+                    y_off + character_height - height,
+                    x_off,
+                    y_off + character_height - height,
+                    x_off + width,
+                    y_off + character_height,
+                ];
+                vertex_buffer.append(&mut single_character_vbuff);
+            }
+        }
+
+        // Create new tex coords
         let mut tex_coords: Vec<f32> = Vec::new();
 
         for y in 0..text_buffer.height {
             for x in 0..text_buffer.width {
+                let character = text_buffer.get_character(x, y);
+                if character == ' ' {
+                    continue;
+                }
                 let char_data;
-                match font.get_character(text_buffer.get_character(x, y)) {
+                match font.get_character(character) {
                     Ok(data) => char_data = data,
                     Err(error) => panic!(error),
                 }
@@ -101,13 +148,31 @@ impl Mesh {
                 tex_coords.append(&mut char_tex_coords);
             }
         }
+        let data_length_pos =
+            (vertex_buffer.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
+        let data_pointer_pos = vertex_buffer.as_ptr() as *const c_void;
 
-        let data_length = (tex_coords.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
-        let data_pointer = tex_coords.as_ptr() as *const c_void;
+        let data_length_tex = (tex_coords.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
+        let data_pointer_tex = tex_coords.as_ptr() as *const c_void;
+
+        self.count.set((vertex_buffer.len() * 6) as i32);
 
         unsafe {
-            gl::BindBuffer(gl::ARRAY_BUFFER, self.tex_coords_vbo);
-            gl::BufferData(gl::ARRAY_BUFFER, data_length, data_pointer, gl::STREAM_DRAW);
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo_pos);
+            gl::BufferData(
+                gl::ARRAY_BUFFER,
+                data_length_pos,
+                data_pointer_pos,
+                gl::STREAM_DRAW,
+            );
+
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo_tex);
+            gl::BufferData(
+                gl::ARRAY_BUFFER,
+                data_length_tex,
+                data_pointer_tex,
+                gl::STREAM_DRAW,
+            );
         }
     }
 }
@@ -191,7 +256,7 @@ pub fn draw(program: u32, proj_matrix: Matrix4, renderable: &Mesh) {
         ) as i32;
         gl::UniformMatrix4fv(loc, 1, gl::TRUE, proj_matrix.as_ptr());
 
-        gl::DrawArrays(gl::TRIANGLES, 0, renderable.count);
+        gl::DrawArrays(gl::TRIANGLES, 0, renderable.count.get());
     }
 }
 

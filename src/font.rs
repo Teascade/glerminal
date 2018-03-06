@@ -11,6 +11,10 @@ pub struct CharacterData {
     pub x2: f32,
     pub y1: f32,
     pub y2: f32,
+    pub width: u32,
+    pub height: u32,
+    pub x_off: u32,
+    pub y_off: u32,
 }
 
 pub struct Font {
@@ -18,6 +22,8 @@ pub struct Font {
     pub image_buffer: Vec<u8>,
     pub width: u32,
     pub height: u32,
+    pub line_height: u32,
+    pub size: u32,
     characters: HashMap<u8, CharacterData>,
 }
 
@@ -61,7 +67,19 @@ impl Font {
             let y1 = value.y as f32 / height_float;
             let y2 = (value.y as f32 + value.height as f32) / height_float;
 
-            characters.insert(*key as u8, CharacterData { x1, x2, y1, y2 });
+            characters.insert(
+                *key as u8,
+                CharacterData {
+                    x1,
+                    x2,
+                    y1,
+                    y2,
+                    width: value.width,
+                    height: value.height,
+                    x_off: value.xoffset,
+                    y_off: value.yoffset,
+                },
+            );
         }
 
         Font {
@@ -69,6 +87,8 @@ impl Font {
             image_buffer: image_buffer,
             width: info.width,
             height: info.height,
+            line_height: bm_font.line_height,
+            size: bm_font.size,
             characters: characters,
         }
     }

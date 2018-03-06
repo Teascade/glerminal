@@ -30,7 +30,7 @@ fn main() {
     let mut frames = 0;
 
     text_buffer.write("Hello, World!");
-    terminal.flush(&text_buffer);
+    terminal.flush(&mut text_buffer);
 
     while terminal.refresh() {
         terminal.draw(&text_buffer);
