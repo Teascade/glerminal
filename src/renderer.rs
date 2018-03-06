@@ -80,10 +80,15 @@ impl Mesh {
         // Create new position veretex buffer
         let mut vertex_buffer = Vec::new();
 
+        // Create new tex coords
+        let mut tex_coords = Vec::new();
+
+        // Fill those arrays
         let character_width = 1.0 / text_buffer.width as f32;
         let character_height = 1.0 / text_buffer.height as f32;
         for y in 0..text_buffer.height {
             for x in 0..text_buffer.width {
+                // Calculate pos vertex coords
                 let character = text_buffer.get_character(x, y);
                 if character == ' ' {
                     continue;
@@ -117,23 +122,8 @@ impl Mesh {
                     y_off + height,
                 ];
                 vertex_buffer.append(&mut single_character_vbuff);
-            }
-        }
 
-        // Create new tex coords
-        let mut tex_coords: Vec<f32> = Vec::new();
-
-        for y in 0..text_buffer.height {
-            for x in 0..text_buffer.width {
-                let character = text_buffer.get_character(x, y);
-                if character == ' ' {
-                    continue;
-                }
-                let char_data;
-                match font.get_character(character) {
-                    Ok(data) => char_data = data,
-                    Err(error) => panic!(error),
-                }
+                // Calculate tex coords
                 let mut char_tex_coords = vec![
                     char_data.x1,
                     char_data.y2,

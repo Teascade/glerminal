@@ -21,7 +21,7 @@ fn main() {
         .with_dimensions((1280, 720))
         .build();
     let mut text_buffer;
-    match TextBuffer::new(&terminal, (80, 25)) {
+    match TextBuffer::new(&terminal, (80, 24)) {
         Ok(buffer) => text_buffer = buffer,
         Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
     }
@@ -29,15 +29,20 @@ fn main() {
     let mut last_time = SystemTime::now();
     let mut frames = 0;
 
-    text_buffer.write("Hello, World! Test'thing");
-    terminal.flush(&mut text_buffer);
+    text_buffer.write("Hello, World! Test-thing");
+    text_buffer.move_cursor(0, 1);
+    text_buffer.write("------------------------");
+    text_buffer.move_cursor(31, 12);
+    text_buffer.write("I AM IN THE CENTER");
 
     while terminal.refresh() {
+        terminal.flush(&mut text_buffer);
         terminal.draw(&text_buffer);
         frames += 1;
 
         if last_time + Duration::new(1, 0) < SystemTime::now() {
             terminal.set_title(format!("Hello, World! FPS: {}", frames));
+
             frames = 0;
             last_time = SystemTime::now();
         }
