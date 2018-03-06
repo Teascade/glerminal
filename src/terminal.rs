@@ -12,6 +12,7 @@ pub struct TerminalBuilder {
     font: Font,
 }
 
+#[allow(dead_code)]
 impl TerminalBuilder {
     pub fn new() -> TerminalBuilder {
         TerminalBuilder {
