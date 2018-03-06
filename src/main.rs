@@ -8,10 +8,14 @@ mod display;
 mod renderer;
 mod font;
 mod text_buffer;
+mod input;
 mod terminal;
+
+use glutin::VirtualKeyCode;
 
 use terminal::TerminalBuilder;
 use text_buffer::TextBuffer;
+use font::Font;
 
 use std::time::{Duration, SystemTime};
 
@@ -37,10 +41,18 @@ fn main() {
 
     terminal.set_debug(false);
 
+    let mut debug = false;
+
     while terminal.refresh() {
         terminal.flush(&mut text_buffer);
         terminal.draw(&text_buffer);
         frames += 1;
+
+        let input = terminal.get_current_input();
+        if input.was_just_pressed(VirtualKeyCode::F3) {
+            debug = !debug;
+            terminal.set_debug(debug);
+        }
 
         if last_time + Duration::new(1, 0) < SystemTime::now() {
             terminal.set_title(format!("Hello, World! FPS: {}", frames));

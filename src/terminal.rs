@@ -2,6 +2,7 @@ use display::Display;
 use font::Font;
 use text_buffer::TextBuffer;
 use renderer;
+use input::Input;
 
 pub type Program = u32;
 
@@ -117,6 +118,10 @@ impl Terminal {
             self.display.proj_matrix.get(),
             &text_buffer.mesh,
         );
+    }
+
+    pub fn get_current_input(&self) -> Input {
+        self.display.get_current_input()
     }
 
     pub fn get_program(&self) -> Program {

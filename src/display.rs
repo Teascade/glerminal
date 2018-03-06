@@ -1,13 +1,16 @@
-use glutin::{ContextBuilder, Event, EventsLoop, GlContext, GlWindow, WindowBuilder, WindowEvent};
+use glutin::{ContextBuilder, ElementState, Event, EventsLoop, GlContext, GlWindow, KeyboardInput,
+             VirtualKeyCode, WindowBuilder, WindowEvent};
 use gl;
 
 use renderer;
 use renderer::Matrix4;
+use input::Input;
 use std::cell::{Cell, RefCell};
 
 pub struct Display {
     pub proj_matrix: Cell<Matrix4>,
     window: GlWindow,
+    input: RefCell<Input>,
     events_loop: RefCell<EventsLoop>,
     aspect_ratio: f32,
 }
@@ -47,6 +50,7 @@ impl Display {
 
         Display {
             window: gl_window,
+            input: RefCell::new(Input::new()),
             events_loop: RefCell::new(events_loop),
             aspect_ratio: aspect_ratio,
             proj_matrix: Cell::new(proj_matrix),
@@ -57,6 +61,9 @@ impl Display {
         let mut running = true;
 
         let mut dimensions: Option<(u32, u32)> = None;
+
+        let mut input = self.input.borrow_mut().clear_just_lists();
+        drop(input);
 
         self.window.swap_buffers().unwrap();
 
@@ -69,6 +76,13 @@ impl Display {
                     }
                     WindowEvent::Resized(width, height) => {
                         dimensions = Some((width, height));
+                    }
+                    WindowEvent::KeyboardInput { input, .. } => {
+                        if let (state, Some(keycode)) = (input.state, input.virtual_keycode) {
+                            self.input
+                                .borrow_mut()
+                                .update_virtual_keycode(keycode, state == ElementState::Pressed);
+                        }
                     }
                     _ => (),
                 },
@@ -84,6 +98,10 @@ impl Display {
         }
 
         running
+    }
+
+    pub fn get_current_input(&self) -> Input {
+        self.input.borrow().clone()
     }
 
     pub fn set_title(&mut self, title: &str) {
