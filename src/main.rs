@@ -29,7 +29,7 @@ fn main() {
     let mut last_time = SystemTime::now();
     let mut frames = 0;
 
-    text_buffer.write("Hello, World!");
+    text_buffer.write("Hello, World! Test'thing");
     terminal.flush(&mut text_buffer);
 
     while terminal.refresh() {

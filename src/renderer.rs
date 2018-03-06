@@ -96,21 +96,25 @@ impl Mesh {
                 let width = character_width * (char_data.width as f32 / font.size as f32);
                 let height = character_height * (char_data.height as f32 / font.line_height as f32);
 
-                let x_off = x as f32 * character_width;
-                let y_off = y as f32 * character_height;
+                let bmoffset_x = character_width * (char_data.x_off as f32 / font.size as f32);
+                let bmoffset_y =
+                    character_height * (char_data.y_off as f32 / font.line_height as f32);
+
+                let x_off = x as f32 * character_width + bmoffset_x;
+                let y_off = y as f32 * character_height + bmoffset_y;
                 let mut single_character_vbuff = vec![
                     x_off,
-                    y_off + character_height,
+                    y_off + height,
                     x_off + width,
-                    y_off + character_height,
+                    y_off + height,
                     x_off,
-                    y_off + character_height - height,
+                    y_off,
                     x_off + width,
-                    y_off + character_height - height,
+                    y_off,
                     x_off,
-                    y_off + character_height - height,
+                    y_off,
                     x_off + width,
-                    y_off + character_height,
+                    y_off + height,
                 ];
                 vertex_buffer.append(&mut single_character_vbuff);
             }
