@@ -67,6 +67,8 @@ impl TerminalBuilder {
 pub struct Terminal {
     display: Display,
     program: Program,
+    nondebug_program: Program,
+    debug_program: Program,
     pub font: Font,
 }
 
@@ -78,12 +80,25 @@ impl Terminal {
         font: Font,
     ) -> Terminal {
         let display = Display::new(title, window_dimensions, clear_color);
-        let program = renderer::create_program();
+        let program = renderer::create_program(renderer::VERT_SHADER, renderer::FRAG_SHADER);
+        let debug_program =
+            renderer::create_program(renderer::VERT_SHADER, renderer::DEBUG_FRAG_SHADER);
         let font = font;
         Terminal {
             display,
             program,
+            nondebug_program: program,
+            debug_program,
             font,
+        }
+    }
+
+    pub fn set_debug(&mut self, debug: bool) {
+        renderer::set_debug(debug);
+        if debug {
+            self.program = self.debug_program;
+        } else {
+            self.program = self.nondebug_program;
         }
     }
 

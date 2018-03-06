@@ -9,8 +9,9 @@ use std::cell::Cell;
 use font::Font;
 use text_buffer::TextBuffer;
 
-static VERT_SHADER: &'static str = include_str!("shaders/vert_shader.glsl");
-static FRAG_SHADER: &'static str = include_str!("shaders/frag_shader.glsl");
+pub static VERT_SHADER: &'static str = include_str!("shaders/vert_shader.glsl");
+pub static FRAG_SHADER: &'static str = include_str!("shaders/frag_shader.glsl");
+pub static DEBUG_FRAG_SHADER: &'static str = include_str!("shaders/debug_frag_shader.glsl");
 
 pub type Matrix4 = [f32; 16];
 
@@ -177,10 +178,10 @@ pub fn clear() {
     }
 }
 
-pub fn create_program() -> u32 {
+pub fn create_program(vert_shader: &str, frag_shader: &str) -> u32 {
     unsafe {
-        let vert = create_shader(VERT_SHADER, gl::VERTEX_SHADER);
-        let frag = create_shader(FRAG_SHADER, gl::FRAGMENT_SHADER);
+        let vert = create_shader(vert_shader, gl::VERTEX_SHADER);
+        let frag = create_shader(frag_shader, gl::FRAGMENT_SHADER);
 
         let program = gl::CreateProgram();
 
@@ -236,6 +237,16 @@ pub fn create_proj_matrix(dimensions: (f32, f32), aspect_ratio: f32) -> Matrix4 
         0.0,
         1.0,
     ]
+}
+
+pub fn set_debug(debug: bool) {
+    unsafe {
+        if debug {
+            gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+        } else {
+            gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
+        }
+    }
 }
 
 pub fn draw(program: u32, proj_matrix: Matrix4, renderable: &Mesh) {

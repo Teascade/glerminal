@@ -35,6 +35,8 @@ fn main() {
     text_buffer.move_cursor(31, 12);
     text_buffer.write("I AM IN THE CENTER");
 
+    terminal.set_debug(false);
+
     while terminal.refresh() {
         terminal.flush(&mut text_buffer);
         terminal.draw(&text_buffer);
