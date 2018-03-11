@@ -1,4 +1,4 @@
-use renderer::Mesh;
+use renderer::TextBufferMesh;
 use font::Font;
 use terminal::Terminal;
 
@@ -11,7 +11,7 @@ pub struct TextBuffer {
     pub chars: Vec<char>,
     pub height: i32,
     pub width: i32,
-    pub mesh: Mesh,
+    pub mesh: TextBufferMesh,
     cursor: TermCursor,
 }
 
@@ -19,7 +19,7 @@ impl TextBuffer {
     pub fn new(terminal: &Terminal, dimensions: (i32, i32)) -> Result<TextBuffer, String> {
         let (width, height) = dimensions;
         let chars = vec![' '; (width * height) as usize];
-        match Mesh::new(terminal.get_program(), dimensions, &terminal.font) {
+        match TextBufferMesh::new(terminal.get_program(), dimensions, &terminal.font) {
             Ok(mesh) => Ok(TextBuffer {
                 chars,
                 height,

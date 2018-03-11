@@ -15,16 +15,44 @@ pub static DEBUG_FRAG_SHADER: &'static str = include_str!("shaders/debug_frag_sh
 
 pub type Matrix4 = [f32; 16];
 
-pub struct Mesh {
-    vao: u32,
+pub type Program = u32;
+pub type Vao = u32;
+pub type Texture = u32;
+
+pub trait Renderable {
+    fn get_vao(&self) -> Vao;
+    fn get_count(&self) -> i32;
+    fn get_texture(&self) -> Option<Texture>;
+}
+
+pub struct TextBufferMesh {
+    vao: Vao,
     vbo_pos: u32,
     vbo_tex: u32,
     count: Cell<i32>,
-    texture: u32,
+    texture: Texture,
 }
 
-impl Mesh {
-    pub fn new(program: u32, dimensions: (i32, i32), font: &Font) -> Result<Mesh, String> {
+impl Renderable for TextBufferMesh {
+    fn get_vao(&self) -> Vao {
+        self.vao
+    }
+
+    fn get_count(&self) -> i32 {
+        self.count.get()
+    }
+
+    fn get_texture(&self) -> Option<Texture> {
+        Some(self.texture)
+    }
+}
+
+impl TextBufferMesh {
+    pub fn new(
+        program: Program,
+        dimensions: (i32, i32),
+        font: &Font,
+    ) -> Result<TextBufferMesh, String> {
         let (width, height) = dimensions;
 
         if width <= 0 || height <= 0 {
@@ -64,7 +92,7 @@ impl Mesh {
         let vao = create_vao(program, vbo_pos, vbo_tex);
 
         let tex = create_texture(&font.image_buffer, font.width, font.height);
-        Ok(Mesh {
+        Ok(TextBufferMesh {
             vao: vao,
             vbo_pos: vbo_pos,
             vbo_tex: vbo_tex,
@@ -178,7 +206,7 @@ pub fn clear() {
     }
 }
 
-pub fn create_program(vert_shader: &str, frag_shader: &str) -> u32 {
+pub fn create_program(vert_shader: &str, frag_shader: &str) -> Program {
     unsafe {
         let vert = create_shader(vert_shader, gl::VERTEX_SHADER);
         let frag = create_shader(frag_shader, gl::FRAGMENT_SHADER);
@@ -249,11 +277,13 @@ pub fn set_debug(debug: bool) {
     }
 }
 
-pub fn draw(program: u32, proj_matrix: Matrix4, renderable: &Mesh) {
+pub fn draw(program: Program, proj_matrix: Matrix4, renderable: &Renderable) {
     unsafe {
         gl::UseProgram(program);
-        gl::BindTexture(gl::TEXTURE_2D, renderable.texture);
-        gl::BindVertexArray(renderable.vao);
+        if let Some(texture) = renderable.get_texture() {
+            gl::BindTexture(gl::TEXTURE_2D, texture);
+        }
+        gl::BindVertexArray(renderable.get_vao());
 
         let loc = gl::GetUniformLocation(
             program,
@@ -261,11 +291,11 @@ pub fn draw(program: u32, proj_matrix: Matrix4, renderable: &Mesh) {
         ) as i32;
         gl::UniformMatrix4fv(loc, 1, gl::TRUE, proj_matrix.as_ptr());
 
-        gl::DrawArrays(gl::TRIANGLES, 0, renderable.count.get());
+        gl::DrawArrays(gl::TRIANGLES, 0, renderable.get_count());
     }
 }
 
-pub fn create_texture(pixels: &[u8], width: u32, height: u32) -> u32 {
+pub fn create_texture(pixels: &[u8], width: u32, height: u32) -> Texture {
     unsafe {
         let mut tex = 0;
         gl::GenTextures(1, &mut tex);
@@ -317,7 +347,7 @@ fn create_vbo(vertex_buffer: Vec<f32>, stream: bool) -> u32 {
     }
 }
 
-fn get_attrib_location(program: u32, attribute: &str) -> u32 {
+fn get_attrib_location(program: Program, attribute: &str) -> u32 {
     unsafe {
         gl::GetAttribLocation(
             program,
@@ -326,7 +356,7 @@ fn get_attrib_location(program: u32, attribute: &str) -> u32 {
     }
 }
 
-fn create_vao(program: u32, vbo_pos: u32, vbo_tex: u32) -> u32 {
+fn create_vao(program: Program, vbo_pos: u32, vbo_tex: u32) -> Vao {
     unsafe {
         let mut vao = 0;
 

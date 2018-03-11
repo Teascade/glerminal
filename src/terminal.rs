@@ -4,8 +4,6 @@ use text_buffer::TextBuffer;
 use renderer;
 use input::Input;
 
-pub type Program = u32;
-
 pub struct TerminalBuilder {
     title: String,
     dimensions: (u32, u32),
@@ -67,9 +65,9 @@ impl TerminalBuilder {
 
 pub struct Terminal {
     display: Display,
-    program: Program,
-    nondebug_program: Program,
-    debug_program: Program,
+    program: renderer::Program,
+    nondebug_program: renderer::Program,
+    debug_program: renderer::Program,
     pub font: Font,
 }
 
@@ -124,7 +122,7 @@ impl Terminal {
         self.display.get_current_input()
     }
 
-    pub fn get_program(&self) -> Program {
+    pub fn get_program(&self) -> renderer::Program {
         self.program
     }
 
