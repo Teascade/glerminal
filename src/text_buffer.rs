@@ -1,4 +1,5 @@
 use renderer::textbuffermesh::TextBufferMesh;
+use renderer::backgroundmesh::BackgroundMesh;
 use font::Font;
 use terminal::Terminal;
 
@@ -8,27 +9,35 @@ struct TermCursor {
 }
 
 pub struct TextBuffer {
-    pub chars: Vec<char>,
-    pub height: i32,
-    pub width: i32,
-    pub mesh: TextBufferMesh,
+    pub(crate) chars: Vec<char>,
+    pub(crate) height: i32,
+    pub(crate) width: i32,
+    pub(crate) mesh: TextBufferMesh,
+    pub(crate) background_mesh: BackgroundMesh,
     cursor: TermCursor,
 }
 
 impl TextBuffer {
     pub fn new(terminal: &Terminal, dimensions: (i32, i32)) -> Result<TextBuffer, String> {
         let (width, height) = dimensions;
-        let chars = vec![' '; (width * height) as usize];
-        match TextBufferMesh::new(terminal.get_program(), dimensions, &terminal.font) {
-            Ok(mesh) => Ok(TextBuffer {
-                chars,
-                height,
-                width,
-                mesh,
-                cursor: TermCursor { x: 0, y: 0 },
-            }),
-            Err(err) => Err(err),
+
+        if width <= 0 || height <= 0 {
+            return Err(
+                "TextBuffer dimensions are erronous; either width or height is below 1".to_owned(),
+            );
         }
+
+        let chars = vec![' '; (width * height) as usize];
+        let mesh = TextBufferMesh::new(terminal.get_program(), dimensions, &terminal.font);
+        let background_mesh = BackgroundMesh::new(terminal.get_background_program(), dimensions);
+        Ok(TextBuffer {
+            chars,
+            height,
+            width,
+            mesh,
+            background_mesh,
+            cursor: TermCursor { x: 0, y: 0 },
+        })
     }
 
     pub(crate) fn swap_buffers(&self, font: &Font) {

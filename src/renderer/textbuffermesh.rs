@@ -27,57 +27,26 @@ impl Renderable for TextBufferMesh {
 }
 
 impl TextBufferMesh {
-    pub fn new(
-        program: Program,
-        dimensions: (i32, i32),
-        font: &Font,
-    ) -> Result<TextBufferMesh, String> {
+    pub fn new(program: Program, dimensions: (i32, i32), font: &Font) -> TextBufferMesh {
         let (width, height) = dimensions;
 
-        if width <= 0 || height <= 0 {
-            return Err("Invalid dimensions; width or height is <= 0".to_owned());
-        }
+        let vertex_buffer_pos = vec![0.0; (width * height * 12) as usize];
+        let vertex_buffer_col = vec![1.0; (width * height * 24) as usize];
+        let vertex_buffer_tex = vec![0.0; (width * height * 12) as usize];
 
-        let mut vertex_buffer = Vec::new();
-
-        let character_width = 1.0 / width as f32;
-        let character_height = 1.0 / height as f32;
-        for y in 0..height {
-            for x in 0..width {
-                let x_off = x as f32 * character_width;
-                let y_off = y as f32 * character_height;
-                let mut single_character_vbuff = vec![
-                    x_off,
-                    y_off + character_height,
-                    x_off + character_width,
-                    y_off + character_height,
-                    x_off,
-                    y_off,
-                    x_off + character_width,
-                    y_off,
-                    x_off,
-                    y_off,
-                    x_off + character_width,
-                    y_off + character_height,
-                ];
-                vertex_buffer.append(&mut single_character_vbuff);
-            }
-        }
-
-        let tex_coords = vec![0.0; (width * height * 12) as usize];
-
-        let vbo_pos = renderer::create_vbo(vertex_buffer, false);
-        let vbo_tex = renderer::create_vbo(tex_coords, true);
-        let vao = renderer::create_vao(program, vbo_pos, vbo_tex);
+        let vbo_pos = renderer::create_vbo(vertex_buffer_pos, false);
+        let vbo_col = renderer::create_vbo(vertex_buffer_col, true);
+        let vbo_tex = renderer::create_vbo(vertex_buffer_tex, true);
+        let vao = renderer::create_vao(program, vbo_pos, vbo_col, Some(vbo_tex));
 
         let tex = renderer::create_texture(&font.image_buffer, font.width, font.height);
-        Ok(TextBufferMesh {
+        TextBufferMesh {
             vao: vao,
             vbo_pos: vbo_pos,
             vbo_tex: vbo_tex,
             count: Cell::new(width * height * 6),
             texture: tex,
-        })
+        }
     }
 
     pub fn update_tex_coords(&self, text_buffer: &TextBuffer, font: &Font) {

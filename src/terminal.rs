@@ -67,6 +67,7 @@ pub struct Terminal {
     display: Display,
     program: renderer::Program,
     nondebug_program: renderer::Program,
+    background_program: renderer::Program,
     debug_program: renderer::Program,
     pub font: Font,
 }
@@ -80,6 +81,8 @@ impl Terminal {
     ) -> Terminal {
         let display = Display::new(title, window_dimensions, clear_color);
         let program = renderer::create_program(renderer::VERT_SHADER, renderer::FRAG_SHADER);
+        let background_program =
+            renderer::create_program(renderer::VERT_SHADER, renderer::BG_FRAG_SHADER);
         let debug_program =
             renderer::create_program(renderer::VERT_SHADER, renderer::DEBUG_FRAG_SHADER);
         let font = font;
@@ -87,6 +90,7 @@ impl Terminal {
             display,
             program,
             nondebug_program: program,
+            background_program,
             debug_program,
             font,
         }
@@ -112,6 +116,11 @@ impl Terminal {
     pub fn draw(&self, text_buffer: &TextBuffer) {
         renderer::clear();
         renderer::draw(
+            self.background_program,
+            self.display.proj_matrix.get(),
+            &text_buffer.background_mesh,
+        );
+        renderer::draw(
             self.program,
             self.display.proj_matrix.get(),
             &text_buffer.mesh,
@@ -122,11 +131,15 @@ impl Terminal {
         self.display.get_current_input()
     }
 
-    pub fn get_program(&self) -> renderer::Program {
+    pub fn set_title<T: Into<String>>(&mut self, title: T) {
+        self.display.set_title(&title.into());
+    }
+
+    pub(crate) fn get_program(&self) -> renderer::Program {
         self.program
     }
 
-    pub fn set_title<T: Into<String>>(&mut self, title: T) {
-        self.display.set_title(&title.into());
+    pub(crate) fn get_background_program(&self) -> renderer::Program {
+        self.background_program
     }
 }

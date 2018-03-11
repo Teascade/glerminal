@@ -7,6 +7,7 @@ use std::ffi::{CStr, CString};
 
 pub(crate) static VERT_SHADER: &'static str = include_str!("../shaders/vert_shader.glsl");
 pub(crate) static FRAG_SHADER: &'static str = include_str!("../shaders/frag_shader.glsl");
+pub(crate) static BG_FRAG_SHADER: &'static str = include_str!("../shaders/bg_frag_shader.glsl");
 pub(crate) static DEBUG_FRAG_SHADER: &'static str =
     include_str!("../shaders/debug_frag_shader.glsl");
 
@@ -164,24 +165,37 @@ pub(crate) fn create_vbo(vertex_buffer: Vec<f32>, stream: bool) -> Vbo {
     }
 }
 
-pub(crate) fn create_vao(program: Program, vbo_pos: Vbo, vbo_tex: Vbo) -> Vao {
+pub(crate) fn create_vao(
+    program: Program,
+    vbo_pos: Vbo,
+    vbo_col: Vbo,
+    vbo_tex: Option<Vbo>,
+) -> Vao {
     unsafe {
         let mut vao = 0;
 
         gl::GenVertexArrays(1, &mut vao);
 
-        let attrib_location = get_attrib_location(program, "position");
-
         gl::BindVertexArray(vao);
+
+        let attrib_location = get_attrib_location(program, "position");
         gl::EnableVertexAttribArray(attrib_location);
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo_pos);
         gl::VertexAttribPointer(attrib_location, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
 
-        let attrib_location = get_attrib_location(program, "texcoord");
+        let attrib_location = get_attrib_location(program, "color");
 
         gl::EnableVertexAttribArray(attrib_location);
-        gl::BindBuffer(gl::ARRAY_BUFFER, vbo_tex);
-        gl::VertexAttribPointer(attrib_location, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
+        gl::BindBuffer(gl::ARRAY_BUFFER, vbo_col);
+        gl::VertexAttribPointer(attrib_location, 4, gl::FLOAT, gl::FALSE, 0, ptr::null());
+
+        if let Some(vbo_tex) = vbo_tex {
+            let attrib_location = get_attrib_location(program, "texcoord");
+
+            gl::EnableVertexAttribArray(attrib_location);
+            gl::BindBuffer(gl::ARRAY_BUFFER, vbo_tex);
+            gl::VertexAttribPointer(attrib_location, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
+        }
 
         vao
     }
