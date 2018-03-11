@@ -37,6 +37,8 @@ impl TermCharacter {
 struct TermCursor {
     x: i32,
     y: i32,
+    foreground_color: Color,
+    background_color: Color,
 }
 
 pub struct TextBuffer {
@@ -67,7 +69,12 @@ impl TextBuffer {
             width,
             mesh,
             background_mesh,
-            cursor: TermCursor { x: 0, y: 0 },
+            cursor: TermCursor {
+                x: 0,
+                y: 0,
+                foreground_color: [1.0; 4],
+                background_color: [0.0; 4],
+            },
         })
     }
 
@@ -80,22 +87,34 @@ impl TextBuffer {
         self.chars[(y * self.width + x) as usize]
     }
 
-    pub fn put_char(&mut self, character: char, fg_color: Color, bg_color: Color) {
-        self.chars[(self.cursor.y * self.width + self.cursor.x) as usize] =
-            TermCharacter::new(character, fg_color, bg_color);
+    pub fn put_char(&mut self, character: char) {
+        self.chars[(self.cursor.y * self.width + self.cursor.x) as usize] = TermCharacter::new(
+            character,
+            self.cursor.foreground_color,
+            self.cursor.background_color,
+        );
         self.move_cursor_by(1);
     }
 
-    pub fn write<T: Into<String>>(&mut self, text: T, fg_color: Color, bg_color: Color) {
+    pub fn write<T: Into<String>>(&mut self, text: T) {
         let text = text.into();
         for c in text.chars() {
-            self.put_char(c, fg_color, bg_color);
+            self.put_char(c);
         }
+    }
+
+    pub fn change_cursor_fg_color(&mut self, color: Color) {
+        self.cursor.foreground_color = color;
+    }
+
+    pub fn change_cursor_bg_color(&mut self, color: Color) {
+        self.cursor.background_color = color;
     }
 
     pub fn move_cursor(&mut self, x: i32, y: i32) {
         if !self.out_of_bounds(x, y) {
-            self.cursor = TermCursor { x: x, y: y };
+            self.cursor.x = x;
+            self.cursor.y = y;
         }
     }
 
