@@ -31,7 +31,7 @@ impl TextBuffer {
         }
     }
 
-    pub fn swap_buffers(&self, font: &Font) {
+    pub(crate) fn swap_buffers(&self, font: &Font) {
         self.mesh.update_tex_coords(&self, font);
     }
 
