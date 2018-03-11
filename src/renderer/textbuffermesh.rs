@@ -2,13 +2,7 @@ use std::cell::Cell;
 
 use font::Font;
 use text_buffer::TextBuffer;
-use super::renderer::{self, Program, Texture, Vao, Vbo};
-
-pub trait Renderable {
-    fn get_vao(&self) -> Vao;
-    fn get_count(&self) -> i32;
-    fn get_texture(&self) -> Option<Texture>;
-}
+use super::renderer::{self, Program, Renderable, Texture, Vao, Vbo};
 
 pub struct TextBufferMesh {
     vao: Vao,

@@ -1,4 +1,4 @@
-use renderer::renderable::TextBufferMesh;
+use renderer::textbuffermesh::TextBufferMesh;
 use font::Font;
 use terminal::Terminal;
 

@@ -5,8 +5,6 @@ use std::ptr;
 use std::str::from_utf8;
 use std::ffi::{CStr, CString};
 
-use super::renderable::Renderable;
-
 pub(crate) static VERT_SHADER: &'static str = include_str!("../shaders/vert_shader.glsl");
 pub(crate) static FRAG_SHADER: &'static str = include_str!("../shaders/frag_shader.glsl");
 pub(crate) static DEBUG_FRAG_SHADER: &'static str =
@@ -18,6 +16,12 @@ pub(crate) type Program = u32;
 pub(crate) type Vao = u32;
 pub(crate) type Vbo = u32;
 pub(crate) type Texture = u32;
+
+pub trait Renderable {
+    fn get_vao(&self) -> Vao;
+    fn get_count(&self) -> i32;
+    fn get_texture(&self) -> Option<Texture>;
+}
 
 pub(crate) fn clear() {
     unsafe {
