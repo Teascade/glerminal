@@ -4,232 +4,62 @@ use std::os::raw::c_void;
 use std::ptr;
 use std::str::from_utf8;
 use std::ffi::{CStr, CString};
-use std::cell::Cell;
 
-use font::Font;
-use text_buffer::TextBuffer;
+use renderable::Renderable;
 
-pub static VERT_SHADER: &'static str = include_str!("shaders/vert_shader.glsl");
-pub static FRAG_SHADER: &'static str = include_str!("shaders/frag_shader.glsl");
-pub static DEBUG_FRAG_SHADER: &'static str = include_str!("shaders/debug_frag_shader.glsl");
+pub(crate) static VERT_SHADER: &'static str = include_str!("shaders/vert_shader.glsl");
+pub(crate) static FRAG_SHADER: &'static str = include_str!("shaders/frag_shader.glsl");
+pub(crate) static DEBUG_FRAG_SHADER: &'static str = include_str!("shaders/debug_frag_shader.glsl");
 
-pub type Matrix4 = [f32; 16];
+pub(crate) type Matrix4 = [f32; 16];
 
-pub type Program = u32;
-pub type Vao = u32;
-pub type Texture = u32;
+pub(crate) type Program = u32;
+pub(crate) type Vao = u32;
+pub(crate) type Vbo = u32;
+pub(crate) type Texture = u32;
 
-pub trait Renderable {
-    fn get_vao(&self) -> Vao;
-    fn get_count(&self) -> i32;
-    fn get_texture(&self) -> Option<Texture>;
-}
-
-pub struct TextBufferMesh {
-    vao: Vao,
-    vbo_pos: u32,
-    vbo_tex: u32,
-    count: Cell<i32>,
-    texture: Texture,
-}
-
-impl Renderable for TextBufferMesh {
-    fn get_vao(&self) -> Vao {
-        self.vao
-    }
-
-    fn get_count(&self) -> i32 {
-        self.count.get()
-    }
-
-    fn get_texture(&self) -> Option<Texture> {
-        Some(self.texture)
-    }
-}
-
-impl TextBufferMesh {
-    pub fn new(
-        program: Program,
-        dimensions: (i32, i32),
-        font: &Font,
-    ) -> Result<TextBufferMesh, String> {
-        let (width, height) = dimensions;
-
-        if width <= 0 || height <= 0 {
-            return Err("Invalid dimensions; width or height is <= 0".to_owned());
-        }
-
-        let mut vertex_buffer = Vec::new();
-
-        let character_width = 1.0 / width as f32;
-        let character_height = 1.0 / height as f32;
-        for y in 0..height {
-            for x in 0..width {
-                let x_off = x as f32 * character_width;
-                let y_off = y as f32 * character_height;
-                let mut single_character_vbuff = vec![
-                    x_off,
-                    y_off + character_height,
-                    x_off + character_width,
-                    y_off + character_height,
-                    x_off,
-                    y_off,
-                    x_off + character_width,
-                    y_off,
-                    x_off,
-                    y_off,
-                    x_off + character_width,
-                    y_off + character_height,
-                ];
-                vertex_buffer.append(&mut single_character_vbuff);
-            }
-        }
-
-        let tex_coords = vec![0.0; (width * height * 12) as usize];
-
-        let vbo_pos = create_vbo(vertex_buffer, false);
-        let vbo_tex = create_vbo(tex_coords, true);
-        let vao = create_vao(program, vbo_pos, vbo_tex);
-
-        let tex = create_texture(&font.image_buffer, font.width, font.height);
-        Ok(TextBufferMesh {
-            vao: vao,
-            vbo_pos: vbo_pos,
-            vbo_tex: vbo_tex,
-            count: Cell::new(width * height * 6),
-            texture: tex,
-        })
-    }
-
-    pub fn update_tex_coords(&self, text_buffer: &TextBuffer, font: &Font) {
-        if (text_buffer.height * text_buffer.width) as usize != text_buffer.chars.len() {
-            panic!("Given TextBuffer height/width do not math chars.len()");
-        }
-
-        // Create new position veretex buffer
-        let mut vertex_buffer = Vec::new();
-
-        // Create new tex coords
-        let mut tex_coords = Vec::new();
-
-        // Fill those arrays
-        let character_width = 1.0 / text_buffer.width as f32;
-        let character_height = 1.0 / text_buffer.height as f32;
-        for y in 0..text_buffer.height {
-            for x in 0..text_buffer.width {
-                // Calculate pos vertex coords
-                let character = text_buffer.get_character(x, y);
-                if character == ' ' {
-                    continue;
-                }
-                let char_data;
-                match font.get_character(character) {
-                    Ok(data) => char_data = data,
-                    Err(error) => panic!(error),
-                }
-                let width = character_width * (char_data.width as f32 / font.size as f32);
-                let height = character_height * (char_data.height as f32 / font.line_height as f32);
-
-                let bmoffset_x = character_width * (char_data.x_off as f32 / font.size as f32);
-                let bmoffset_y =
-                    character_height * (char_data.y_off as f32 / font.line_height as f32);
-
-                let x_off = x as f32 * character_width + bmoffset_x;
-                let y_off = y as f32 * character_height + bmoffset_y;
-                let mut single_character_vbuff = vec![
-                    x_off,
-                    y_off + height,
-                    x_off + width,
-                    y_off + height,
-                    x_off,
-                    y_off,
-                    x_off + width,
-                    y_off,
-                    x_off,
-                    y_off,
-                    x_off + width,
-                    y_off + height,
-                ];
-                vertex_buffer.append(&mut single_character_vbuff);
-
-                // Calculate tex coords
-                let mut char_tex_coords = vec![
-                    char_data.x1,
-                    char_data.y2,
-                    char_data.x2,
-                    char_data.y2,
-                    char_data.x1,
-                    char_data.y1,
-                    char_data.x2,
-                    char_data.y1,
-                    char_data.x1,
-                    char_data.y1,
-                    char_data.x2,
-                    char_data.y2,
-                ];
-
-                tex_coords.append(&mut char_tex_coords);
-            }
-        }
-        let data_length_pos =
-            (vertex_buffer.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
-        let data_pointer_pos = vertex_buffer.as_ptr() as *const c_void;
-
-        let data_length_tex = (tex_coords.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
-        let data_pointer_tex = tex_coords.as_ptr() as *const c_void;
-
-        self.count.set((vertex_buffer.len() * 6) as i32);
-
-        unsafe {
-            gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo_pos);
-            gl::BufferData(
-                gl::ARRAY_BUFFER,
-                data_length_pos,
-                data_pointer_pos,
-                gl::STREAM_DRAW,
-            );
-
-            gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo_tex);
-            gl::BufferData(
-                gl::ARRAY_BUFFER,
-                data_length_tex,
-                data_pointer_tex,
-                gl::STREAM_DRAW,
-            );
-        }
-    }
-}
-
-pub fn clear() {
+pub(crate) fn clear() {
     unsafe {
         gl::Clear(gl::COLOR_BUFFER_BIT);
     }
 }
 
-pub fn create_program(vert_shader: &str, frag_shader: &str) -> Program {
-    unsafe {
-        let vert = create_shader(vert_shader, gl::VERTEX_SHADER);
-        let frag = create_shader(frag_shader, gl::FRAGMENT_SHADER);
-
-        let program = gl::CreateProgram();
-
-        gl::AttachShader(program, vert);
-        gl::AttachShader(program, frag);
-
-        gl::LinkProgram(program);
-
-        program
-    }
-}
-
-pub fn update_viewport(dimensions: (u32, u32)) {
+pub(crate) fn update_viewport(dimensions: (u32, u32)) {
     let (width, height) = dimensions;
     unsafe {
         gl::Viewport(0, 0, width as i32, height as i32);
     }
 }
 
-pub fn create_proj_matrix(dimensions: (f32, f32), aspect_ratio: f32) -> Matrix4 {
+pub(crate) fn set_debug(debug: bool) {
+    unsafe {
+        if debug {
+            gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+        } else {
+            gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
+        }
+    }
+}
+
+pub(crate) fn draw(program: Program, proj_matrix: Matrix4, renderable: &Renderable) {
+    unsafe {
+        gl::UseProgram(program);
+        if let Some(texture) = renderable.get_texture() {
+            gl::BindTexture(gl::TEXTURE_2D, texture);
+        }
+        gl::BindVertexArray(renderable.get_vao());
+
+        let loc = gl::GetUniformLocation(
+            program,
+            CString::new("proj_mat".to_string()).unwrap().as_ptr() as *const i8,
+        ) as i32;
+        gl::UniformMatrix4fv(loc, 1, gl::TRUE, proj_matrix.as_ptr());
+
+        gl::DrawArrays(gl::TRIANGLES, 0, renderable.get_count());
+    }
+}
+
+pub(crate) fn create_proj_matrix(dimensions: (f32, f32), aspect_ratio: f32) -> Matrix4 {
     let (width, height) = dimensions;
     let true_width = height * aspect_ratio;
     let true_height = width / aspect_ratio;
@@ -267,35 +97,7 @@ pub fn create_proj_matrix(dimensions: (f32, f32), aspect_ratio: f32) -> Matrix4 
     ]
 }
 
-pub fn set_debug(debug: bool) {
-    unsafe {
-        if debug {
-            gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
-        } else {
-            gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
-        }
-    }
-}
-
-pub fn draw(program: Program, proj_matrix: Matrix4, renderable: &Renderable) {
-    unsafe {
-        gl::UseProgram(program);
-        if let Some(texture) = renderable.get_texture() {
-            gl::BindTexture(gl::TEXTURE_2D, texture);
-        }
-        gl::BindVertexArray(renderable.get_vao());
-
-        let loc = gl::GetUniformLocation(
-            program,
-            CString::new("proj_mat".to_string()).unwrap().as_ptr() as *const i8,
-        ) as i32;
-        gl::UniformMatrix4fv(loc, 1, gl::TRUE, proj_matrix.as_ptr());
-
-        gl::DrawArrays(gl::TRIANGLES, 0, renderable.get_count());
-    }
-}
-
-pub fn create_texture(pixels: &[u8], width: u32, height: u32) -> Texture {
+pub(crate) fn create_texture(pixels: &[u8], width: u32, height: u32) -> Texture {
     unsafe {
         let mut tex = 0;
         gl::GenTextures(1, &mut tex);
@@ -324,7 +126,17 @@ pub fn create_texture(pixels: &[u8], width: u32, height: u32) -> Texture {
     }
 }
 
-fn create_vbo(vertex_buffer: Vec<f32>, stream: bool) -> u32 {
+pub(crate) fn upload_buffer(vbo: Vbo, vertex_buffer: Vec<f32>) {
+    let data_length = (vertex_buffer.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
+    let data_pointer = vertex_buffer.as_ptr() as *const c_void;
+
+    unsafe {
+        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+        gl::BufferData(gl::ARRAY_BUFFER, data_length, data_pointer, gl::STREAM_DRAW);
+    }
+}
+
+pub(crate) fn create_vbo(vertex_buffer: Vec<f32>, stream: bool) -> Vbo {
     unsafe {
         let mut vbo = 0;
         gl::GenBuffers(1, &mut vbo);
@@ -347,16 +159,7 @@ fn create_vbo(vertex_buffer: Vec<f32>, stream: bool) -> u32 {
     }
 }
 
-fn get_attrib_location(program: Program, attribute: &str) -> u32 {
-    unsafe {
-        gl::GetAttribLocation(
-            program,
-            CString::new(attribute).unwrap().as_ptr() as *const i8,
-        ) as u32
-    }
-}
-
-fn create_vao(program: Program, vbo_pos: u32, vbo_tex: u32) -> Vao {
+pub(crate) fn create_vao(program: Program, vbo_pos: Vbo, vbo_tex: Vbo) -> Vao {
     unsafe {
         let mut vao = 0;
 
@@ -376,6 +179,22 @@ fn create_vao(program: Program, vbo_pos: u32, vbo_tex: u32) -> Vao {
         gl::VertexAttribPointer(attrib_location, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
 
         vao
+    }
+}
+
+pub(crate) fn create_program(vert_shader: &str, frag_shader: &str) -> Program {
+    unsafe {
+        let vert = create_shader(vert_shader, gl::VERTEX_SHADER);
+        let frag = create_shader(frag_shader, gl::FRAGMENT_SHADER);
+
+        let program = gl::CreateProgram();
+
+        gl::AttachShader(program, vert);
+        gl::AttachShader(program, frag);
+
+        gl::LinkProgram(program);
+
+        program
     }
 }
 
@@ -410,5 +229,14 @@ fn create_shader(shader_text: &str, shader_type: u32) -> u32 {
         } else {
             shader
         }
+    }
+}
+
+fn get_attrib_location(program: Program, attribute: &str) -> u32 {
+    unsafe {
+        gl::GetAttribLocation(
+            program,
+            CString::new(attribute).unwrap().as_ptr() as *const i8,
+        ) as u32
     }
 }
