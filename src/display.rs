@@ -1,5 +1,5 @@
-use glutin::{ContextBuilder, ElementState, Event, EventsLoop, GlContext, GlWindow, KeyboardInput,
-             VirtualKeyCode, WindowBuilder, WindowEvent};
+use glutin::{ContextBuilder, ElementState, Event, EventsLoop, GlContext, GlWindow, WindowBuilder,
+             WindowEvent};
 use gl;
 
 use renderer;
@@ -62,7 +62,7 @@ impl Display {
 
         let mut dimensions: Option<(u32, u32)> = None;
 
-        let mut input = self.input.borrow_mut().clear_just_lists();
+        let input = self.input.borrow_mut().clear_just_lists();
         drop(input);
 
         self.window.swap_buffers().unwrap();

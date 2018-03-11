@@ -20,7 +20,7 @@ impl TerminalBuilder {
             title: "Hello, World!".to_owned(),
             dimensions: (1280, 720),
             clear_color: (0.14, 0.19, 0.28, 1.0),
-            font: Font::load("fonts/iosevka.png", "fonts/iosevka.sfl"),
+            font: Font::load("fonts/iosevka.sfl"),
         }
     }
 

@@ -15,7 +15,6 @@ use glutin::VirtualKeyCode;
 
 use terminal::TerminalBuilder;
 use text_buffer::TextBuffer;
-use font::Font;
 
 use std::time::{Duration, SystemTime};
 
