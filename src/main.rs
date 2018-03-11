@@ -40,11 +40,11 @@ fn main() {
     text_buffer.change_cursor_fg_color([1.0, 0.0, 0.0, 1.0]);
     text_buffer.change_cursor_bg_color([1.0; 4]);
     text_buffer.write("I AM IN THE CENTER");
+    terminal.flush(&mut text_buffer);
 
     terminal.set_debug(false);
 
     while terminal.refresh() {
-        terminal.flush(&mut text_buffer);
         terminal.draw(&text_buffer);
         frames += 1;
 

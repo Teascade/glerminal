@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use glutin::VirtualKeyCode;
 use std::cell::Cell;
 
@@ -136,10 +137,12 @@ impl Terminal {
         );
     }
 
+    #[allow(dead_code)]
     pub fn get_current_input(&self) -> Input {
         self.display.get_current_input()
     }
 
+    #[allow(dead_code)]
     pub fn set_title<T: Into<String>>(&mut self, title: T) {
         self.display.set_title(&title.into());
     }
