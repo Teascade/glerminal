@@ -24,6 +24,8 @@ pub struct Font {
     pub height: u32,
     pub line_height: u32,
     pub size: u32,
+    pub max_offset_y: u32,
+    pub max_offset_x: u32,
     characters: HashMap<u8, CharacterData>,
 }
 
@@ -61,11 +63,19 @@ impl Font {
         let mut characters = HashMap::<u8, CharacterData>::new();
         let width_float = info.width as f32;
         let height_float = info.height as f32;
+        let mut max_off_x = 0;
+        let mut max_off_y = 0;
         for (key, value) in bm_font.chars.iter() {
             let x1 = value.x as f32 / width_float;
             let x2 = (value.x as f32 + value.width as f32) / width_float;
             let y1 = value.y as f32 / height_float;
             let y2 = (value.y as f32 + value.height as f32) / height_float;
+            if value.xoffset > max_off_x {
+                max_off_x = value.xoffset
+            }
+            if value.yoffset > max_off_y {
+                max_off_y = value.yoffset
+            }
 
             characters.insert(
                 *key as u8,
@@ -89,6 +99,8 @@ impl Font {
             height: info.height,
             line_height: bm_font.line_height,
             size: bm_font.size,
+            max_offset_x: max_off_x + 2,
+            max_offset_y: max_off_y + 2,
             characters: characters,
         }
     }

@@ -11,8 +11,6 @@ mod text_buffer;
 mod input;
 mod terminal;
 
-use glutin::VirtualKeyCode;
-
 use terminal::TerminalBuilder;
 use text_buffer::TextBuffer;
 
@@ -32,26 +30,22 @@ fn main() {
     let mut last_time = SystemTime::now();
     let mut frames = 0;
 
-    text_buffer.write("Hello, World! Test-thing");
+    text_buffer.write("Hello, World! Test'thing", [1.0, 0.0, 0.0, 1.0], [1.0; 4]);
     text_buffer.move_cursor(0, 1);
-    text_buffer.write("------------------------");
+    text_buffer.write(
+        "------------------------",
+        [1.0, 0.0, 0.0, 1.0],
+        [0.0, 1.0, 0.1, 1.0],
+    );
     text_buffer.move_cursor(31, 12);
-    text_buffer.write("I AM IN THE CENTER");
+    text_buffer.write("I AM IN THE CENTER", [1.0, 0.0, 0.0, 1.0], [1.0; 4]);
 
     terminal.set_debug(false);
-
-    let mut debug = false;
 
     while terminal.refresh() {
         terminal.flush(&mut text_buffer);
         terminal.draw(&text_buffer);
         frames += 1;
-
-        let input = terminal.get_current_input();
-        if input.was_just_pressed(VirtualKeyCode::F3) {
-            debug = !debug;
-            terminal.set_debug(debug);
-        }
 
         if last_time + Duration::new(1, 0) < SystemTime::now() {
             terminal.set_title(format!("Hello, World! FPS: {}", frames));

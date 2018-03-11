@@ -7,6 +7,7 @@ use super::renderer::{self, Program, Renderable, Texture, Vao, Vbo};
 pub struct TextBufferMesh {
     vao: Vao,
     vbo_pos: Vbo,
+    vbo_col: Vbo,
     vbo_tex: Vbo,
     count: Cell<i32>,
     texture: Texture,
@@ -43,22 +44,26 @@ impl TextBufferMesh {
         TextBufferMesh {
             vao: vao,
             vbo_pos: vbo_pos,
+            vbo_col: vbo_col,
             vbo_tex: vbo_tex,
             count: Cell::new(width * height * 6),
             texture: tex,
         }
     }
 
-    pub fn update_tex_coords(&self, text_buffer: &TextBuffer, font: &Font) {
+    pub fn update(&self, text_buffer: &TextBuffer, font: &Font) {
         if (text_buffer.height * text_buffer.width) as usize != text_buffer.chars.len() {
             panic!("Given TextBuffer height/width do not math chars.len()");
         }
 
         // Create new position veretex buffer
-        let mut vertex_buffer_pos = Vec::new();
+        let mut vertex_buffer_pos: Vec<f32> = Vec::new();
+
+        // Create new color vertex buffer
+        let mut vertex_buffer_col: Vec<f32> = Vec::new();
 
         // Create new tex coords
-        let mut vertex_buffer_tex = Vec::new();
+        let mut vertex_buffer_tex: Vec<f32> = Vec::new();
 
         // Fill those arrays
         let character_width = 1.0 / text_buffer.width as f32;
@@ -67,20 +72,21 @@ impl TextBufferMesh {
             for x in 0..text_buffer.width {
                 // Calculate pos vertex coords
                 let character = text_buffer.get_character(x, y);
-                if character == ' ' {
+                if character.get_char() == ' ' {
                     continue;
                 }
-                let char_data;
-                match font.get_character(character) {
-                    Ok(data) => char_data = data,
+                let char_data = match font.get_character(character.get_char()) {
+                    Ok(data) => data,
                     Err(error) => panic!(error),
-                }
+                };
                 let width = character_width * (char_data.width as f32 / font.size as f32);
                 let height = character_height * (char_data.height as f32 / font.line_height as f32);
 
-                let bmoffset_x = character_width * (char_data.x_off as f32 / font.size as f32);
-                let bmoffset_y =
-                    character_height * (char_data.y_off as f32 / font.line_height as f32);
+                let bmoffset_x =
+                    character_width * (char_data.x_off as i32 as f32 / font.size as f32);
+                let bmoffset_y = character_height
+                    * ((char_data.y_off as i32 - font.max_offset_x as i32) as f32
+                        / font.line_height as f32);
 
                 let x_off = x as f32 * character_width + bmoffset_x;
                 let y_off = y as f32 * character_height + bmoffset_y;
@@ -99,6 +105,11 @@ impl TextBufferMesh {
                     y_off + height,
                 ];
                 vertex_buffer_pos.append(&mut single_character_vbuff);
+
+                // Get colors
+                for _ in 0..6 {
+                    vertex_buffer_col.append(&mut character.get_fg_color().to_vec());
+                }
 
                 // Calculate tex coords
                 let mut char_tex_coords = vec![
@@ -123,6 +134,7 @@ impl TextBufferMesh {
         self.count.set((vertex_buffer_pos.len() * 6) as i32);
 
         renderer::upload_buffer(self.vbo_pos, vertex_buffer_pos);
+        renderer::upload_buffer(self.vbo_col, vertex_buffer_col);
         renderer::upload_buffer(self.vbo_tex, vertex_buffer_tex);
     }
 }

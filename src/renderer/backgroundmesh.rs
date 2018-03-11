@@ -1,6 +1,11 @@
-use super::renderer::{self, Program, Renderable, Texture, Vao};
+use super::renderer::{self, Program, Renderable, Texture, Vao, Vbo};
+use text_buffer::TextBuffer;
 
 pub struct BackgroundMesh {
+    width: i32,
+    height: i32,
+    vbo_pos: Vbo,
+    vbo_col: Vbo,
     vao: Vao,
     count: i32,
 }
@@ -58,8 +63,63 @@ impl BackgroundMesh {
         let count = width * height * 6;
 
         BackgroundMesh {
+            width: width,
+            height: height,
+            vbo_pos: vbo_pos,
+            vbo_col: vbo_col,
             vao: vao,
             count: count,
         }
+    }
+
+    pub fn update(&self, text_buffer: &TextBuffer) {
+        if (text_buffer.height * text_buffer.width) as usize != text_buffer.chars.len() {
+            panic!("Given TextBuffer height/width do not math chars.len()");
+        }
+
+        // Create new color vertex buffer
+        let mut vertex_buffer_pos: Vec<f32> = Vec::new();
+
+        // Create new color vertex buffer
+        let mut vertex_buffer_col: Vec<f32> = Vec::new();
+
+        let character_width = 1.0 / self.width as f32;
+        let character_height = 1.0 / self.height as f32;
+        for y in 0..text_buffer.height {
+            for x in 0..text_buffer.width {
+                let character = text_buffer.get_character(x, y);
+
+                if character.get_bg_color() == [0.0; 4] {
+                    continue;
+                }
+
+                // New Vertex Buffers
+                let x_off = x as f32 * character_width;
+                let y_off = y as f32 * character_height;
+                let mut single_character_vbuff = vec![
+                    x_off,
+                    y_off + character_height,
+                    x_off + character_width,
+                    y_off + character_height,
+                    x_off,
+                    y_off,
+                    x_off + character_width,
+                    y_off,
+                    x_off,
+                    y_off,
+                    x_off + character_width,
+                    y_off + character_height,
+                ];
+                vertex_buffer_pos.append(&mut single_character_vbuff);
+
+                // Get colors
+                for _ in 0..6 {
+                    vertex_buffer_col.append(&mut character.get_bg_color().to_vec());
+                }
+            }
+        }
+
+        renderer::upload_buffer(self.vbo_pos, vertex_buffer_pos);
+        renderer::upload_buffer(self.vbo_col, vertex_buffer_col);
     }
 }

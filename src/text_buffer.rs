@@ -3,13 +3,44 @@ use renderer::backgroundmesh::BackgroundMesh;
 use font::Font;
 use terminal::Terminal;
 
+type Color = [f32; 4];
+
+#[derive(Clone, Copy)]
+pub struct TermCharacter {
+    character: char,
+    fg_color: Color,
+    bg_color: Color,
+}
+
+impl TermCharacter {
+    pub fn new(character: char, fg_color: Color, bg_color: Color) -> TermCharacter {
+        TermCharacter {
+            character,
+            fg_color,
+            bg_color,
+        }
+    }
+
+    pub fn get_char(&self) -> char {
+        self.character
+    }
+
+    pub fn get_fg_color(&self) -> Color {
+        self.fg_color
+    }
+
+    pub fn get_bg_color(&self) -> Color {
+        self.bg_color
+    }
+}
+
 struct TermCursor {
     x: i32,
     y: i32,
 }
 
 pub struct TextBuffer {
-    pub(crate) chars: Vec<char>,
+    pub(crate) chars: Vec<TermCharacter>,
     pub(crate) height: i32,
     pub(crate) width: i32,
     pub(crate) mesh: TextBufferMesh,
@@ -27,7 +58,7 @@ impl TextBuffer {
             );
         }
 
-        let chars = vec![' '; (width * height) as usize];
+        let chars = vec![TermCharacter::new(' ', [0.0; 4], [0.0; 4]); (width * height) as usize];
         let mesh = TextBufferMesh::new(terminal.get_program(), dimensions, &terminal.font);
         let background_mesh = BackgroundMesh::new(terminal.get_background_program(), dimensions);
         Ok(TextBuffer {
@@ -41,22 +72,24 @@ impl TextBuffer {
     }
 
     pub(crate) fn swap_buffers(&self, font: &Font) {
-        self.mesh.update_tex_coords(&self, font);
+        self.mesh.update(&self, font);
+        self.background_mesh.update(&self);
     }
 
-    pub fn get_character(&self, x: i32, y: i32) -> char {
+    pub fn get_character(&self, x: i32, y: i32) -> TermCharacter {
         self.chars[(y * self.width + x) as usize]
     }
 
-    pub fn put_char(&mut self, character: char) {
-        self.chars[(self.cursor.y * self.width + self.cursor.x) as usize] = character;
+    pub fn put_char(&mut self, character: char, fg_color: Color, bg_color: Color) {
+        self.chars[(self.cursor.y * self.width + self.cursor.x) as usize] =
+            TermCharacter::new(character, fg_color, bg_color);
         self.move_cursor_by(1);
     }
 
-    pub fn write<T: Into<String>>(&mut self, text: T) {
+    pub fn write<T: Into<String>>(&mut self, text: T, fg_color: Color, bg_color: Color) {
         let text = text.into();
         for c in text.chars() {
-            self.put_char(c);
+            self.put_char(c, fg_color, bg_color);
         }
     }
 

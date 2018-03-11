@@ -1,3 +1,6 @@
+use glutin::VirtualKeyCode;
+use std::cell::Cell;
+
 use display::Display;
 use font::Font;
 use text_buffer::TextBuffer;
@@ -66,9 +69,9 @@ impl TerminalBuilder {
 pub struct Terminal {
     display: Display,
     program: renderer::Program,
-    nondebug_program: renderer::Program,
     background_program: renderer::Program,
     debug_program: renderer::Program,
+    debug: Cell<bool>,
     pub font: Font,
 }
 
@@ -89,22 +92,28 @@ impl Terminal {
         Terminal {
             display,
             program,
-            nondebug_program: program,
             background_program,
             debug_program,
+            debug: Cell::new(false),
             font,
         }
     }
 
-    pub fn set_debug(&mut self, debug: bool) {
+    pub fn set_debug(&self, debug: bool) {
         renderer::set_debug(debug);
-        if debug {
-            self.program = self.debug_program;
-        } else {
-            self.program = self.nondebug_program;
-        }
+        self.debug.set(debug);
     }
 
+    #[cfg(debug_assertions)]
+    pub fn refresh(&self) -> bool {
+        let input = self.get_current_input();
+        if input.was_just_pressed(VirtualKeyCode::F3) {
+            self.set_debug(!self.debug.get());
+        }
+        self.display.refresh()
+    }
+
+    #[cfg(not(debug_assertions))]
     pub fn refresh(&self) -> bool {
         self.display.refresh()
     }
@@ -116,12 +125,12 @@ impl Terminal {
     pub fn draw(&self, text_buffer: &TextBuffer) {
         renderer::clear();
         renderer::draw(
-            self.background_program,
+            self.get_background_program(),
             self.display.proj_matrix.get(),
             &text_buffer.background_mesh,
         );
         renderer::draw(
-            self.program,
+            self.get_program(),
             self.display.proj_matrix.get(),
             &text_buffer.mesh,
         );
@@ -136,10 +145,18 @@ impl Terminal {
     }
 
     pub(crate) fn get_program(&self) -> renderer::Program {
-        self.program
+        if !self.debug.get() {
+            self.program
+        } else {
+            self.debug_program
+        }
     }
 
     pub(crate) fn get_background_program(&self) -> renderer::Program {
-        self.background_program
+        if !self.debug.get() {
+            self.background_program
+        } else {
+            self.debug_program
+        }
     }
 }
