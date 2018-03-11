@@ -1,7 +1,7 @@
 use display::Display;
 use font::Font;
 use text_buffer::TextBuffer;
-use renderer;
+use renderer::renderer;
 use input::Input;
 
 pub struct TerminalBuilder {

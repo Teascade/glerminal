@@ -2,8 +2,7 @@ use glutin::{ContextBuilder, ElementState, Event, EventsLoop, GlContext, GlWindo
              WindowEvent};
 use gl;
 
-use renderer;
-use renderer::Matrix4;
+use renderer::renderer::{self, Matrix4};
 use input::Input;
 use std::cell::{Cell, RefCell};
 

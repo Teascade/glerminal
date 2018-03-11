@@ -6,7 +6,6 @@ extern crate sfl_parser;
 
 mod display;
 mod renderer;
-mod renderable;
 mod font;
 mod text_buffer;
 mod input;

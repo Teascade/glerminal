@@ -2,7 +2,7 @@ use std::cell::Cell;
 
 use font::Font;
 use text_buffer::TextBuffer;
-use renderer::{self, Program, Texture, Vao, Vbo};
+use super::renderer::{self, Program, Texture, Vao, Vbo};
 
 pub trait Renderable {
     fn get_vao(&self) -> Vao;

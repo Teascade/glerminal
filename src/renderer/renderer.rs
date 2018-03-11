@@ -5,11 +5,12 @@ use std::ptr;
 use std::str::from_utf8;
 use std::ffi::{CStr, CString};
 
-use renderable::Renderable;
+use super::renderable::Renderable;
 
-pub(crate) static VERT_SHADER: &'static str = include_str!("shaders/vert_shader.glsl");
-pub(crate) static FRAG_SHADER: &'static str = include_str!("shaders/frag_shader.glsl");
-pub(crate) static DEBUG_FRAG_SHADER: &'static str = include_str!("shaders/debug_frag_shader.glsl");
+pub(crate) static VERT_SHADER: &'static str = include_str!("../shaders/vert_shader.glsl");
+pub(crate) static FRAG_SHADER: &'static str = include_str!("../shaders/frag_shader.glsl");
+pub(crate) static DEBUG_FRAG_SHADER: &'static str =
+    include_str!("../shaders/debug_frag_shader.glsl");
 
 pub(crate) type Matrix4 = [f32; 16];
 
