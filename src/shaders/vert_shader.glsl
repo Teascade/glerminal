@@ -12,8 +12,8 @@ uniform mat4 proj_mat;
 uniform float time;
 
 void main() {
-  float x_shake = sin(time * shakiness * 50) * 0.002 * shakiness;
-  float y_shake = sin(time * shakiness * 40) * 0.004 * shakiness;
+  float x_shake = sin(time * sqrt(shakiness) * 50) * 0.02 * shakiness / 10;
+  float y_shake = sin(time * sqrt(shakiness) * 40) * 0.03 * shakiness / 10;
   gl_Position = proj_mat * vec4(position + vec2(x_shake, y_shake), 0, 1);
   f_texcoord = texcoord;
   f_color = color;

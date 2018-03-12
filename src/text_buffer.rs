@@ -147,8 +147,14 @@ impl TextBuffer {
         self.cursor.background_color
     }
 
+    #[allow(dead_code)]
     pub fn set_cursor_shakiness(&mut self, shakiness: f32) {
         self.cursor.shakiness = shakiness;
+    }
+
+    #[allow(dead_code)]
+    pub fn get_cursor_shakiness(&mut self) -> f32 {
+        self.cursor.shakiness
     }
 
     #[allow(dead_code)]

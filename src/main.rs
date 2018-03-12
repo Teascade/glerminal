@@ -34,11 +34,12 @@ fn main() {
     let mut frames = 0;
 
     let mut parser = Parser::new();
-    parser.add_color("red", [1.0, 0.0, 0.0, 1.0]);
-    parser.write(&mut text_buffer, "Hello, [fg=red]Mastodon[/fg]!");
-
-    text_buffer.set_cursor_shakiness(1.0);
-    text_buffer.put_char('a');
+    parser.add_color("red", [1.0, 0.2, 0.2, 1.0]);
+    parser.add_color("green", [0.2, 1.0, 0.2, 1.0]);
+    parser.write(
+        &mut text_buffer,
+        "Hello, [fg=red]Mastodon[/fg]! And here is a [shake=0.7][fg=green]shakey boy[/fg][/shake].",
+    );
 
     terminal.flush(&mut text_buffer);
 
