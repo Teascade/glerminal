@@ -1,7 +1,7 @@
 use std::cell::Cell;
 
 use font::Font;
-use text_buffer::TextBuffer;
+use text_buffer::text_buffer::TextBuffer;
 use super::renderer::{self, Program, Renderable, Texture, Vao, Vbo};
 
 pub struct TextBufferMesh {

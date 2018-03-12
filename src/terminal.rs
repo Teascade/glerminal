@@ -5,7 +5,7 @@ use std::time::SystemTime;
 
 use display::Display;
 use font::Font;
-use text_buffer::TextBuffer;
+use text_buffer::text_buffer::TextBuffer;
 use renderer::renderer;
 use input::Input;
 

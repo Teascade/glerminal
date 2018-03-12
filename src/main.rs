@@ -9,13 +9,12 @@ mod display;
 mod renderer;
 mod font;
 mod text_buffer;
-mod parser;
 mod input;
 mod terminal;
 
 use terminal::TerminalBuilder;
-use text_buffer::TextBuffer;
-use parser::Parser;
+use text_buffer::text_buffer::TextBuffer;
+use text_buffer::parser::Parser;
 
 use std::time::{Duration, SystemTime};
 

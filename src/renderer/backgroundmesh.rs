@@ -1,7 +1,7 @@
 use std::cell::Cell;
 
 use super::renderer::{self, Program, Renderable, Texture, Vao, Vbo};
-use text_buffer::TextBuffer;
+use text_buffer::text_buffer::TextBuffer;
 
 pub struct BackgroundMesh {
     width: i32,
