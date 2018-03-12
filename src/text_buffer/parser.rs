@@ -33,7 +33,7 @@ impl Parser {
             if let Some(target) = capture.get(3) {
                 if let Some(_) = capture.get(1) {
                     if target.as_str() == "shake" {
-                        text_buffer.set_cursor_shakiness(default_shakiness);
+                        text_buffer.change_cursor_shakiness(default_shakiness);
                     } else if target.as_str() == "fg" {
                         text_buffer.change_cursor_fg_color(default_fg);
                     } else if target.as_str() == "bg" {
@@ -46,7 +46,7 @@ impl Parser {
                             Ok(val) => val,
                             Err(_) => panic!("Failed to parse shake-number"),
                         };
-                        text_buffer.set_cursor_shakiness(value);
+                        text_buffer.change_cursor_shakiness(value);
                     } else {
                         if let Some(color) = self.colors.get(value.as_str()) {
                             if target.as_str() == "fg" {
