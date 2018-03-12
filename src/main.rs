@@ -2,17 +2,20 @@ extern crate gl;
 extern crate glutin;
 extern crate libc;
 extern crate png;
+extern crate regex;
 extern crate sfl_parser;
 
 mod display;
 mod renderer;
 mod font;
 mod text_buffer;
+mod parser;
 mod input;
 mod terminal;
 
 use terminal::TerminalBuilder;
 use text_buffer::TextBuffer;
+use parser::Parser;
 
 use std::time::{Duration, SystemTime};
 
@@ -30,16 +33,10 @@ fn main() {
     let mut last_time = SystemTime::now();
     let mut frames = 0;
 
-    text_buffer.change_cursor_fg_color([1.0, 0.0, 0.0, 1.0]);
-    text_buffer.write("Hello, World! Test'thing");
-    text_buffer.move_cursor(0, 1);
-    text_buffer.change_cursor_fg_color([1.0, 0.0, 0.0, 1.0]);
-    text_buffer.change_cursor_bg_color([0.0, 1.0, 0.1, 1.0]);
-    text_buffer.write("------------------------");
-    text_buffer.move_cursor(31, 12);
-    text_buffer.change_cursor_fg_color([1.0, 0.0, 0.0, 1.0]);
-    text_buffer.change_cursor_bg_color([1.0; 4]);
-    text_buffer.write("I AM IN THE CENTER");
+    let mut parser = Parser::new();
+    parser.add_color("red", [1.0, 0.0, 0.0, 1.0]);
+    parser.write(&mut text_buffer, "Hello, [fg=red]Mastodon[/fg]!");
+
     terminal.flush(&mut text_buffer);
 
     terminal.set_debug(false);

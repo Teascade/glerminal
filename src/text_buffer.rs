@@ -3,7 +3,7 @@ use renderer::backgroundmesh::BackgroundMesh;
 use font::Font;
 use terminal::Terminal;
 
-type Color = [f32; 4];
+pub type Color = [f32; 4];
 
 #[derive(Clone, Copy)]
 pub struct TermCharacter {
@@ -123,6 +123,16 @@ impl TextBuffer {
     #[allow(dead_code)]
     pub fn change_cursor_bg_color(&mut self, color: Color) {
         self.cursor.background_color = color;
+    }
+
+    #[allow(dead_code)]
+    pub fn get_cursor_fg_color(&mut self) -> Color {
+        self.cursor.foreground_color
+    }
+
+    #[allow(dead_code)]
+    pub fn get_cursor_bg_color(&mut self) -> Color {
+        self.cursor.background_color
     }
 
     #[allow(dead_code)]

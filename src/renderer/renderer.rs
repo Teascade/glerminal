@@ -133,7 +133,7 @@ pub(crate) fn create_texture(pixels: &[u8], width: u32, height: u32) -> Texture 
 }
 
 pub(crate) fn upload_buffer(vbo: Vbo, vertex_buffer: Vec<f32>) {
-    let data_length = (vertex_buffer.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
+    let mut data_length = (vertex_buffer.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
     let data_pointer = vertex_buffer.as_ptr() as *const c_void;
 
     unsafe {
