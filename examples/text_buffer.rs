@@ -1,7 +1,7 @@
-extern crate adragaria_remastered;
+extern crate glerminal;
 
-use adragaria_remastered::terminal::TerminalBuilder;
-use adragaria_remastered::text_buffer::TextBuffer;
+use glerminal::terminal::TerminalBuilder;
+use glerminal::text_buffer::TextBuffer;
 
 fn main() {
     let terminal = TerminalBuilder::new()
