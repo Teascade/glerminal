@@ -102,7 +102,6 @@ impl TextBuffer {
         (x < 0 || y < 0 || x > self.width || y > self.height)
     }
 
-    #[allow(dead_code)]
     pub fn clear(&mut self) {
         self.chars = vec![
             TermCharacter::new(' ', [0.0; 4], [0.0; 4], 0.0);
@@ -110,7 +109,6 @@ impl TextBuffer {
         ];
     }
 
-    #[allow(dead_code)]
     pub fn put_char(&mut self, character: char) {
         self.chars[(self.cursor.y * self.width + self.cursor.x) as usize] = TermCharacter::new(
             character,
@@ -121,7 +119,6 @@ impl TextBuffer {
         self.move_cursor_by(1);
     }
 
-    #[allow(dead_code)]
     pub fn write<T: Into<String>>(&mut self, text: T) {
         let text = text.into();
         for c in text.chars() {
@@ -129,37 +126,30 @@ impl TextBuffer {
         }
     }
 
-    #[allow(dead_code)]
     pub fn change_cursor_fg_color(&mut self, color: Color) {
         self.cursor.foreground_color = color;
     }
 
-    #[allow(dead_code)]
     pub fn change_cursor_bg_color(&mut self, color: Color) {
         self.cursor.background_color = color;
     }
 
-    #[allow(dead_code)]
     pub fn get_cursor_fg_color(&mut self) -> Color {
         self.cursor.foreground_color
     }
 
-    #[allow(dead_code)]
     pub fn get_cursor_bg_color(&mut self) -> Color {
         self.cursor.background_color
     }
 
-    #[allow(dead_code)]
     pub fn change_cursor_shakiness(&mut self, shakiness: f32) {
         self.cursor.shakiness = shakiness;
     }
 
-    #[allow(dead_code)]
     pub fn get_cursor_shakiness(&mut self) -> f32 {
         self.cursor.shakiness
     }
 
-    #[allow(dead_code)]
     pub fn move_cursor(&mut self, x: i32, y: i32) {
         if !self.out_of_bounds(x, y) {
             self.cursor.x = x;
