@@ -10,14 +10,16 @@ pub struct TermCharacter {
     character: char,
     fg_color: Color,
     bg_color: Color,
+    shakiness: f32,
 }
 
 impl TermCharacter {
-    pub fn new(character: char, fg_color: Color, bg_color: Color) -> TermCharacter {
+    pub fn new(character: char, fg_color: Color, bg_color: Color, shakiness: f32) -> TermCharacter {
         TermCharacter {
             character,
             fg_color,
             bg_color,
+            shakiness,
         }
     }
 
@@ -32,6 +34,10 @@ impl TermCharacter {
     pub fn get_bg_color(&self) -> Color {
         self.bg_color
     }
+
+    pub fn get_shakiness(&self) -> f32 {
+        self.shakiness
+    }
 }
 
 struct TermCursor {
@@ -39,6 +45,7 @@ struct TermCursor {
     y: i32,
     foreground_color: Color,
     background_color: Color,
+    shakiness: f32,
 }
 
 pub struct TextBuffer {
@@ -60,7 +67,8 @@ impl TextBuffer {
             );
         }
 
-        let chars = vec![TermCharacter::new(' ', [0.0; 4], [0.0; 4]); (width * height) as usize];
+        let chars =
+            vec![TermCharacter::new(' ', [0.0; 4], [0.0; 4], 0.0); (width * height) as usize];
         let mesh = TextBufferMesh::new(terminal.get_program(), dimensions, &terminal.font);
         let background_mesh = BackgroundMesh::new(terminal.get_background_program(), dimensions);
         Ok(TextBuffer {
@@ -74,6 +82,7 @@ impl TextBuffer {
                 y: 0,
                 foreground_color: [1.0; 4],
                 background_color: [0.0; 4],
+                shakiness: 0.0,
             },
         })
     }
@@ -93,8 +102,10 @@ impl TextBuffer {
 
     #[allow(dead_code)]
     pub fn clear(&mut self) {
-        self.chars =
-            vec![TermCharacter::new(' ', [0.0; 4], [0.0; 4]); (self.width * self.height) as usize];
+        self.chars = vec![
+            TermCharacter::new(' ', [0.0; 4], [0.0; 4], 0.0);
+            (self.width * self.height) as usize
+        ];
     }
 
     #[allow(dead_code)]
@@ -103,6 +114,7 @@ impl TextBuffer {
             character,
             self.cursor.foreground_color,
             self.cursor.background_color,
+            self.cursor.shakiness,
         );
         self.move_cursor_by(1);
     }
@@ -133,6 +145,10 @@ impl TextBuffer {
     #[allow(dead_code)]
     pub fn get_cursor_bg_color(&mut self) -> Color {
         self.cursor.background_color
+    }
+
+    pub fn set_cursor_shakiness(&mut self, shakiness: f32) {
+        self.cursor.shakiness = shakiness;
     }
 
     #[allow(dead_code)]

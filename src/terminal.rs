@@ -1,6 +1,7 @@
 #[allow(unused_imports)]
 use glutin::VirtualKeyCode;
 use std::cell::Cell;
+use std::time::SystemTime;
 
 use display::Display;
 use font::Font;
@@ -73,6 +74,7 @@ pub struct Terminal {
     background_program: renderer::Program,
     debug_program: renderer::Program,
     debug: Cell<bool>,
+    since_start: SystemTime,
     pub font: Font,
 }
 
@@ -96,6 +98,7 @@ impl Terminal {
             background_program,
             debug_program,
             debug: Cell::new(false),
+            since_start: SystemTime::now(),
             font,
         }
     }
@@ -125,14 +128,20 @@ impl Terminal {
 
     pub fn draw(&self, text_buffer: &TextBuffer) {
         renderer::clear();
+        let duration = SystemTime::now().duration_since(self.since_start).unwrap();
+
+        let time = duration.as_secs() as f32 + duration.subsec_nanos() as f32 / 1_000_000_000.0;
+
         renderer::draw(
             self.get_background_program(),
             self.display.proj_matrix.get(),
+            time,
             &text_buffer.background_mesh,
         );
         renderer::draw(
             self.get_program(),
             self.display.proj_matrix.get(),
+            time,
             &text_buffer.mesh,
         );
     }

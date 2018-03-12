@@ -37,6 +37,9 @@ fn main() {
     parser.add_color("red", [1.0, 0.0, 0.0, 1.0]);
     parser.write(&mut text_buffer, "Hello, [fg=red]Mastodon[/fg]!");
 
+    text_buffer.set_cursor_shakiness(1.0);
+    text_buffer.put_char('a');
+
     terminal.flush(&mut text_buffer);
 
     terminal.set_debug(false);

@@ -47,7 +47,7 @@ pub(crate) fn set_debug(debug: bool) {
     }
 }
 
-pub(crate) fn draw(program: Program, proj_matrix: Matrix4, renderable: &Renderable) {
+pub(crate) fn draw(program: Program, proj_matrix: Matrix4, time: f32, renderable: &Renderable) {
     unsafe {
         gl::UseProgram(program);
         if let Some(texture) = renderable.get_texture() {
@@ -55,11 +55,11 @@ pub(crate) fn draw(program: Program, proj_matrix: Matrix4, renderable: &Renderab
         }
         gl::BindVertexArray(renderable.get_vao());
 
-        let loc = gl::GetUniformLocation(
-            program,
-            CString::new("proj_mat".to_string()).unwrap().as_ptr() as *const i8,
-        ) as i32;
+        let loc = get_uniform_location("proj_mat".to_owned(), program);
         gl::UniformMatrix4fv(loc, 1, gl::TRUE, proj_matrix.as_ptr());
+
+        let loc = get_uniform_location("time".to_owned(), program);
+        gl::Uniform1fv(loc, 1, vec![time].as_ptr());
 
         gl::DrawArrays(gl::TRIANGLES, 0, renderable.get_count());
     }
@@ -133,7 +133,7 @@ pub(crate) fn create_texture(pixels: &[u8], width: u32, height: u32) -> Texture 
 }
 
 pub(crate) fn upload_buffer(vbo: Vbo, vertex_buffer: Vec<f32>) {
-    let mut data_length = (vertex_buffer.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
+    let data_length = (vertex_buffer.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
     let data_pointer = vertex_buffer.as_ptr() as *const c_void;
 
     unsafe {
@@ -142,7 +142,7 @@ pub(crate) fn upload_buffer(vbo: Vbo, vertex_buffer: Vec<f32>) {
     }
 }
 
-pub(crate) fn create_vbo(vertex_buffer: Vec<f32>, stream: bool) -> Vbo {
+pub(crate) fn create_vbo(vertex_buffer: Vec<f32>) -> Vbo {
     unsafe {
         let mut vbo = 0;
         gl::GenBuffers(1, &mut vbo);
@@ -151,16 +151,7 @@ pub(crate) fn create_vbo(vertex_buffer: Vec<f32>, stream: bool) -> Vbo {
 
         let data_length = (vertex_data.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
         let data_pointer = vertex_data.as_ptr() as *const c_void;
-        gl::BufferData(
-            gl::ARRAY_BUFFER,
-            data_length,
-            data_pointer,
-            if stream {
-                gl::STREAM_DRAW
-            } else {
-                gl::STATIC_DRAW
-            },
-        );
+        gl::BufferData(gl::ARRAY_BUFFER, data_length, data_pointer, gl::STREAM_DRAW);
         vbo
     }
 }
@@ -169,7 +160,7 @@ pub(crate) fn create_vao(
     program: Program,
     vbo_pos: Vbo,
     vbo_col: Vbo,
-    vbo_tex: Option<Vbo>,
+    vbo_tuple: Option<(Vbo, Vbo)>,
 ) -> Vao {
     unsafe {
         let mut vao = 0;
@@ -189,12 +180,18 @@ pub(crate) fn create_vao(
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo_col);
         gl::VertexAttribPointer(attrib_location, 4, gl::FLOAT, gl::FALSE, 0, ptr::null());
 
-        if let Some(vbo_tex) = vbo_tex {
+        if let Some((vbo_tex, vbo_shakiness)) = vbo_tuple {
             let attrib_location = get_attrib_location(program, "texcoord");
 
             gl::EnableVertexAttribArray(attrib_location);
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo_tex);
             gl::VertexAttribPointer(attrib_location, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
+
+            let attrib_location = get_attrib_location(program, "shakiness");
+
+            gl::EnableVertexAttribArray(attrib_location);
+            gl::BindBuffer(gl::ARRAY_BUFFER, vbo_shakiness);
+            gl::VertexAttribPointer(attrib_location, 1, gl::FLOAT, gl::FALSE, 0, ptr::null());
         }
 
         vao
@@ -251,11 +248,16 @@ fn create_shader(shader_text: &str, shader_type: u32) -> u32 {
     }
 }
 
-fn get_attrib_location(program: Program, attribute: &str) -> u32 {
-    unsafe {
-        gl::GetAttribLocation(
-            program,
-            CString::new(attribute).unwrap().as_ptr() as *const i8,
-        ) as u32
-    }
+unsafe fn get_attrib_location(program: Program, attribute: &str) -> u32 {
+    gl::GetAttribLocation(
+        program,
+        CString::new(attribute).unwrap().as_ptr() as *const i8,
+    ) as u32
+}
+
+unsafe fn get_uniform_location(uniform: String, program: Program) -> i32 {
+    gl::GetUniformLocation(
+        program,
+        CString::new(uniform.to_string()).unwrap().as_ptr() as *const i8,
+    ) as i32
 }

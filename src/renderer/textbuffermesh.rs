@@ -9,6 +9,7 @@ pub struct TextBufferMesh {
     vbo_pos: Vbo,
     vbo_col: Vbo,
     vbo_tex: Vbo,
+    vbo_shakiness: Vbo,
     count: Cell<i32>,
     texture: Texture,
 }
@@ -34,11 +35,13 @@ impl TextBufferMesh {
         let vertex_buffer_pos = vec![0.0; (width * height * 12) as usize];
         let vertex_buffer_col = vec![1.0; (width * height * 24) as usize];
         let vertex_buffer_tex = vec![0.0; (width * height * 12) as usize];
+        let vertex_buffer_shakiness = vec![0.0; (width * height * 6) as usize];
 
-        let vbo_pos = renderer::create_vbo(vertex_buffer_pos, false);
-        let vbo_col = renderer::create_vbo(vertex_buffer_col, true);
-        let vbo_tex = renderer::create_vbo(vertex_buffer_tex, true);
-        let vao = renderer::create_vao(program, vbo_pos, vbo_col, Some(vbo_tex));
+        let vbo_pos = renderer::create_vbo(vertex_buffer_pos);
+        let vbo_col = renderer::create_vbo(vertex_buffer_col);
+        let vbo_tex = renderer::create_vbo(vertex_buffer_tex);
+        let vbo_shakiness = renderer::create_vbo(vertex_buffer_shakiness);
+        let vao = renderer::create_vao(program, vbo_pos, vbo_col, Some((vbo_tex, vbo_shakiness)));
 
         let tex = renderer::create_texture(&font.image_buffer, font.width, font.height);
         TextBufferMesh {
@@ -46,6 +49,7 @@ impl TextBufferMesh {
             vbo_pos: vbo_pos,
             vbo_col: vbo_col,
             vbo_tex: vbo_tex,
+            vbo_shakiness: vbo_shakiness,
             count: Cell::new(width * height * 6),
             texture: tex,
         }
@@ -64,6 +68,9 @@ impl TextBufferMesh {
 
         // Create new tex coords
         let mut vertex_buffer_tex: Vec<f32> = Vec::new();
+
+        // Create new tex coords
+        let mut vertex_buffer_shakiness: Vec<f32> = Vec::new();
 
         // Fill those arrays
         let character_width = 1.0 / text_buffer.width as f32;
@@ -106,9 +113,10 @@ impl TextBufferMesh {
                 ];
                 vertex_buffer_pos.append(&mut single_character_vbuff);
 
-                // Get colors
+                // Color and Shakiness
                 for _ in 0..6 {
                     vertex_buffer_col.append(&mut character.get_fg_color().to_vec());
+                    vertex_buffer_shakiness.push(character.get_shakiness());
                 }
 
                 // Calculate tex coords
@@ -136,5 +144,6 @@ impl TextBufferMesh {
         renderer::upload_buffer(self.vbo_pos, vertex_buffer_pos);
         renderer::upload_buffer(self.vbo_col, vertex_buffer_col);
         renderer::upload_buffer(self.vbo_tex, vertex_buffer_tex);
+        renderer::upload_buffer(self.vbo_shakiness, vertex_buffer_shakiness);
     }
 }
