@@ -36,7 +36,7 @@ impl Parser {
                         text_buffer.set_cursor_shakiness(default_shakiness);
                     } else if target.as_str() == "fg" {
                         text_buffer.change_cursor_fg_color(default_fg);
-                    } else if target.as_str() == "fg" {
+                    } else if target.as_str() == "bg" {
                         text_buffer.change_cursor_bg_color(default_bg);
                     }
                 }

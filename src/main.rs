@@ -33,12 +33,14 @@ fn main() {
     let mut last_time = SystemTime::now();
     let mut frames = 0;
 
+    text_buffer.move_cursor(20, 15);
+
     let mut parser = Parser::new();
     parser.add_color("red", [1.0, 0.2, 0.2, 1.0]);
     parser.add_color("green", [0.2, 1.0, 0.2, 1.0]);
     parser.write(
         &mut text_buffer,
-        "Hello, [fg=red]Mastodon[/fg]! And here is a [shake=0.7][fg=green]shakey boy[/fg][/shake].",
+        "Hello, [bg=green][fg=red]Mastodon[/fg][/bg]! [bg=red]And here is a [shake=0.7][fg=green]shakey boy[/fg][/shake].[/bg]",
     );
 
     terminal.flush(&mut text_buffer);
