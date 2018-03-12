@@ -13,7 +13,7 @@ mod input;
 mod terminal;
 
 use terminal::TerminalBuilder;
-use text_buffer::text_buffer::TextBuffer;
+use text_buffer::TextBuffer;
 use text_buffer::parser::Parser;
 
 use std::time::{Duration, SystemTime};

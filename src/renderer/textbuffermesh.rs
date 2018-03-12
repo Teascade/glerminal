@@ -1,8 +1,8 @@
 use std::cell::Cell;
 
 use font::Font;
-use text_buffer::text_buffer::TextBuffer;
-use super::renderer::{self, Program, Renderable, Texture, Vao, Vbo};
+use text_buffer::TextBuffer;
+use super::{Program, Renderable, Texture, Vao, Vbo};
 
 pub struct TextBufferMesh {
     vao: Vao,
@@ -37,13 +37,13 @@ impl TextBufferMesh {
         let vertex_buffer_tex = vec![0.0; (width * height * 12) as usize];
         let vertex_buffer_shakiness = vec![0.0; (width * height * 6) as usize];
 
-        let vbo_pos = renderer::create_vbo(vertex_buffer_pos);
-        let vbo_col = renderer::create_vbo(vertex_buffer_col);
-        let vbo_tex = renderer::create_vbo(vertex_buffer_tex);
-        let vbo_shakiness = renderer::create_vbo(vertex_buffer_shakiness);
-        let vao = renderer::create_vao(program, vbo_pos, vbo_col, Some((vbo_tex, vbo_shakiness)));
+        let vbo_pos = super::create_vbo(vertex_buffer_pos);
+        let vbo_col = super::create_vbo(vertex_buffer_col);
+        let vbo_tex = super::create_vbo(vertex_buffer_tex);
+        let vbo_shakiness = super::create_vbo(vertex_buffer_shakiness);
+        let vao = super::create_vao(program, vbo_pos, vbo_col, Some((vbo_tex, vbo_shakiness)));
 
-        let tex = renderer::create_texture(&font.image_buffer, font.width, font.height);
+        let tex = super::create_texture(&font.image_buffer, font.width, font.height);
         TextBufferMesh {
             vao: vao,
             vbo_pos: vbo_pos,
@@ -141,9 +141,9 @@ impl TextBufferMesh {
 
         self.count.set((vertex_buffer_pos.len() * 6) as i32);
 
-        renderer::upload_buffer(self.vbo_pos, vertex_buffer_pos);
-        renderer::upload_buffer(self.vbo_col, vertex_buffer_col);
-        renderer::upload_buffer(self.vbo_tex, vertex_buffer_tex);
-        renderer::upload_buffer(self.vbo_shakiness, vertex_buffer_shakiness);
+        super::upload_buffer(self.vbo_pos, vertex_buffer_pos);
+        super::upload_buffer(self.vbo_col, vertex_buffer_col);
+        super::upload_buffer(self.vbo_tex, vertex_buffer_tex);
+        super::upload_buffer(self.vbo_shakiness, vertex_buffer_shakiness);
     }
 }

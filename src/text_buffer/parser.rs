@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use regex::Regex;
-use super::text_buffer::{Color, TextBuffer};
+use super::{Color, TextBuffer};
 
 pub struct Parser {
     colors: HashMap<String, Color>,

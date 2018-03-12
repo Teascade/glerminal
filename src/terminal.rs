@@ -5,8 +5,8 @@ use std::time::SystemTime;
 
 use display::Display;
 use font::Font;
-use text_buffer::text_buffer::TextBuffer;
-use renderer::renderer;
+use text_buffer::TextBuffer;
+use renderer;
 use input::Input;
 
 pub struct TerminalBuilder {

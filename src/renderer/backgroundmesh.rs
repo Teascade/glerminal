@@ -1,7 +1,7 @@
 use std::cell::Cell;
 
-use super::renderer::{self, Program, Renderable, Texture, Vao, Vbo};
-use text_buffer::text_buffer::TextBuffer;
+use super::{Program, Renderable, Texture, Vao, Vbo};
+use text_buffer::TextBuffer;
 
 pub struct BackgroundMesh {
     width: i32,
@@ -58,9 +58,9 @@ impl BackgroundMesh {
 
         let vertex_buffer_col = vec![0.0; (width * height * 24) as usize];
 
-        let vbo_pos = renderer::create_vbo(vertex_buffer_pos);
-        let vbo_col = renderer::create_vbo(vertex_buffer_col);
-        let vao = renderer::create_vao(program, vbo_pos, vbo_col, None);
+        let vbo_pos = super::create_vbo(vertex_buffer_pos);
+        let vbo_col = super::create_vbo(vertex_buffer_col);
+        let vao = super::create_vao(program, vbo_pos, vbo_col, None);
 
         let count = width * height * 6;
 
@@ -123,7 +123,7 @@ impl BackgroundMesh {
 
         self.count.set((vertex_buffer_pos.len() * 6) as i32);
 
-        renderer::upload_buffer(self.vbo_pos, vertex_buffer_pos);
-        renderer::upload_buffer(self.vbo_col, vertex_buffer_col);
+        super::upload_buffer(self.vbo_pos, vertex_buffer_pos);
+        super::upload_buffer(self.vbo_col, vertex_buffer_col);
     }
 }
