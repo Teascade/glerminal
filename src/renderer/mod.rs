@@ -27,6 +27,7 @@ pub trait Renderable {
     fn get_texture(&self) -> Option<Texture>;
 }
 
+#[cfg(test)]
 pub(crate) fn get_error() -> Option<u32> {
     unsafe {
         let error = gl::GetError();
