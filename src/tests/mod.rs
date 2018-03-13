@@ -5,6 +5,7 @@ mod terminal;
 mod input;
 mod text_buffer;
 mod parser;
+mod font;
 
 use rand;
 

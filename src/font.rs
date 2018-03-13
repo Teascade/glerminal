@@ -22,6 +22,7 @@ use sfl_parser::BMFont;
 /// Contains data of a single character in a Font
 #[derive(Clone)]
 pub struct CharacterData {
+    pub(crate) id: i32,
     pub(crate) x1: f32,
     pub(crate) x2: f32,
     pub(crate) y1: f32,
@@ -44,7 +45,7 @@ pub struct Font {
     /// Size of the font (width)
     pub size: u32,
     pub(crate) min_offset_y: i32,
-    characters: HashMap<u8, CharacterData>,
+    pub(crate) characters: HashMap<u8, CharacterData>,
 }
 
 impl Font {
@@ -60,14 +61,14 @@ impl Font {
             panic!("Font image or .sfl file missing");
         }
 
-        // Load Font .sfl file
+// Load Font .sfl file
         let bm_font;
         match BMFont::from_path(fnt_path) {
             Ok(bmf) => bm_font = bmf,
             Err(error) => panic!("Failed to load .sfl file: {}", error),
         }
 
-        // Load Font image file
+// Load Font image file
         let decoder = Decoder::new(File::open(&bm_font.image_path).unwrap());
         let (info, mut reader) = decoder.read_info().unwrap();
 
@@ -83,7 +84,8 @@ impl Font {
             panic!("Font image is deformed");
         }
 
-        // Load the font
+
+// Load the font
         let mut characters = HashMap::<u8, CharacterData>::new();
         let width_float = info.width as f32;
         let height_float = info.height as f32;
@@ -100,6 +102,7 @@ impl Font {
             characters.insert(
                 *key as u8,
                 CharacterData {
+                    id: value.id,
                     x1,
                     x2,
                     y1,
