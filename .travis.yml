@@ -8,4 +8,4 @@ notifications:
     on_success: never
     on_failure: never
 
-script: xvfb-run --server-args="-screen 0 1024x768x24" make test
+script: xvfb-run --server-args="-screen 0 1024x768x24" cargo test
