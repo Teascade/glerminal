@@ -27,6 +27,17 @@ pub trait Renderable {
     fn get_texture(&self) -> Option<Texture>;
 }
 
+pub(crate) fn get_error() -> Option<u32> {
+    unsafe {
+        let error = gl::GetError();
+        if error == gl::NO_ERROR {
+            None
+        } else {
+            Some(error)
+        }
+    }
+}
+
 pub(crate) fn clear() {
     unsafe {
         gl::Clear(gl::COLOR_BUFFER_BIT);

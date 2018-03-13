@@ -1,5 +1,6 @@
 use terminal::{Terminal, TerminalBuilder};
 use text_buffer::TextBuffer;
+use renderer;
 
 mod terminal;
 mod input;
@@ -8,6 +9,22 @@ mod parser;
 mod font;
 
 use rand;
+
+#[test]
+fn test_for_gl_error() {
+    let terminal = test_setup_open_terminal();
+    let mut buffer = match TextBuffer::new(&terminal, (2, 2)) {
+        Ok(buffer) => buffer,
+        Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
+    };
+
+    while terminal.refresh() {
+        terminal.draw(&mut buffer);
+        terminal.close();
+    }
+
+    assert_eq!(renderer::get_error(), None);
+}
 
 fn test_setup_open_terminal() -> Terminal {
     TerminalBuilder::new()
