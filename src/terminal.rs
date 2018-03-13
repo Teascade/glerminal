@@ -36,6 +36,7 @@ pub struct TerminalBuilder {
     dimensions: (u32, u32),
     clear_color: (f32, f32, f32, f32),
     font: Font,
+    visibility: bool,
 }
 
 #[allow(dead_code)]
@@ -47,52 +48,49 @@ impl TerminalBuilder {
             dimensions: (1280, 720),
             clear_color: (0.14, 0.19, 0.28, 1.0),
             font: Font::load("fonts/iosevka.sfl"),
+            visibility: true,
         }
     }
 
     /// Sets the title for the `Terminal`.
-    pub fn with_title<T: Into<String>>(self, title: T) -> TerminalBuilder {
-        TerminalBuilder {
-            title: title.into(),
-            dimensions: self.dimensions,
-            clear_color: self.clear_color,
-            font: self.font,
-        }
+    pub fn with_title<T: Into<String>>(mut self, title: T) -> TerminalBuilder {
+        self.title = title.into();
+        self
     }
 
     /// Sets the dimensions the `Terminal` is to be opened with.
-    pub fn with_dimensions(self, dimensions: (u32, u32)) -> TerminalBuilder {
-        TerminalBuilder {
-            title: self.title,
-            dimensions: dimensions,
-            clear_color: self.clear_color,
-            font: self.font,
-        }
+    pub fn with_dimensions(mut self, dimensions: (u32, u32)) -> TerminalBuilder {
+        self.dimensions = dimensions;
+        self
     }
 
     /// Sets the clear color of the terminal.
-    pub fn with_clear_color(self, clear_color: (f32, f32, f32, f32)) -> TerminalBuilder {
-        TerminalBuilder {
-            title: self.title,
-            dimensions: self.dimensions,
-            clear_color: clear_color,
-            font: self.font,
-        }
+    pub fn with_clear_color(mut self, clear_color: (f32, f32, f32, f32)) -> TerminalBuilder {
+        self.clear_color = clear_color;
+        self
     }
 
     /// Changes the font that the terminal uses.
-    pub fn with_font(self, font: Font) -> TerminalBuilder {
-        TerminalBuilder {
-            title: self.title,
-            dimensions: self.dimensions,
-            clear_color: self.clear_color,
-            font: font,
-        }
+    pub fn with_font(mut self, font: Font) -> TerminalBuilder {
+        self.font = font;
+        self
+    }
+
+    /// Changes the visibility that the terminal will be opened with
+    pub fn with_visibility(mut self, visibility: bool) -> TerminalBuilder {
+        self.visibility = visibility;
+        self
     }
 
     /// Builds the actual terminal and opens the window
     pub fn build(self) -> Terminal {
-        Terminal::new(self.title, self.dimensions, self.clear_color, self.font)
+        Terminal::new(
+            self.title,
+            self.dimensions,
+            self.clear_color,
+            self.font,
+            self.visibility,
+        )
     }
 }
 
@@ -116,8 +114,9 @@ impl Terminal {
         window_dimensions: (u32, u32),
         clear_color: (f32, f32, f32, f32),
         font: Font,
+        visibility: bool,
     ) -> Terminal {
-        let display = Display::new(title, window_dimensions, clear_color);
+        let display = Display::new(title, window_dimensions, clear_color, visibility);
         let program = renderer::create_program(renderer::VERT_SHADER, renderer::FRAG_SHADER);
         let background_program =
             renderer::create_program(renderer::VERT_SHADER, renderer::BG_FRAG_SHADER);
@@ -199,6 +198,11 @@ impl Terminal {
     /// Sets the title for the window
     pub fn set_title<T: Into<String>>(&mut self, title: T) {
         self.display.set_title(&title.into());
+    }
+
+    /// Shows the window, if it's hidden
+    pub fn show(&mut self) {
+        self.display.show();
     }
 
     pub(crate) fn get_program(&self) -> renderer::Program {

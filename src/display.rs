@@ -19,6 +19,7 @@ impl Display {
         title: T,
         dimensions: (u32, u32),
         clear_color: (f32, f32, f32, f32),
+        visibility: bool,
     ) -> Display {
         let (width, height) = dimensions;
         let aspect_ratio = width as f32 / height as f32;
@@ -26,7 +27,8 @@ impl Display {
         let events_loop = EventsLoop::new();
         let window = WindowBuilder::new()
             .with_title(title)
-            .with_dimensions(width, height);
+            .with_dimensions(width, height)
+            .with_visibility(visibility);
         let context = ContextBuilder::new().with_vsync(true);
         let gl_window;
         match GlWindow::new(window, context, &events_loop) {
@@ -105,5 +107,9 @@ impl Display {
 
     pub fn set_title(&mut self, title: &str) {
         self.window.set_title(title);
+    }
+
+    pub fn show(&mut self) {
+        self.window.show();
     }
 }

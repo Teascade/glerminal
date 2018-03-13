@@ -43,7 +43,6 @@ pub struct Font {
     pub line_height: u32,
     /// Size of the font (width)
     pub size: u32,
-    pub(crate) max_offset_y: i32,
     pub(crate) min_offset_y: i32,
     characters: HashMap<u8, CharacterData>,
 }
@@ -89,15 +88,11 @@ impl Font {
         let width_float = info.width as f32;
         let height_float = info.height as f32;
         let mut min_off_y = 100_000;
-        let mut max_off_y = 0;
         for (key, value) in bm_font.chars.iter() {
             let x1 = value.x as f32 / width_float;
             let x2 = (value.x as f32 + value.width as f32) / width_float;
             let y1 = value.y as f32 / height_float;
             let y2 = (value.y as f32 + value.height as f32) / height_float;
-            if value.yoffset > max_off_y {
-                max_off_y = value.yoffset;
-            }
             if value.yoffset < min_off_y {
                 min_off_y = value.yoffset;
             }
@@ -125,7 +120,6 @@ impl Font {
             line_height: bm_font.line_height,
             size: bm_font.size,
             min_offset_y: min_off_y,
-            max_offset_y: max_off_y,
             characters: characters,
         }
     }
