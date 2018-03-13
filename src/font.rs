@@ -26,10 +26,10 @@ pub struct CharacterData {
     pub(crate) x2: f32,
     pub(crate) y1: f32,
     pub(crate) y2: f32,
-    pub(crate) width: u32,
-    pub(crate) height: u32,
-    pub(crate) x_off: u32,
-    pub(crate) y_off: u32,
+    pub(crate) width: i32,
+    pub(crate) height: i32,
+    pub(crate) x_off: i32,
+    pub(crate) y_off: i32,
 }
 
 /// Represents the font when it's loaded.
@@ -43,8 +43,8 @@ pub struct Font {
     pub line_height: u32,
     /// Size of the font (width)
     pub size: u32,
-    pub(crate) max_offset_y: u32,
-    pub(crate) max_offset_x: u32,
+    pub(crate) max_offset_y: i32,
+    pub(crate) min_offset_y: i32,
     characters: HashMap<u8, CharacterData>,
 }
 
@@ -87,18 +87,18 @@ impl Font {
         let mut characters = HashMap::<u8, CharacterData>::new();
         let width_float = info.width as f32;
         let height_float = info.height as f32;
-        let mut max_off_x = 0;
+        let mut min_off_y = 100_000;
         let mut max_off_y = 0;
         for (key, value) in bm_font.chars.iter() {
             let x1 = value.x as f32 / width_float;
             let x2 = (value.x as f32 + value.width as f32) / width_float;
             let y1 = value.y as f32 / height_float;
             let y2 = (value.y as f32 + value.height as f32) / height_float;
-            if value.xoffset > max_off_x {
-                max_off_x = value.xoffset
-            }
             if value.yoffset > max_off_y {
-                max_off_y = value.yoffset
+                max_off_y = value.yoffset;
+            }
+            if value.yoffset < min_off_y {
+                min_off_y = value.yoffset;
             }
 
             characters.insert(
@@ -123,7 +123,7 @@ impl Font {
             height: info.height,
             line_height: bm_font.line_height,
             size: bm_font.size,
-            max_offset_x: max_off_x,
+            min_offset_y: min_off_y,
             max_offset_y: max_off_y,
             characters: characters,
         }
