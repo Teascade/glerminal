@@ -254,6 +254,11 @@ impl TextBuffer {
         }
     }
 
+    /// Returns the current position of the cursor
+    pub fn get_cursor_position(&self) -> (i32, i32) {
+        (self.cursor.x, self.cursor.y)
+    }
+
     fn move_cursor_by(&mut self, amount: i32) {
         let new_pos = self.cursor.x + amount;
         if new_pos >= 0 {
