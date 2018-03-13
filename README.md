@@ -1,4 +1,6 @@
 # GLerminal, an OpenGL terminal
+[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=master)](https://travis-ci.org/Teascade/glerminal)
+
 A lightweight terminal made with OpenGL from the ground-up.  
 With this terminal, you're able to make the terminal applications or games you've always wanted, but with a terminal that looks the same for everyone, because it's made with OpenGL and doesn't use the computer's native terminal!
 
