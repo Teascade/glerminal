@@ -20,3 +20,6 @@ libc = "*"
 png = "*"
 regex = "*"
 sfl_parser = "*"
+
+[dev-dependencies]
+rand = "*"

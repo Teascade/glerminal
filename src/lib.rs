@@ -57,12 +57,18 @@
 //!
 //! Examples can be found at [`text_buffer`](text_buffer) module.
 
+#[cfg(test)]
+extern crate rand;
+
 extern crate gl;
 extern crate glutin;
 extern crate libc;
 extern crate png;
 extern crate regex;
 extern crate sfl_parser;
+
+#[cfg(test)]
+mod tests;
 
 mod display;
 mod renderer;

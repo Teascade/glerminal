@@ -6,6 +6,9 @@ use renderer::{self, Matrix4};
 use input::Input;
 use std::cell::{Cell, RefCell};
 
+#[cfg(test)]
+use glutin::VirtualKeyCode;
+
 pub struct Display {
     pub proj_matrix: Cell<Matrix4>,
     window: GlWindow,
@@ -111,5 +114,12 @@ impl Display {
 
     pub fn show(&mut self) {
         self.window.show();
+    }
+
+    #[cfg(test)]
+    pub(crate) fn update_virtual_keycode(&mut self, keycode: VirtualKeyCode, pressed: bool) {
+        self.input
+            .borrow_mut()
+            .update_virtual_keycode(keycode, pressed);
     }
 }

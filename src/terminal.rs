@@ -237,5 +237,8 @@ impl Terminal {
         }
     }
 
-    // TODO: Add .close
+    #[cfg(test)]
+    pub(crate) fn update_virtual_keycode(&mut self, keycode: VirtualKeyCode, pressed: bool) {
+        self.display.update_virtual_keycode(keycode, pressed);
+    }
 }
