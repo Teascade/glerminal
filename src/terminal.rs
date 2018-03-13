@@ -9,12 +9,28 @@
 //! ```no_run
 //! use glerminal::terminal::TerminalBuilder;
 //!
-//! let mut terminal = TerminalBuilder::new()
+//! let terminal = TerminalBuilder::new()
 //!     .with_title("Hello GLerminal!")
 //!     .with_dimensions((1280, 720))
 //!     .build();
+//! ```
+//!
+//! ### `let mut terminal` vs `let terminal`
+//! In most cases you might just want to initialize the terminal as immutable, but in some, you will need to initialize it as mutable,
+//! allowing it to run some additional methods, such as `.show()` and `.set_title("title")`
+//!
+//1 #### Example of a mutable terminal:
+//! ```no_run
+//! use glerminal::terminal::TerminalBuilder;
+//!
+//! let mut terminal = TerminalBuilder::new()
+//!     .with_title("Hello GLerminal!")
+//!     .with_dimensions((1280, 720))
+//!     .with_visibility(false)
+//!     .build();
 //!
 //! terminal.set_title("Changed title!");
+//! terminal.show();
 //! ```
 
 #[allow(unused_imports)]
