@@ -15,7 +15,7 @@
 //! The colors the `Parser` uses mid text must be pre-defined however with `add_color`.
 //!
 //! ### Example usage of `TextBuffer`:
-//! ```
+//! ```no_run
 //! use glerminal::terminal::TerminalBuilder;
 //! use glerminal::text_buffer::TextBuffer;
 //!
@@ -42,7 +42,7 @@
 //! ```
 //!
 //! ### Example usage of `Parser`
-//! ```
+//! ```no_run
 //! use glerminal::terminal::TerminalBuilder;
 //! use glerminal::text_buffer::TextBuffer;
 //! use glerminal::text_buffer::parser::Parser;

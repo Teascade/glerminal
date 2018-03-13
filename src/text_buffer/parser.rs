@@ -28,7 +28,7 @@ impl Parser {
     /// Parses the given text and makes it look according to the parsed text.
     ///
     /// Example:
-    /// ```
+    /// ```no_run
     /// use glerminal::terminal::TerminalBuilder;
     /// use glerminal::text_buffer::TextBuffer;
     /// use glerminal::text_buffer::parser::Parser;

@@ -6,7 +6,7 @@ use glutin::VirtualKeyCode;
 ///
 /// It's usage is quite simple, but an Input must be retrieved via a Terminal. Example:
 ///
-/// ```
+/// ```no_run
 /// use glerminal::terminal::TerminalBuilder;
 /// use glerminal::VirtualKeyCode;
 ///
@@ -16,7 +16,7 @@ use glutin::VirtualKeyCode;
 ///     .build();
 ///
 /// let current_input = terminal.get_current_input();
-/// if current_input.just_pressed(VirtualKeyCode::E) {
+/// if current_input.was_just_pressed(VirtualKeyCode::E) {
 ///     println!("E was just pressed!");
 /// }
 /// ```

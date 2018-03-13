@@ -6,7 +6,7 @@
 //! **Note** when building with debug-mode, you are able to press `F3` to toggle between debug and non-debug. see ([`Terminal`](struct.Terminal.html#method.set_debug)) for more information.
 //!
 //! ### Terminal example:
-//! ```
+//! ```no_run
 //! use glerminal::terminal::TerminalBuilder;
 //!
 //! let mut terminal = TerminalBuilder::new()
@@ -105,6 +105,7 @@ pub struct Terminal {
     background_program: renderer::Program,
     debug_program: renderer::Program,
     debug: Cell<bool>,
+    running: Cell<bool>,
     since_start: SystemTime,
     pub(crate) font: Font,
 }
@@ -129,6 +130,7 @@ impl Terminal {
             background_program,
             debug_program,
             debug: Cell::new(false),
+            running: Cell::new(true),
             since_start: SystemTime::now(),
             font,
         }
@@ -147,13 +149,13 @@ impl Terminal {
         if input.was_just_pressed(VirtualKeyCode::F3) {
             self.set_debug(!self.debug.get());
         }
-        self.display.refresh()
+        self.display.refresh() && self.running.get()
     }
 
     /// Refreshes the screen and returns weather the while-loop should continue (is the program running)
     #[cfg(not(debug_assertions))]
     pub fn refresh(&self) -> bool {
-        self.display.refresh()
+        self.display.refresh() && self.running.get()
     }
 
     /// Flushes `TextBuffer`, taking it's character-grid and making it show for the next draw.
@@ -187,6 +189,11 @@ impl Terminal {
     /// Gets the current Input, must be retrieved every time you want new inputs. (ie. every frame)
     pub fn get_current_input(&self) -> Input {
         self.display.get_current_input()
+    }
+
+    /// Closes the Terminal
+    pub fn close(&self) {
+        self.running.set(false);
     }
 
     /// Sets the title for the window

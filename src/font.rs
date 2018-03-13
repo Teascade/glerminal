@@ -1,7 +1,7 @@
 //! This module is used to load fonts that can be used in the [`TextBuffer`](text_buffer/struct.TextBuffer.html)
 //!
 //! The [`Font`](struct.Font.html) can be loaded from an `.sfl` file and then used in the `TextBuffer`, in example:
-//! ```
+//! ```no_run
 //! use glerminal::terminal::TerminalBuilder;
 //! use glerminal::font::Font;
 //!
@@ -52,6 +52,7 @@ impl Font {
     /// Loads the font fron the given .sfl file, for example:
     ///
     /// ```
+    /// use glerminal::font::Font;
     /// let font = Font::load("fonts/iosevka.sfl");
     /// ```
     pub fn load<T: Into<PathBuf>>(fnt_path: T) -> Font {
@@ -132,6 +133,7 @@ impl Font {
     /// Gets the CharacterData from the Font with the given char, if the charcter exists, otherwise returns an error as a String. Example:
     ///
     /// ```
+    /// use glerminal::font::Font;
     /// let a_char_data = Font::load("fonts/iosevka.sfl").get_character('a');
     /// ```
     pub fn get_character(&self, character: char) -> Result<CharacterData, String> {

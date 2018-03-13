@@ -11,7 +11,7 @@
 //! After that you should browse through the rest of this guide and read about [`terminal`](terminal) and [`text_buffer`](text_buffer) documentations respectively
 //!
 //! # Example
-//! ```
+//! ```no_run
 //! extern crate glerminal;
 //!
 //! use glerminal::terminal::TerminalBuilder;
@@ -28,8 +28,8 @@
 //!         Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 //!     }
 //!
-//!       text_buffer.write("Hello, GLerminal!");
-//!       terminal.flush(&mut text_buffer);
+//!     text_buffer.write("Hello, GLerminal!");
+//!     terminal.flush(&mut text_buffer);
 //!
 //!     while terminal.refresh() {
 //!         terminal.draw(&text_buffer);
