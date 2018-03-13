@@ -180,8 +180,8 @@ impl TextBuffer {
         self.background_mesh.update(&self);
     }
 
-    fn out_of_bounds(&self, x: i32, y: i32) -> bool {
-        (x < 0 || y < 0 || x > self.width || y > self.height)
+    pub(crate) fn out_of_bounds(&self, x: i32, y: i32) -> bool {
+        (x < 0 || y < 0 || x >= self.width || y >= self.height)
     }
 
     /// Gets the TermChaacter in the given position

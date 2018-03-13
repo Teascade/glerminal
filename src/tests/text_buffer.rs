@@ -81,6 +81,27 @@ fn test_text_buffer_chars_put_single_styled_character() {
 }
 
 #[test]
+fn test_text_buffer_out_of_bounds() {
+    run_multiple_times(10, || {
+        let mut range = Range::new(3i32, 100);
+        let mut rnd = rand::thread_rng();
+
+        let width = range.sample(&mut rnd);
+        let height = range.sample(&mut rnd);
+
+        let text_buffer = test_setup_text_buffer((width, height));
+
+        assert_eq!(text_buffer.out_of_bounds(width, height), true);
+        assert_eq!(text_buffer.out_of_bounds(width - 1, height), true);
+        assert_eq!(text_buffer.out_of_bounds(width, height - 1), true);
+        assert_eq!(text_buffer.out_of_bounds(width - 1, height - 1), false);
+        assert_eq!(text_buffer.out_of_bounds(0, 0), false);
+        assert_eq!(text_buffer.out_of_bounds(-1, 0), true);
+        assert_eq!(text_buffer.out_of_bounds(0, -1), true);
+    });
+}
+
+#[test]
 fn test_text_buffer_cursor_move() {
     run_multiple_times(100, || {
         let mut range = Range::new(3i32, 100);
@@ -97,11 +118,9 @@ fn test_text_buffer_cursor_move() {
         let y = height_range.sample(&mut rnd);
         text_buffer.move_cursor(x, y);
         assert_eq!(text_buffer.get_cursor_position(), (x, y));
-        text_buffer.move_cursor(
-            width + width_range.sample(&mut rnd),
-            height + height_range.sample(&mut rnd),
-        );
-        assert_eq!(text_buffer.get_cursor_position(), (x, y));
+        text_buffer.move_cursor(width, height);
+        assert_eq!(text_buffer.get_cursor_position(), (x, y))
+        ;
     });
 }
 
