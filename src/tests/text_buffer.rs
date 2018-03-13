@@ -4,7 +4,7 @@ use rand::distributions::{Range, Sample};
 
 #[test]
 fn test_text_buffer_size() {
-    run_multiple_times(|| {
+    run_multiple_times(10, || {
         let mut range = Range::new(2i32, 100);
         let mut rnd = rand::thread_rng();
 
@@ -30,7 +30,7 @@ fn test_text_buffer_chars_get_char_empty() {
 
 #[test]
 fn test_text_buffer_chars_put_single_character() {
-    run_multiple_times(|| {
+    run_multiple_times(10, || {
         let character = rand::random::<char>();
         let mut text_buffer = test_setup_text_buffer((2, 2));
         text_buffer.put_char(character);
@@ -42,7 +42,7 @@ fn test_text_buffer_chars_put_single_character() {
 
 #[test]
 fn test_text_buffer_chars_write_three_characters() {
-    run_multiple_times(|| {
+    run_multiple_times(10, || {
         let mut text = String::new();
         for _ in 0..3 {
             text.push(rand::random::<char>());
@@ -62,7 +62,7 @@ fn test_text_buffer_chars_write_three_characters() {
 
 #[test]
 fn test_text_buffer_chars_put_single_styled_character() {
-    run_multiple_times(|| {
+    run_multiple_times(10, || {
         let fg_color = random_color();
         let bg_color = random_color();
         let shakiness = rand::random::<f32>();
@@ -82,15 +82,15 @@ fn test_text_buffer_chars_put_single_styled_character() {
 
 #[test]
 fn test_text_buffer_cursor_move() {
-    run_multiple_times(|| {
-        let mut range = Range::new(2i32, 100);
+    run_multiple_times(100, || {
+        let mut range = Range::new(3i32, 100);
         let mut rnd = rand::thread_rng();
 
         let width = range.sample(&mut rnd);
         let height = range.sample(&mut rnd);
 
-        let mut width_range = Range::new(0i32, width - 1);
-        let mut height_range = Range::new(0i32, height - 1);
+        let mut width_range = Range::new(0i32, width - 2);
+        let mut height_range = Range::new(0i32, height - 2);
 
         let mut text_buffer = test_setup_text_buffer((width, height));
         let x = width_range.sample(&mut rnd);
@@ -107,7 +107,7 @@ fn test_text_buffer_cursor_move() {
 
 #[test]
 fn test_text_buffer_cursor_styles() {
-    run_multiple_times(|| {
+    run_multiple_times(100, || {
         let mut text_buffer = test_setup_text_buffer((2, 2));
         let fg = random_color();
         let bg = random_color();

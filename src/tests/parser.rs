@@ -4,7 +4,7 @@ use rand;
 
 #[test]
 fn test_parser_add_color() {
-    run_multiple_times(|| {
+    run_multiple_times(1000, || {
         let mut parser = Parser::new();
 
         let color = random_color();
@@ -15,7 +15,7 @@ fn test_parser_add_color() {
 
 #[test]
 fn test_parser_write() {
-    run_multiple_times(|| {
+    run_multiple_times(10, || {
         let mut text_buffer = test_setup_text_buffer((2, 2));
 
         let mut parser = Parser::new();

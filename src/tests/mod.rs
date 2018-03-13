@@ -42,8 +42,8 @@ fn test_setup_text_buffer(dimensions: (i32, i32)) -> TextBuffer {
     }
 }
 
-fn run_multiple_times<F: Fn()>(f: F) {
-    for _ in 0..10 {
+fn run_multiple_times<F: Fn()>(how_many_times: u32, f: F) {
+    for _ in 0..how_many_times {
         f();
     }
 }
