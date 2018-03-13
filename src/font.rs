@@ -1,3 +1,17 @@
+//! This module is used to load fonts that can be used in the [`TextBuffer`](text_buffer/struct.TextBuffer.html)
+//!
+//! The [`Font`](struct.Font.html) can be loaded from an `.sfl` file and then used in the `TextBuffer`, in example:
+//! ```
+//! use glerminal::terminal::TerminalBuilder;
+//! use glerminal::font::Font;
+//!
+//! let mut terminal = TerminalBuilder::new()
+//!     .with_title("Hello glerminal::font::Font!")
+//!     .with_dimensions((1280, 720))
+//!     .with_font(Font::load("fonts/iosevka.sfl"))
+//!     .build();
+//! ```
+
 use png::{ColorType, Decoder};
 use std::fs::File;
 use std::path::PathBuf;
@@ -5,31 +19,41 @@ use std::collections::HashMap;
 
 use sfl_parser::BMFont;
 
+/// Contains data of a single character in a Font
 #[derive(Clone)]
 pub struct CharacterData {
-    pub x1: f32,
-    pub x2: f32,
-    pub y1: f32,
-    pub y2: f32,
-    pub width: u32,
-    pub height: u32,
-    pub x_off: u32,
-    pub y_off: u32,
+    pub(crate) x1: f32,
+    pub(crate) x2: f32,
+    pub(crate) y1: f32,
+    pub(crate) y2: f32,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
+    pub(crate) x_off: u32,
+    pub(crate) y_off: u32,
 }
 
+/// Represents the font when it's loaded.
 pub struct Font {
+    /// The name of the font
     pub name: String,
-    pub image_buffer: Vec<u8>,
-    pub width: u32,
-    pub height: u32,
+    pub(crate) image_buffer: Vec<u8>,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
+    /// Line height of the font
     pub line_height: u32,
+    /// Size of the font (width)
     pub size: u32,
-    pub max_offset_y: u32,
-    pub max_offset_x: u32,
+    pub(crate) max_offset_y: u32,
+    pub(crate) max_offset_x: u32,
     characters: HashMap<u8, CharacterData>,
 }
 
 impl Font {
+    /// Loads the font fron the given .sfl file, for example:
+    ///
+    /// ```
+    /// let font = Font::load("fonts/iosevka.sfl");
+    /// ```
     pub fn load<T: Into<PathBuf>>(fnt_path: T) -> Font {
         let fnt_path = fnt_path.into();
         if !fnt_path.exists() {
@@ -99,12 +123,17 @@ impl Font {
             height: info.height,
             line_height: bm_font.line_height,
             size: bm_font.size,
-            max_offset_x: max_off_x + 2,
-            max_offset_y: max_off_y + 2,
+            max_offset_x: max_off_x,
+            max_offset_y: max_off_y,
             characters: characters,
         }
     }
 
+    /// Gets the CharacterData from the Font with the given char, if the charcter exists, otherwise returns an error as a String. Example:
+    ///
+    /// ```
+    /// let a_char_data = Font::load("fonts/iosevka.sfl").get_character('a');
+    /// ```
     pub fn get_character(&self, character: char) -> Result<CharacterData, String> {
         let character_code = character as u8;
         if let Some(character_data) = self.characters.get(&character_code) {

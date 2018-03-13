@@ -1,23 +1,60 @@
+//! The module that contains the `Parser`.
+
 use std::collections::HashMap;
 
 use regex::Regex;
 use super::{Color, TextBuffer};
 
+/// Represents a parser, that is able to read given texts and use [`TextBuffer`](struct.TextBuffer.html) accordingly, to write text and styles matching to the text.
+///
+/// See [text_buffer mod](../index.html) for examples and more detailed documentation.
 pub struct Parser {
     colors: HashMap<String, Color>,
 }
 
 impl Parser {
+    /// Creates a new Parser to use.
     pub fn new() -> Parser {
         Parser {
             colors: HashMap::<String, Color>::new(),
         }
     }
 
+    /// Adds a color to the parser to use later.
     pub fn add_color<T: Into<String>>(&mut self, color_str: T, color: Color) {
         self.colors.insert(color_str.into(), color);
     }
 
+    /// Parses the given text and makes it look according to the parsed text.
+    ///
+    /// Example:
+    /// ```
+    /// use glerminal::terminal::TerminalBuilder;
+    /// use glerminal::text_buffer::TextBuffer;
+    /// use glerminal::text_buffer::parser::Parser;
+    ///
+    /// // Initialize a terminal to use
+    /// let terminal = TerminalBuilder::new()
+    ///     .with_title("Parser example!")
+    ///     .with_dimensions((1280, 720))
+    ///     .build();
+    ///
+    /// // Initialize a TextBuffer for the Parser
+    /// let mut text_buffer;
+    /// match TextBuffer::new(&terminal, (80, 24)) {
+    ///   Ok(buffer) => text_buffer = buffer,
+    ///   Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
+    /// }
+    ///
+    /// // Test Parser
+    /// let mut parser = Parser::new();
+    /// parser.add_color("red", [1.0, 0.0, 0.0, 1.0]);
+    /// parser.write(&mut text_buffer, "Hello, [fg=red]this color is red![/fg], [bg=red]this text has a red background[/bg] and [shake=0.5]this text shakes[/shake]");
+    /// // Note: it is not necessary to close fg/bg/shake tags, parser will automatically revert colors in the TextBuffer.
+    ///
+    /// // Flush to "apply changes"
+    /// terminal.flush(&mut text_buffer);
+    /// ```
     pub fn write<T: Into<String>>(&self, text_buffer: &mut TextBuffer, text: T) {
         let text = text.into();
 

@@ -1,4 +1,4 @@
-# OpenGLerminal, an OpenGL terminal
+# GLerminal, an OpenGL terminal
 A lightweight terminal made with OpenGL from the ground-up.  
 With this terminal, you're able to make the terminal applications or games you've always wanted, but with a terminal that looks the same for everyone, because it's made with OpenGL and doesn't use the computer's native terminal!
 
@@ -8,6 +8,10 @@ Currently supported features include:
 - Shaking text
 - A text-parser that will make it easy to write whatever you want and make it look cool!
   - Parseable text example: `"Hello, [fg=red]this is red[/fg] and [shake=1.0]this is shaking[/shake]."`
+
+### Table of Contents
+- [How to use](#how-to-use)
+- [License](#license)
 
 ### How to use
 Extensive documentation can be found at: [docs.rs][docs].
@@ -23,7 +27,7 @@ And simply add the following line to your `main.rs`:
 extern crate glerminal;
 ```
 
-And an example of creating a window is simple:
+And then using this crate is quite simple:
 ```rust
 extern crate glerminal;
 
@@ -51,7 +55,10 @@ fn main() {
 ```
 
 ### License
-This crate is distributed under the terms of [the MIT License][license].
+This crate is distributed under the terms of [the MIT License][license].  
+This crate also uses a font as a default font, called [Iosevka][iosevka], which is distributed under the terms of [SIL OFL Version 1.1][license-iosevka].
 
 [docs]: https://docs.rs/glerminal
 [license]: LICENSE.md
+[iosevka]: https://github.com/be5invis/Iosevka
+[license-iosevka]: LICENSE-IOSEVKA.md
