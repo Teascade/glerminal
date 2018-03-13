@@ -4,6 +4,9 @@ use text_buffer::TextBuffer;
 mod terminal;
 mod input;
 mod text_buffer;
+mod parser;
+
+use rand;
 
 fn test_setup_open_terminal() -> Terminal {
     TerminalBuilder::new()
@@ -25,4 +28,13 @@ fn run_multiple_times<F: Fn()>(f: F) {
     for _ in 0..10 {
         f();
     }
+}
+
+fn random_color() -> [f32; 4] {
+    [
+        rand::random::<f32>(),
+        rand::random::<f32>(),
+        rand::random::<f32>(),
+        rand::random::<f32>(),
+    ]
 }

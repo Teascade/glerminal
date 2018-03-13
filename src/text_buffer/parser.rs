@@ -103,4 +103,10 @@ impl Parser {
         text_buffer.change_cursor_fg_color(default_fg);
         text_buffer.change_cursor_bg_color(default_bg);
     }
+
+    /// Gets the color specified, not compiled in a non-testing environment.
+    #[cfg(test)]
+    pub(crate) fn get_color(&self, color: String) -> Option<&Color> {
+        self.colors.get(&color)
+    }
 }

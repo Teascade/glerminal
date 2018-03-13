@@ -1,4 +1,4 @@
-use super::{run_multiple_times, test_setup_text_buffer};
+use super::{random_color, run_multiple_times, test_setup_text_buffer};
 use rand;
 use rand::distributions::{Range, Sample};
 
@@ -120,13 +120,4 @@ fn test_text_buffer_cursor_styles() {
         text_buffer.change_cursor_shakiness(shakiness);
         assert_eq!(text_buffer.get_cursor_shakiness(), shakiness);
     });
-}
-
-fn random_color() -> [f32; 4] {
-    [
-        rand::random::<f32>(),
-        rand::random::<f32>(),
-        rand::random::<f32>(),
-        rand::random::<f32>(),
-    ]
 }
