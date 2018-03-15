@@ -30,7 +30,7 @@ fn test_setup_open_terminal() -> Terminal {
     TerminalBuilder::new()
         .with_title("Simple window")
         .with_dimensions((1280, 720))
-        .with_visibility(false)
+        .with_headless(true)
         .build()
 }
 

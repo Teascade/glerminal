@@ -53,6 +53,7 @@ pub struct TerminalBuilder {
     clear_color: (f32, f32, f32, f32),
     font: Font,
     visibility: bool,
+    headless: bool,
 }
 
 #[allow(dead_code)]
@@ -65,6 +66,7 @@ impl TerminalBuilder {
             clear_color: (0.14, 0.19, 0.28, 1.0),
             font: Font::load("fonts/iosevka.sfl"),
             visibility: true,
+            headless: false,
         }
     }
 
@@ -92,9 +94,15 @@ impl TerminalBuilder {
         self
     }
 
-    /// Changes the visibility that the terminal will be opened with
+    /// Changes the visibility that the terminal will be opened with. If headless, visibility will not matter.
     pub fn with_visibility(mut self, visibility: bool) -> TerminalBuilder {
         self.visibility = visibility;
+        self
+    }
+
+    /// Changes the visibility that the terminal will be opened with
+    pub fn with_headless(mut self, headless: bool) -> TerminalBuilder {
+        self.headless = headless;
         self
     }
 
@@ -106,6 +114,7 @@ impl TerminalBuilder {
             self.clear_color,
             self.font,
             self.visibility,
+            self.headless,
         )
     }
 }
@@ -131,8 +140,9 @@ impl Terminal {
         clear_color: (f32, f32, f32, f32),
         font: Font,
         visibility: bool,
+        headless: bool,
     ) -> Terminal {
-        let display = Display::new(title, window_dimensions, clear_color, visibility);
+        let display = Display::new(title, window_dimensions, clear_color, visibility, headless);
         let program = renderer::create_program(renderer::VERT_SHADER, renderer::FRAG_SHADER);
         let background_program =
             renderer::create_program(renderer::VERT_SHADER, renderer::BG_FRAG_SHADER);
