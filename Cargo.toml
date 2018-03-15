@@ -14,12 +14,12 @@ documentation = "https://docs.rs/glerminal"
 travis-ci = { repository = "Teascade/glerminal", branch = "0.1.0" }
 
 [dependencies]
-glutin = "*"
-gl = "*"
-libc = "*"
-png = "*"
-regex = "*"
-sfl_parser = "*"
+glutin = "0.13"
+gl = "0.10"
+libc = "0.2"
+png = "0.11"
+regex = "0.2"
+sfl_parser = "1.2"
 
 [dev-dependencies]
-rand = "*"
+rand = "0.4"
