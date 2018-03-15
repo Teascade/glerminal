@@ -1,5 +1,7 @@
 # GLerminal, an OpenGL terminal
-[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=master)](https://travis-ci.org/Teascade/glerminal)
+[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=0.1.0)](https://travis-ci.org/Teascade/glerminal)
+[![Docs](https://docs.rs/glerminal/badge.svg)](https://docs.rs/glerminal)
+[![Crates.io](https://img.shields.io/crates/v/glerminal.svg)](https://crates.io/crates/glerminal)
 
 A lightweight terminal made with OpenGL from the ground-up.  
 With this terminal, you're able to make the terminal applications or games you've always wanted, but with a terminal that looks the same for everyone, because it's made with OpenGL and doesn't use the computer's native terminal!
