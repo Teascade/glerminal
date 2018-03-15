@@ -1,4 +1,10 @@
-use super::test_setup_open_terminal;
+use super::{test_setup_open_terminal, run_multiple_times};
+use terminal::FrameCounter;
+use rand;
+use rand::distributions::{Range, Sample};
+use std::time::Duration;
+use std::thread;
+
 
 #[test]
 fn test_terminal_open_refresh_and_close() {
@@ -25,4 +31,23 @@ fn test_terminal_programs_debug_shaders() {
         assert_ne!(program, debug_program);
         assert_ne!(background_program, debug_background_program);
     }
+}
+
+#[test]
+pub fn test_terminal_frame_counter() {
+    run_multiple_times(10, || {
+        let mut range = Range::new(1i32, 100);
+        let mut rnd = rand::thread_rng();
+
+        let target_fps = range.sample(&mut rnd);
+
+        let mut frame_counter = FrameCounter::new();
+        for _ in 0..target_fps {
+            frame_counter.update();
+        }
+
+        thread::sleep(Duration::from_secs(1));
+
+        assert_eq!(frame_counter.get_fps(), target_fps as f32);
+    })
 }

@@ -316,7 +316,7 @@ impl Terminal {
     }
 }
 
-struct FrameCounter {
+pub(crate) struct FrameCounter {
     frames: u32,
     last_check: SystemTime,
     fps: f32,
