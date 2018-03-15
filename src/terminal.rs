@@ -35,8 +35,8 @@
 
 #[allow(unused_imports)]
 use glutin::VirtualKeyCode;
-use std::cell::Cell;
-use std::time::SystemTime;
+use std::cell::{Cell, RefCell};
+use std::time::{SystemTime, Duration};
 
 use display::Display;
 use font::Font;
@@ -132,6 +132,7 @@ pub struct Terminal {
     pub(crate) headless: bool,
     since_start: SystemTime,
     pub(crate) font: Font,
+    frame_counter: RefCell<FrameCounter>,
 }
 
 impl Terminal {
@@ -176,6 +177,7 @@ impl Terminal {
             headless,
             since_start: SystemTime::now(),
             font,
+            frame_counter: RefCell::new(FrameCounter::new()),
         }
     }
 
@@ -190,6 +192,10 @@ impl Terminal {
     /// Refreshes the screen and returns weather the while-loop should continue (is the program running)
     #[cfg(debug_assertions)]
     pub fn refresh(&self) -> bool {
+        let mut frame_counter = self.frame_counter.borrow_mut();
+        frame_counter.update();
+        drop(frame_counter);
+
         if let Some(ref display) = self.display {
             let input = self.get_current_input();
             if input.was_just_pressed(VirtualKeyCode::F3) {
@@ -204,6 +210,11 @@ impl Terminal {
     /// Refreshes the screen and returns weather the while-loop should continue (is the program running)
     #[cfg(not(debug_assertions))]
     pub fn refresh(&self) -> bool {
+        let mut frame_counter = self.frame_counter.borrow_mut();
+        frame_counter.update();
+        drop(frame_counter);
+
+        self.frame_counter.borrow_mut().update();
         if let Some(ref display) = self.display {
             self.display.refresh() & &self.running.get()
         } else {
@@ -254,7 +265,9 @@ impl Terminal {
         self.running.set(false);
     }
 
-    /// Sets the title for the window
+    /// Sets the title for the window.
+    ///
+    /// **Warning:** This is a nuclear hazard (takes up a lot of performance), it might melt down your computer if called every frame (or so).
     pub fn set_title<T: Into<String>>(&mut self, title: T) {
         if let Some(ref mut display) = self.display {
             display.set_title(&title.into());
@@ -266,6 +279,11 @@ impl Terminal {
         if let Some(ref mut display) = self.display {
             display.show();
         }
+    }
+
+    /// Returns the current fps; updates every second
+    pub fn get_fps(&self) -> f32 {
+        self.frame_counter.borrow().get_fps()
     }
 
     pub(crate) fn get_program(&self) -> renderer::Program {
@@ -295,5 +313,32 @@ impl Terminal {
         if let Some(ref mut display) = self.display {
             display.update_virtual_keycode(keycode, pressed);
         }
+    }
+}
+
+struct FrameCounter {
+    frames: u32,
+    last_check: SystemTime,
+    fps: f32,
+}
+
+impl FrameCounter {
+    pub fn new() -> FrameCounter {
+        FrameCounter {
+            frames: 0,
+            last_check: SystemTime::now(),
+            fps: 0.0,
+        }
+    }
+
+    pub fn update(&mut self) {
+        self.frames += 1;
+        if SystemTime::now().duration_since(self.last_check).unwrap() < Duration::from_secs(1) {
+            self.fps = self.frames as f32;
+        }
+    }
+
+    pub fn get_fps(&self) -> f32 {
+        self.fps
     }
 }
