@@ -123,12 +123,13 @@ impl TerminalBuilder {
 ///
 /// See [terminal mod](index.html) for examples and more detailed documentation.
 pub struct Terminal {
-    display: Display,
+    display: Option<Display>,
     program: renderer::Program,
     background_program: renderer::Program,
     debug_program: renderer::Program,
     debug: Cell<bool>,
     running: Cell<bool>,
+    pub(crate) headless: bool,
     since_start: SystemTime,
     pub(crate) font: Font,
 }
@@ -142,12 +143,28 @@ impl Terminal {
         visibility: bool,
         headless: bool,
     ) -> Terminal {
-        let display = Display::new(title, window_dimensions, clear_color, visibility, headless);
-        let program = renderer::create_program(renderer::VERT_SHADER, renderer::FRAG_SHADER);
-        let background_program =
-            renderer::create_program(renderer::VERT_SHADER, renderer::BG_FRAG_SHADER);
-        let debug_program =
-            renderer::create_program(renderer::VERT_SHADER, renderer::DEBUG_FRAG_SHADER);
+        let display;
+        let program;
+        let background_program;
+        let debug_program;
+        if headless {
+            display = None;
+            program = 0;
+            background_program = 0;
+            debug_program = 0;
+        } else {
+            display = Some(Display::new(
+                title,
+                window_dimensions,
+                clear_color,
+                visibility,
+            ));
+            program = renderer::create_program(renderer::VERT_SHADER, renderer::FRAG_SHADER);
+            background_program =
+                renderer::create_program(renderer::VERT_SHADER, renderer::BG_FRAG_SHADER);
+            debug_program =
+                renderer::create_program(renderer::VERT_SHADER, renderer::DEBUG_FRAG_SHADER);
+        }
         let font = font;
         Terminal {
             display,
@@ -156,6 +173,7 @@ impl Terminal {
             debug_program,
             debug: Cell::new(false),
             running: Cell::new(true),
+            headless,
             since_start: SystemTime::now(),
             font,
         }
@@ -163,24 +181,34 @@ impl Terminal {
 
     /// Sets debug mode (changes characters and backgrounds into wireframe)
     pub fn set_debug(&self, debug: bool) {
-        renderer::set_debug(debug);
-        self.debug.set(debug);
+        if !self.headless {
+            renderer::set_debug(debug);
+            self.debug.set(debug);
+        }
     }
 
     /// Refreshes the screen and returns weather the while-loop should continue (is the program running)
     #[cfg(debug_assertions)]
     pub fn refresh(&self) -> bool {
-        let input = self.get_current_input();
-        if input.was_just_pressed(VirtualKeyCode::F3) {
-            self.set_debug(!self.debug.get());
+        if let Some(ref display) = self.display {
+            let input = self.get_current_input();
+            if input.was_just_pressed(VirtualKeyCode::F3) {
+                self.set_debug(!self.debug.get());
+            }
+            display.refresh() & &self.running.get()
+        } else {
+            self.running.get()
         }
-        self.display.refresh() && self.running.get()
     }
 
     /// Refreshes the screen and returns weather the while-loop should continue (is the program running)
     #[cfg(not(debug_assertions))]
     pub fn refresh(&self) -> bool {
-        self.display.refresh() && self.running.get()
+        if let Some(ref display) = self.display {
+            self.display.refresh() & &self.running.get()
+        } else {
+            self.running.get()
+        }
     }
 
     /// Flushes `TextBuffer`, taking it's character-grid and making it show for the next draw.
@@ -192,28 +220,33 @@ impl Terminal {
 
     /// Draws the `TextBuffer`, this should be called every time in the while-loop.
     pub fn draw(&self, text_buffer: &TextBuffer) {
-        renderer::clear();
-        let duration = SystemTime::now().duration_since(self.since_start).unwrap();
-
-        let time = duration.as_secs() as f32 + duration.subsec_nanos() as f32 / 1_000_000_000.0;
-
-        renderer::draw(
-            self.get_background_program(),
-            self.display.proj_matrix.get(),
-            time,
-            &text_buffer.background_mesh,
-        );
-        renderer::draw(
-            self.get_program(),
-            self.display.proj_matrix.get(),
-            time,
+        if let (&Some(ref display), &Some(ref mesh), &Some(ref background_mesh)) = (
+            &self.display,
             &text_buffer.mesh,
-        );
+            &text_buffer.background_mesh,
+        ) {
+            renderer::clear();
+            let duration = SystemTime::now().duration_since(self.since_start).unwrap();
+
+            let time = duration.as_secs() as f32 + duration.subsec_nanos() as f32 / 1_000_000_000.0;
+
+            renderer::draw(
+                self.get_background_program(),
+                display.proj_matrix.get(),
+                time,
+                background_mesh,
+            );
+            renderer::draw(self.get_program(), display.proj_matrix.get(), time, mesh);
+        }
     }
 
     /// Gets the current Input, must be retrieved every time you want new inputs. (ie. every frame)
     pub fn get_current_input(&self) -> Input {
-        self.display.get_current_input()
+        if let Some(ref display) = self.display {
+            display.get_current_input()
+        } else {
+            Input::new()
+        }
     }
 
     /// Closes the Terminal
@@ -223,15 +256,22 @@ impl Terminal {
 
     /// Sets the title for the window
     pub fn set_title<T: Into<String>>(&mut self, title: T) {
-        self.display.set_title(&title.into());
+        if let Some(ref mut display) = self.display {
+            display.set_title(&title.into());
+        }
     }
 
     /// Shows the window, if it's hidden
     pub fn show(&mut self) {
-        self.display.show();
+        if let Some(ref mut display) = self.display {
+            display.show();
+        }
     }
 
     pub(crate) fn get_program(&self) -> renderer::Program {
+        if self.headless {
+            panic!("Unable to get program from headless terminal");
+        }
         if !self.debug.get() {
             self.program
         } else {
@@ -240,6 +280,9 @@ impl Terminal {
     }
 
     pub(crate) fn get_background_program(&self) -> renderer::Program {
+        if self.headless {
+            panic!("Unable to get program from headless terminal");
+        }
         if !self.debug.get() {
             self.background_program
         } else {
@@ -249,6 +292,8 @@ impl Terminal {
 
     #[cfg(test)]
     pub(crate) fn update_virtual_keycode(&mut self, keycode: VirtualKeyCode, pressed: bool) {
-        self.display.update_virtual_keycode(keycode, pressed);
+        if let Some(ref mut display) = self.display {
+            display.update_virtual_keycode(keycode, pressed);
+        }
     }
 }

@@ -42,11 +42,12 @@ fn test_input_is_pressed() {
 fn test_input_was_just_pressed_with_terminal() {
     let button = VirtualKeyCode::A;
     let mut terminal = test_setup_open_terminal();
+    if !terminal.headless {
+        terminal.update_virtual_keycode(button, true);
+        let mut input = terminal.get_current_input();
 
-    terminal.update_virtual_keycode(button, true);
-    let mut input = terminal.get_current_input();
-
-    assert_eq!(input.was_just_pressed(button), true);
-    input.clear_just_lists();
-    assert_eq!(input.was_just_pressed(button), false);
+        assert_eq!(input.was_just_pressed(button), true);
+        input.clear_just_lists();
+        assert_eq!(input.was_just_pressed(button), false);
+    }
 }

@@ -139,8 +139,8 @@ pub struct TextBuffer {
     pub(crate) chars: Vec<TermCharacter>,
     pub(crate) height: i32,
     pub(crate) width: i32,
-    pub(crate) mesh: TextBufferMesh,
-    pub(crate) background_mesh: BackgroundMesh,
+    pub(crate) mesh: Option<TextBufferMesh>,
+    pub(crate) background_mesh: Option<BackgroundMesh>,
     cursor: TermCursor,
 }
 
@@ -157,8 +157,15 @@ impl TextBuffer {
 
         let chars =
             vec![TermCharacter::new(' ', [0.0; 4], [0.0; 4], 0.0); (width * height) as usize];
-        let mesh = TextBufferMesh::new(terminal.get_program(), dimensions, &terminal.font);
-        let background_mesh = BackgroundMesh::new(terminal.get_background_program(), dimensions);
+        let mesh;
+        let background_mesh;
+        if terminal.headless {
+            mesh = None;
+            background_mesh = None;
+        } else {
+            mesh = Some(TextBufferMesh::new(terminal.get_program(), dimensions, &terminal.font));
+            background_mesh = Some(BackgroundMesh::new(terminal.get_background_program(), dimensions));
+        }
         Ok(TextBuffer {
             chars,
             height,
@@ -176,8 +183,10 @@ impl TextBuffer {
     }
 
     pub(crate) fn swap_buffers(&self, font: &Font) {
-        self.mesh.update(&self, font);
-        self.background_mesh.update(&self);
+        if let (&Some(ref mesh), &Some(ref background_mesh)) = (&self.mesh, &self.background_mesh) {
+            mesh.update(&self, font);
+            background_mesh.update(&self);
+        }
     }
 
     pub(crate) fn out_of_bounds(&self, x: i32, y: i32) -> bool {

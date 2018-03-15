@@ -23,7 +23,7 @@ fn test_for_gl_error() {
         terminal.close();
     }
 
-    assert_eq!(renderer::get_error(), None);
+    assert_eq!(renderer::get_error(terminal.headless), None);
 }
 
 fn test_setup_open_terminal() -> Terminal {

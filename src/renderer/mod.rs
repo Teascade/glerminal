@@ -28,14 +28,18 @@ pub trait Renderable {
 }
 
 #[cfg(test)]
-pub(crate) fn get_error() -> Option<u32> {
-    unsafe {
-        let error = gl::GetError();
-        if error == gl::NO_ERROR {
-            None
-        } else {
-            Some(error)
+pub(crate) fn get_error(headless: bool) -> Option<u32> {
+    if !headless {
+        unsafe {
+            let error = gl::GetError();
+            if error == gl::NO_ERROR {
+                None
+            } else {
+                Some(error)
+            }
         }
+    } else {
+        None
     }
 }
 
