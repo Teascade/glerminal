@@ -3,6 +3,8 @@
 [![Docs](https://docs.rs/glerminal/badge.svg)](https://docs.rs/glerminal)
 [![Crates.io](https://img.shields.io/crates/v/glerminal.svg)](https://crates.io/crates/glerminal)
 
+<iframe src="https://discordapp.com/widget?id=424595035854471178&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0"></iframe>
+
 A lightweight terminal made with OpenGL from the ground-up.  
 With this terminal, you're able to make the terminal applications or games you've always wanted, but with a terminal that looks the same for everyone, because it's made with OpenGL and doesn't use the computer's native terminal!
 
@@ -15,6 +17,7 @@ Currently supported features include:
 
 ### Table of Contents
 - [How to use](#how-to-use)
+- [Contributing & Code of Conduct](#contributing-&-code-of-conduct)
 - [License](#license)
 
 ### How to use
@@ -49,14 +52,20 @@ fn main() {
         Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
     }
 
-      text_buffer.write("Hello, GLerminal!");
-      terminal.flush(&mut text_buffer);
+    text_buffer.write("Hello, GLerminal!");
+    terminal.flush(&mut text_buffer);
 
     while terminal.refresh() {
         terminal.draw(&text_buffer);
     }
 }
 ```
+
+### Contributing & Code of Conduct
+You are welcome to contribute to this project, but before do review the [Contributing guidelines](CONTRIBUTING.md).
+
+A Code of Conduct can also be found in the repository as [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), 
+please review it before interacting with the community.
 
 ### License
 This crate is distributed under the terms of [the MIT License][license].  
