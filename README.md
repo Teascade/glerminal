@@ -46,7 +46,7 @@ fn main() {
         .with_title("Hello GLerminal!")
         .with_dimensions((1280, 720))
         .build();
-    let text_buffer;
+    let mut text_buffer;
     match TextBuffer::new(&terminal, (80, 24)) {
         Ok(buffer) => text_buffer = buffer,
         Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
