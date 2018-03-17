@@ -69,6 +69,21 @@ impl Input {
         self.just_released.contains(&keycode)
     }
 
+    /// Returns an entire list of keys that were just pressed.
+    pub fn get_just_pressed_list(&self) -> Vec<VirtualKeyCode> {
+        self.just_pressed.clone()
+    }
+
+    /// Returns an entire list of keys that were just released.
+    pub fn get_just_released_list(&self) -> Vec<VirtualKeyCode> {
+        self.just_released.clone()
+    }
+
+    /// Returns an entire list of keys that are pressed right now.
+    pub fn get_pressed_list(&self) -> Vec<VirtualKeyCode> {
+        self.pressed.clone()
+    }
+
     fn find_keycode_idx_from_pressed(&self, keycode: VirtualKeyCode) -> Option<usize> {
         let mut idx: usize = 0;
         let mut found = false;

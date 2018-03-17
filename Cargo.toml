@@ -13,6 +13,11 @@ documentation = "https://docs.rs/glerminal"
 [badges]
 travis-ci = { repository = "Teascade/glerminal", branch = "0.1.0" }
 
+[features]
+default = ["menu_systems"]
+
+menu_systems = []
+
 [dependencies]
 glutin = "0.13"
 gl = "0.10"

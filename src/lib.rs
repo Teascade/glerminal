@@ -56,6 +56,7 @@
 //! With this struct you can simply pass a string that the parser will parse, and the `TextBuffer` will then change colors or shakiness of your text accordingly.
 //!
 //! Examples can be found at [`text_buffer`](text_buffer) module.
+#![deny(missing_docs)]
 
 #[cfg(test)]
 extern crate rand;
@@ -76,5 +77,8 @@ pub mod input;
 pub mod font;
 pub mod text_buffer;
 pub mod terminal;
+
+#[cfg(feature = "menu_systems")]
+pub mod menu_systems;
 
 pub use glutin::VirtualKeyCode;
