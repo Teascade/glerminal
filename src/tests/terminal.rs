@@ -1,10 +1,9 @@
-use super::{test_setup_open_terminal, run_multiple_times};
+use super::{run_multiple_times, test_setup_open_terminal};
 use terminal::FrameCounter;
 use rand;
 use rand::distributions::{Range, Sample};
 use std::time::Duration;
 use std::thread;
-
 
 #[test]
 fn test_terminal_open_refresh_and_close() {
@@ -47,7 +46,8 @@ pub fn test_terminal_frame_counter() {
         }
 
         thread::sleep(Duration::from_secs(1));
+        frame_counter.update();
 
-        assert_eq!(frame_counter.get_fps(), target_fps as f32);
+        assert_eq!(frame_counter.get_fps(), target_fps as f32 + 1.0);
     })
 }
