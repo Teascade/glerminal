@@ -3,7 +3,7 @@
 [![Docs](https://docs.rs/glerminal/badge.svg)](https://docs.rs/glerminal)
 [![Crates.io](https://img.shields.io/crates/v/glerminal.svg)](https://crates.io/crates/glerminal)
 
-<iframe src="https://discordapp.com/widget?id=424595035854471178&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0"></iframe>
+Read our [Code of Conduct](CODE_OF_CONDUCT.md) and join our [Discord server](https://discord.gg/Wg6D2Rk) if you want to chat!
 
 A lightweight terminal made with OpenGL from the ground-up.  
 With this terminal, you're able to make the terminal applications or games you've always wanted, but with a terminal that looks the same for everyone, because it's made with OpenGL and doesn't use the computer's native terminal!
