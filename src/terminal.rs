@@ -36,7 +36,7 @@
 #[allow(unused_imports)]
 use glutin::VirtualKeyCode;
 use std::cell::{Cell, RefCell};
-use std::time::{SystemTime, Duration};
+use std::time::{Duration, SystemTime};
 
 use display::Display;
 use font::Font;
@@ -214,7 +214,6 @@ impl Terminal {
         frame_counter.update();
         drop(frame_counter);
 
-        self.frame_counter.borrow_mut().update();
         if let Some(ref display) = self.display {
             self.display.refresh() & &self.running.get()
         } else {
@@ -333,8 +332,11 @@ impl FrameCounter {
 
     pub fn update(&mut self) {
         self.frames += 1;
-        if SystemTime::now().duration_since(self.last_check).unwrap() < Duration::from_secs(1) {
+        let current_time = SystemTime::now();
+        if current_time.duration_since(self.last_check).unwrap() > Duration::from_secs(1) {
             self.fps = self.frames as f32;
+            self.last_check = current_time;
+            self.frames = 0;
         }
     }
 
