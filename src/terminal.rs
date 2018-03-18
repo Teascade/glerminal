@@ -204,7 +204,7 @@ impl Terminal {
             if input.was_just_pressed(VirtualKeyCode::F3) {
                 self.set_debug(!self.debug.get());
             }
-            display.refresh() & &self.running.get()
+            display.refresh() && self.running.get()
         } else {
             self.running.get()
         }
@@ -218,7 +218,7 @@ impl Terminal {
         drop(frame_counter);
 
         if let Some(ref display) = self.display {
-            self.display.refresh() & &self.running.get()
+            display.refresh() && self.running.get()
         } else {
             self.running.get()
         }
