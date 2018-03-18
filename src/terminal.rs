@@ -44,6 +44,9 @@ use text_buffer::TextBuffer;
 use renderer;
 use input::Input;
 
+static IOSEVKA_SFL: &'static str = include_str!("../fonts/iosevka.sfl");
+static IOSEVKA_PNG: &'static [u8] = include_bytes!("../fonts/iosevka.png");
+
 /// A builder for the `Terminal`. Includes some settings that can be set before building.
 ///
 /// See [terminal mod](index.html) for examples and more detailed documentation.
@@ -61,10 +64,10 @@ impl TerminalBuilder {
     /// Creates a new terminal builder with default settings.
     pub fn new() -> TerminalBuilder {
         TerminalBuilder {
-            title: "Hello, World!".to_owned(),
+            title: "Hello, World ! ".to_owned(),
             dimensions: (1280, 720),
             clear_color: (0.14, 0.19, 0.28, 1.0),
-            font: Font::load("fonts/iosevka.sfl"),
+            font: Font::load_raw(IOSEVKA_SFL, IOSEVKA_PNG),
             visibility: true,
             headless: false,
         }
