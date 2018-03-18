@@ -9,6 +9,7 @@ keywords = []
 categories = []
 repository = "https://github.com/Teascade/glerminal"
 documentation = "https://docs.rs/glerminal"
+include = ["src/**/*", "Cargo.toml", "fonts/*"]
 
 [badges]
 travis-ci = { repository = "Teascade/glerminal", branch = "0.1.0" }
