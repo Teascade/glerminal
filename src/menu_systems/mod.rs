@@ -14,6 +14,7 @@ pub struct TextInput {
     prefix: String,
     suffix: String,
     focused: bool,
+    dirty: bool,
 }
 
 impl TextInput {
@@ -28,6 +29,7 @@ impl TextInput {
             prefix: String::new(),
             suffix: String::new(),
             focused: false,
+            dirty: false,
         }
     }
 
@@ -70,7 +72,9 @@ impl TextInput {
     }
 
     /// Draws the TextInput.
-    pub fn draw(&self, text_buffer: &mut TextBuffer) {
+    pub fn draw(&mut self, text_buffer: &mut TextBuffer) {
+        self.dirty = false;
+
         if self.focused {
             text_buffer.change_cursor_bg_color([0.8, 0.8, 0.8, 1.0]);
             text_buffer.change_cursor_fg_color([0.2, 0.2, 0.2, 1.0]);
@@ -87,6 +91,7 @@ impl TextInput {
         if self.focused {
             if input.was_just_pressed(VirtualKeyCode::Back) {
                 self.text.pop();
+                self.dirty = true;
             }
             for keycode in input.get_just_pressed_list() {
                 if let Some(mut character) = filter.get(&keycode) {
@@ -99,9 +104,15 @@ impl TextInput {
                         text.push(*character);
                     }
                     self.text.push_str(&*text);
+                    self.dirty = true;
                 }
             }
         }
+    }
+
+    /// Returns weather the TextInput is dirty, meaning it should be drawn again.
+    pub fn is_dirty(&self) -> bool {
+        self.dirty
     }
 }
 

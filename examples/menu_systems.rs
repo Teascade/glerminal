@@ -27,19 +27,33 @@ fn main() {
         .with_basic_numerals()
         .with_basic_special_symbols();
 
-    while terminal.refresh() {
-        text_buffer.clear();
+    let mut fps = 0.0;
 
+    while terminal.refresh() {
         let input = terminal.get_current_input();
 
         text_input.handle_input(&input, &filter);
 
-        text_buffer.change_cursor_fg_color([0.8, 0.8, 0.8, 1.0]);
-        text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
-        text_buffer.move_cursor(5, 4);
-        text_buffer.write(format!("FPS: {}", terminal.get_fps()));
-        text_input.draw(&mut text_buffer);
-        terminal.flush(&mut text_buffer);
+        let mut should_flush = false;
+
+        let curr_fps = terminal.get_fps();
+        if curr_fps != fps {
+            fps = curr_fps;
+            should_flush = true;
+        }
+        if text_input.is_dirty() {
+            should_flush = true;
+        }
+
+        if should_flush {
+            text_buffer.clear();
+            text_buffer.change_cursor_fg_color([0.8, 0.8, 0.8, 1.0]);
+            text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
+            text_buffer.move_cursor(5, 4);
+            text_buffer.write(format!("FPS: {}", terminal.get_fps()));
+            text_input.draw(&mut text_buffer);
+            terminal.flush(&mut text_buffer);
+        }
 
         terminal.draw(&text_buffer);
     }
