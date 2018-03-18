@@ -1,8 +1,10 @@
 //! Module doc
+use std::collections::HashMap;
+use std::iter;
+
 use text_buffer::TextBuffer;
 use input::Input;
 use glutin::VirtualKeyCode;
-use std::collections::HashMap;
 
 /// Represents a text-input field, that can be focused, takes in input (text),
 /// and it's possible to get the input with get_text
@@ -83,7 +85,11 @@ impl TextInput {
             text_buffer.change_cursor_fg_color([0.2, 0.2, 0.2, 1.0]);
         }
         text_buffer.move_cursor(self.x, self.y);
-        text_buffer.write(format!("{}{}{}", self.prefix, self.text, self.suffix));
+        let text_width = (self.width as usize).min(self.text.len());
+        let text: String = self.text[(self.text.len() - text_width)..].to_string();
+        let spaces: String = iter::repeat(" ").take(self.width as usize - text_width).collect();
+        let text = text + &*spaces;
+        text_buffer.write(format!("{}{}{}", self.prefix, text, self.suffix));
     }
 
     /// Handles input for the TextInput, should be called every frame, at least if focused.
