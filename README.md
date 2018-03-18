@@ -1,7 +1,9 @@
 # GLerminal, an OpenGL terminal
-[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=0.1.0)](https://travis-ci.org/Teascade/glerminal)
+[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=0.1.1)](https://travis-ci.org/Teascade/glerminal)
 [![Docs](https://docs.rs/glerminal/badge.svg)](https://docs.rs/glerminal)
 [![Crates.io](https://img.shields.io/crates/v/glerminal.svg)](https://crates.io/crates/glerminal)
+[![Codecov.io](https://img.shields.io/codecov/c/github/Teascade/glerminal.svg)](https://codecov.io/gh/Teascade/glerminal)
+
 
 Read our [Code of Conduct](CODE_OF_CONDUCT.md) and join our [Discord server](https://discord.gg/Wg6D2Rk) if you want to chat!
 
@@ -26,7 +28,7 @@ Extensive documentation can be found at: [docs.rs][docs].
 Just add the following line to your `Cargo.toml`:
 ```toml
 [dependencies]
-glerminal = "0.1.0"
+glerminal = "0.1.1"
 ```
 
 And simply add the following line to your `main.rs`:

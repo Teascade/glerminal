@@ -1,7 +1,7 @@
 //! This module is used to load fonts that can be used in the [`TextBuffer`](text_buffer/struct.TextBuffer.html)
 //!
 //! The [`Font`](struct.Font.html) can be loaded from an `.sfl` file and then used in the `TextBuffer`, in example:
-//! ```no_run
+//! ```
 //! use glerminal::terminal::TerminalBuilder;
 //! use glerminal::font::Font;
 //!
@@ -9,10 +9,28 @@
 //!     .with_title("Hello glerminal::font::Font!")
 //!     .with_dimensions((1280, 720))
 //!     .with_font(Font::load("fonts/iosevka.sfl"))
+//!     .with_headless(true)
+//!     .build();
+//! ```
+//!
+//! Alternatively you can use `load_raw` to load the font straight with `include_str!` and `include_bytes!`, example:
+//! ```
+//! use glerminal::terminal::TerminalBuilder;
+//! use glerminal::font::Font;
+//!
+//! static IOSEVKA_SFL: &'static str = include_str!("../fonts/iosevka.sfl");
+//! static IOSEVKA_PNG: &'static [u8] = include_bytes!("../fonts/iosevka.png");
+//!
+//! let mut terminal = TerminalBuilder::new()
+//!     .with_title("Hello glerminal::font::Font!")
+//!     .with_dimensions((1280, 720))
+//!     .with_font(Font::load_raw(IOSEVKA_SFL, IOSEVKA_PNG))
+//!     .with_headless(true)
 //!     .build();
 //! ```
 
 use png::{ColorType, Decoder};
+use std::io::Read;
 use std::fs::File;
 use std::path::PathBuf;
 use std::collections::HashMap;
@@ -20,7 +38,7 @@ use std::collections::HashMap;
 use sfl_parser::BMFont;
 
 /// Contains data of a single character in a Font
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CharacterData {
     pub(crate) id: i32,
     pub(crate) x1: f32,
@@ -34,6 +52,7 @@ pub struct CharacterData {
 }
 
 /// Represents the font when it's loaded.
+#[derive(Debug, PartialEq)]
 pub struct Font {
     /// The name of the font
     pub name: String,
@@ -60,16 +79,37 @@ impl Font {
         if !fnt_path.exists() {
             panic!("Font image or .sfl file missing");
         }
-
-// Load Font .sfl file
+        // Load Font .sfl file
         let bm_font;
         match BMFont::from_path(fnt_path) {
             Ok(bmf) => bm_font = bmf,
             Err(error) => panic!("Failed to load .sfl file: {}", error),
         }
 
-// Load Font image file
-        let decoder = Decoder::new(File::open(&bm_font.image_path).unwrap());
+        // Load Font image file
+        Font::load_with_bmfont_and_image_read(&bm_font, File::open(&bm_font.image_path).unwrap())
+    }
+
+    /// Loads the font from the given string (.sfl file contents) and Read (image read)
+    ///
+    /// ```
+    /// use glerminal::font::Font;
+    /// use std::fs::File;
+    ///
+    /// let font = Font::load_raw(include_str!("../fonts/iosevka.sfl"), File::open("fonts/iosevka.png").unwrap());
+    /// ```
+    pub fn load_raw<T: Into<String>, R: Read>(sfl_content: T, image_read: R) -> Font {
+        let bm_font;
+        match BMFont::from_loaded(sfl_content.into(), "image.png".to_owned()) {
+            Ok(bmf) => bm_font = bmf,
+            Err(error) => panic!("Failed to load .sfl file: {}", error),
+        }
+
+        Font::load_with_bmfont_and_image_read(&bm_font, image_read)
+    }
+
+    fn load_with_bmfont_and_image_read<R: Read>(bm_font: &BMFont, read: R) -> Font {
+        let decoder = Decoder::new(read);
         let (info, mut reader) = decoder.read_info().unwrap();
 
         if info.color_type != ColorType::RGBA {
@@ -84,8 +124,7 @@ impl Font {
             panic!("Font image is deformed");
         }
 
-
-// Load the font
+        // Load the font
         let mut characters = HashMap::<u8, CharacterData>::new();
         let width_float = info.width as f32;
         let height_float = info.height as f32;
@@ -116,7 +155,7 @@ impl Font {
         }
 
         Font {
-            name: bm_font.font_name,
+            name: (&bm_font.font_name).clone(),
             image_buffer: image_buffer,
             width: info.width,
             height: info.height,
@@ -126,7 +165,6 @@ impl Font {
             characters: characters,
         }
     }
-
     /// Gets the CharacterData from the Font with the given char, if the charcter exists, otherwise returns an error as a String. Example:
     ///
     /// ```
