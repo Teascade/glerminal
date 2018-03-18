@@ -2,6 +2,8 @@
 [![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=0.1.1)](https://travis-ci.org/Teascade/glerminal)
 [![Docs](https://docs.rs/glerminal/badge.svg)](https://docs.rs/glerminal)
 [![Crates.io](https://img.shields.io/crates/v/glerminal.svg)](https://crates.io/crates/glerminal)
+[![Codecov.io](https://img.shields.io/codecov/c/github/Teascade/glerminal.svg)](https://codecov.io/gh/Teascade/glerminal)
+
 
 Read our [Code of Conduct](CODE_OF_CONDUCT.md) and join our [Discord server](https://discord.gg/Wg6D2Rk) if you want to chat!
 
