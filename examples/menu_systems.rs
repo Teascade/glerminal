@@ -17,7 +17,8 @@ fn main() {
         Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
     }
 
-    let mut text_input = TextInput::new((5, 5), 10)
+    let mut text_input = TextInput::new(10)
+        .with_pos((5, 5))
         .with_prefix("Test: [")
         .with_suffix("]")
         .with_focus(true);
