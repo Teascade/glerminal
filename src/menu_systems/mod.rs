@@ -1,6 +1,13 @@
 //! Module doc
+
+mod text_input;
+mod menu;
+
+pub use self::text_input::TextInput;
+pub use self::menu::Menu;
+pub use self::menu::MenuItem;
+
 use std::collections::HashMap;
-use std::iter;
 
 use text_buffer::TextBuffer;
 use input::Input;
@@ -29,156 +36,11 @@ pub trait InterfaceItem {
     /// Draw the InterfaceItem
     fn draw(&mut self, text_buffer: &mut TextBuffer);
     /// Handle input for this InterfaceItem. Returns weather it handled any input.
-    fn handle_input(&mut self, input: &Input, filter: &Filter) -> bool;
-}
-
-/// Represents a text-input field, that can be focused, takes in input (text),
-/// and it's possible to get the input with get_text
-pub struct TextInput {
-    x: u32,
-    y: u32,
-    width: u32,
-    text: String,
-    prefix: String,
-    suffix: String,
-    focused: bool,
-    dirty: bool,
-}
-
-impl InterfaceItem for TextInput {
-    fn get_pos(&self) -> (u32, u32) {
-        (self.x, self.y)
-    }
-
-    fn set_pos(&mut self, pos: (u32, u32)) {
-        let (x, y) = pos;
-        self.x = x;
-        self.y = y;
-    }
-
-    fn get_total_width(&self) -> u32 {
-        (self.prefix.len() + self.suffix.len()) as u32 + self.width
-    }
-
-    fn get_total_height(&self) -> u32 {
-        1
-    }
-
-    fn is_focused(&self) -> bool {
-        self.focused
-    }
-
-    fn set_focused(&mut self, focused: bool) {
-        self.focused = focused;
-    }
-
-    fn is_dirty(&self) -> bool {
-        self.dirty
-    }
-
-    fn draw(&mut self, text_buffer: &mut TextBuffer) {
-        self.dirty = false;
-
-        if self.focused {
-            text_buffer.change_cursor_bg_color([0.8, 0.8, 0.8, 1.0]);
-            text_buffer.change_cursor_fg_color([0.2, 0.2, 0.2, 1.0]);
-        } else {
-            text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
-            text_buffer.change_cursor_fg_color([0.8, 0.8, 0.8, 1.0]);
-        }
-        text_buffer.move_cursor(self.x as i32, self.y as i32);
-        let text_width = (self.width as usize).min(self.text.len());
-        let text: String = self.text[(self.text.len() - text_width)..].to_string();
-        let spaces: String = iter::repeat(" ")
-            .take(self.width as usize - text_width)
-            .collect();
-        let text = text + &*spaces;
-        text_buffer.write(format!("{}{}{}", self.prefix, text, self.suffix));
-    }
-
-    fn handle_input(&mut self, input: &Input, filter: &Filter) -> bool {
-        let mut handled = false;
-        if self.focused {
-            if input.was_just_pressed(VirtualKeyCode::Back) {
-                self.text.pop();
-                self.dirty = true;
-                handled = true;
-            }
-            for keycode in input.get_just_pressed_list() {
-                if let Some(mut character) = filter.get(&keycode) {
-                    let mut text = String::new();
-                    if input.is_pressed(VirtualKeyCode::LShift)
-                        || input.is_pressed(VirtualKeyCode::RShift)
-                        {
-                            text.push_str(&*character.to_uppercase().to_string());
-                        } else {
-                        text.push(*character);
-                    }
-                    self.text.push_str(&*text);
-                    self.dirty = true;
-                    handled = true;
-                }
-            }
-        }
-        handled
-    }
-}
-
-impl TextInput {
-    /// Initializes a new TextInput with the given position and width
-    pub fn new(width: u32) -> TextInput {
-        TextInput {
-            x: 0,
-            y: 0,
-            width: width,
-            text: String::new(),
-            prefix: String::new(),
-            suffix: String::new(),
-            focused: false,
-            dirty: true,
-        }
-    }
-
-    /// Sets the position of the TextInput
-    pub fn with_pos(mut self, position: (u32, u32)) -> TextInput {
-        let (x, y) = position;
-        self.x = x;
-        self.y = y;
-        self
-    }
-
-    /// Sets the width of the TextInput.
-    pub fn with_width(mut self, width: u32) -> TextInput {
-        self.width = width;
-        self
-    }
-
-    /// Sets the text of the TextInput.
-    pub fn with_text<T: Into<String>>(mut self, text: T) -> TextInput {
-        self.text = text.into();
-        self
-    }
-
-    /// Sets the prefix text of the TextInput.
-    pub fn with_prefix<T: Into<String>>(mut self, prefix: T) -> TextInput {
-        self.prefix = prefix.into();
-        self
-    }
-
-    /// Sets the suffix text of the TextInput.
-    pub fn with_suffix<T: Into<String>>(mut self, suffix: T) -> TextInput {
-        self.suffix = suffix.into();
-        self
-    }
-
-    /// Sets weather the TextInput is focused.
-    pub fn with_focus(mut self, focused: bool) -> TextInput {
-        self.focused = focused;
-        self
-    }
+    fn handle_input(&mut self, input: &Input) -> bool;
 }
 
 /// Represents a HashMap from VirtualKeyCode to character. Used to filter out which characters get registered by the textinput.
+#[derive(Clone, Debug)]
 pub struct Filter {
     map: HashMap<VirtualKeyCode, char>,
 }
