@@ -192,7 +192,7 @@ impl Terminal {
         }
     }
 
-    /// Refreshes the screen and returns weather the while-loop should continue (is the program running)
+    /// Refreshes the screen and returns whether the while-loop should continue (is the program running)
     #[cfg(debug_assertions)]
     pub fn refresh(&self) -> bool {
         let mut frame_counter = self.frame_counter.borrow_mut();
@@ -210,7 +210,7 @@ impl Terminal {
         }
     }
 
-    /// Refreshes the screen and returns weather the while-loop should continue (is the program running)
+    /// Refreshes the screen and returns whether the while-loop should continue (is the program running)
     #[cfg(not(debug_assertions))]
     pub fn refresh(&self) -> bool {
         let mut frame_counter = self.frame_counter.borrow_mut();

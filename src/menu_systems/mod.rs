@@ -1,4 +1,4 @@
-//! Module doc
+//! Menu systems enable easy interface creation
 
 mod text_input;
 mod menu;

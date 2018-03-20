@@ -56,7 +56,7 @@ fn main() {
             text_buffer.move_cursor(5, 4);
             text_buffer.move_cursor(5, 10);
             text_buffer.write(format!(
-                "{}{}",
+                "{} {}",
                 text_input.get_text(),
                 text_input_2.get_text()
             ));

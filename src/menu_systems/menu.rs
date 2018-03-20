@@ -75,17 +75,6 @@ impl Menu {
         self
     }
 
-    /*
-        /// Get a reference of the box of the currently selected item, if such exists.
-        pub fn get_current_focused_item(&self) -> Option<&Box<InterfaceItem>> {
-            if !self.focused || self.interface_items.len() == 0 {
-                None
-            } else {
-                self.interface_items.get(self.select_idx as usize)
-            }
-        }
-    */
-
     /// Get the position of the Menu
     pub fn get_pos(&self) -> (u32, u32) {
         (self.x, self.y)
@@ -114,12 +103,13 @@ impl Menu {
         self.focused
     }
 
-    /// Set weather the menu is focused
+    /// Set whether the menu is focused
     pub fn set_focused(&mut self, focused: bool) {
         self.focused = focused;
     }
 
-    /// Handle input for this menu and children if required
+    /// Update the menu, first handling any input if necessary, checking dirtyness,
+    /// saving changes for later drawing and returning whether the menu should be redrawn or not.
     pub fn update<T: 'static + InterfaceItem + Clone>(
         &mut self,
         input: &Input,
@@ -153,7 +143,7 @@ impl Menu {
         dirty
     }
 
-    /// Draw the menu
+    /// Draw the menu and any saved children (see [`update(input, children)`](#method.update))
     pub fn draw(&mut self, text_buffer: &mut TextBuffer) {
         self.dirty = false;
         let mut h_off = 0;
