@@ -8,7 +8,7 @@ use input::Input;
 
 /// Represents a text-input field, that can be focused, takes in input (text),
 /// and it's possible to get the input with get_text
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TextInput {
     x: u32,
     y: u32,

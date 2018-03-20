@@ -6,11 +6,12 @@ use text_buffer::TextBuffer;
 use glutin::VirtualKeyCode;
 
 /// Represents an InterfaceItem, that can be added in a menu
-pub struct MenuItem<T: InterfaceItem> {
+#[derive(Clone)]
+pub struct MenuItem<T: InterfaceItem + Clone> {
     pub(crate) item: T,
 }
 
-impl<T: 'static + InterfaceItem> MenuItem<T> {
+impl<T: 'static + InterfaceItem + Clone> MenuItem<T> {
     /// Creates a new menu item from the given InterfaceItem
     pub fn new(item: T) -> MenuItem<T> {
         MenuItem {
@@ -19,7 +20,7 @@ impl<T: 'static + InterfaceItem> MenuItem<T> {
     }
 }
 
-impl<T: 'static + InterfaceItem> Deref for MenuItem<T> {
+impl<T: 'static + InterfaceItem + Clone> Deref for MenuItem<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -27,7 +28,7 @@ impl<T: 'static + InterfaceItem> Deref for MenuItem<T> {
     }
 }
 
-impl<T: 'static + InterfaceItem> DerefMut for MenuItem<T> {
+impl<T: 'static + InterfaceItem + Clone> DerefMut for MenuItem<T> {
     fn deref_mut(&mut self) -> &mut T {
         &mut self.item
     }
@@ -42,6 +43,7 @@ pub struct Menu {
     select_idx: u32,
     total_width: u32,
     total_height: u32,
+    cloned_interface_items: Vec<Box<InterfaceItem>>,
 }
 
 impl Menu {
@@ -55,6 +57,7 @@ impl Menu {
             select_idx: 0,
             total_width: 0,
             total_height: 0,
+            cloned_interface_items: Vec::new(),
         }
     }
 
@@ -116,31 +119,8 @@ impl Menu {
         self.focused = focused;
     }
 
-    /// Is the menu dirty and should it be redrawn
-    pub fn is_dirty<T: 'static + InterfaceItem>(&self, children: &[&MenuItem<T>]) -> bool {
-        let mut children_are_dirty = false; // No lewding the dragon loli
-        for item in children {
-            children_are_dirty = children_are_dirty || item.is_dirty();
-        }
-        self.dirty || children_are_dirty
-    }
-
-    /// Draw the menu
-    pub fn draw<T: 'static + InterfaceItem>(&mut self, text_buffer: &mut TextBuffer, children: &mut [&mut MenuItem<T>]) {
-        self.dirty = false;
-        let mut h_off = 0;
-        let mut idx = 0;
-        for item in children {
-            item.set_focused(self.select_idx == idx);
-            item.set_pos((self.x, self.y + h_off));
-            h_off += item.get_total_height();
-            item.draw(text_buffer);
-            idx += 1;
-        }
-    }
-
     /// Handle input for this menu and children if required
-    pub fn handle_input<T: 'static + InterfaceItem>(
+    pub fn update<T: 'static + InterfaceItem + Clone>(
         &mut self,
         input: &Input,
         children: &mut [&mut MenuItem<T>],
@@ -148,21 +128,54 @@ impl Menu {
         if !self.focused {
             return false;
         }
-        let mut catched_input = false;
         if input.was_just_pressed(VirtualKeyCode::Up) {
             self.select_idx = (((self.select_idx as i32 + children.len() as i32) - 1)
                 % children.len() as i32) as u32;
-            catched_input = true;
             self.dirty = true;
         }
         if input.was_just_pressed(VirtualKeyCode::Down) {
             self.select_idx = (((self.select_idx as i32) + 1) % children.len() as i32) as u32;
-            catched_input = true;
             self.dirty = true;
         }
-        if let Some(item) = children.get_mut(self.select_idx as usize) {
-            return item.handle_input(input) || catched_input;
+        let mut idx = 0;
+        for item in &mut children.iter_mut() {
+            item.set_focused(self.select_idx == idx);
+            idx += 1;
         }
-        catched_input
+        if let Some(item) = children.get_mut(self.select_idx as usize) {
+            item.handle_input(input);
+        }
+
+        let dirty = self.is_dirty(children);
+        if dirty {
+            self.clone_list(children);
+        }
+        dirty
+    }
+
+    /// Draw the menu
+    pub fn draw(&mut self, text_buffer: &mut TextBuffer) {
+        self.dirty = false;
+        let mut h_off = 0;
+        for item in &mut self.cloned_interface_items {
+            item.set_pos((self.x, self.y + h_off));
+            h_off += item.get_total_height();
+            item.draw(text_buffer);
+        }
+    }
+
+    fn is_dirty<T: 'static + InterfaceItem + Clone>(&self, children: &mut [&mut MenuItem<T>]) -> bool {
+        let mut children_are_dirty = false; // No lewding the dragon loli
+        for item in children {
+            children_are_dirty = children_are_dirty || item.is_dirty();
+        }
+        self.dirty || children_are_dirty
+    }
+
+    fn clone_list<T: 'static + InterfaceItem + Clone>(&mut self, children: &mut [&mut MenuItem<T>]) {
+        self.cloned_interface_items.clear();
+        for item in children {
+            self.cloned_interface_items.push(Box::new(item.clone().item));
+        }
     }
 }
