@@ -24,14 +24,16 @@ fn main() {
         TextInput::new(10)
             .with_prefix("Test: [")
             .with_suffix("]")
-            .with_filter(filter.clone()),
+            .with_filter(filter.clone())
+            .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.2, 0.8, 0.2, 1.0])),
     );
 
     let mut text_input_2 = MenuItem::new(
         TextInput::new(10)
             .with_prefix("Test 2:  [")
             .with_suffix("]")
-            .with_filter(filter.clone()),
+            .with_filter(filter.clone())
+            .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.8, 0.2, 0.2, 1.0])),
     );
 
     let mut menu = Menu::new().with_pos((5, 5)).with_focus(true);

@@ -5,11 +5,20 @@ use std::iter::repeat;
 use glutin::VirtualKeyCode;
 use text_buffer::TextBuffer;
 use input::Input;
+use text_buffer::Color;
 
 /// Represents a text-input field, that can be focused, takes in input (text),
 /// and it's possible to get the input with get_text
 #[derive(Debug, Clone)]
 pub struct TextInput {
+    /// Background-color for when the field is unfocused
+    pub unfocused_bg: Color,
+    /// Background-color for when the field is focused
+    pub focused_bg: Color,
+    /// Foreground-color for when the field is unfocused
+    pub unfocused_fg: Color,
+    /// Foreground-color for when the field is focused
+    pub focused_fg: Color,
     x: u32,
     y: u32,
     width: u32,
@@ -34,6 +43,10 @@ impl TextInput {
             filter: Filter::empty_filter(),
             focused: false,
             dirty: true,
+            unfocused_bg: [0.0, 0.0, 0.0, 0.0],
+            unfocused_fg: [0.8, 0.8, 0.8, 1.0],
+            focused_bg: [0.8, 0.8, 0.8, 1.0],
+            focused_fg: [0.2, 0.2, 0.2, 1.0],
         }
     }
 
@@ -69,7 +82,7 @@ impl TextInput {
         self
     }
 
-    /// Sets weather the TextInput is focused.
+    /// Sets whether the TextInput is focused.
     pub fn with_focus(mut self, focused: bool) -> TextInput {
         self.focused = focused;
         self
@@ -78,6 +91,22 @@ impl TextInput {
     /// Sets the filter for the TextInput.
     pub fn with_filter(mut self, filter: Filter) -> TextInput {
         self.filter = filter;
+        self
+    }
+
+    /// Sets the (fg, bg) colors for when the field is unfocused
+    pub fn with_unfocused_colors(mut self, colors: (Color, Color)) -> TextInput {
+        let (fg, bg) = colors;
+        self.unfocused_fg = fg;
+        self.unfocused_bg = bg;
+        self
+    }
+
+    /// Sets the (fg, bg) colors for when the field is focused
+    pub fn with_focused_colors(mut self, colors: (Color, Color)) -> TextInput {
+        let (fg, bg) = colors;
+        self.focused_fg = fg;
+        self.focused_bg = bg;
         self
     }
 
@@ -137,11 +166,11 @@ impl InterfaceItem for TextInput {
         self.dirty = false;
 
         if self.focused {
-            text_buffer.change_cursor_bg_color([0.8, 0.8, 0.8, 1.0]);
-            text_buffer.change_cursor_fg_color([0.2, 0.2, 0.2, 1.0]);
+            text_buffer.change_cursor_bg_color(self.focused_bg);
+            text_buffer.change_cursor_fg_color(self.focused_fg);
         } else {
-            text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
-            text_buffer.change_cursor_fg_color([0.8, 0.8, 0.8, 1.0]);
+            text_buffer.change_cursor_bg_color(self.unfocused_bg);
+            text_buffer.change_cursor_fg_color(self.unfocused_fg);
         }
         text_buffer.move_cursor(self.x as i32, self.y as i32);
         let text_width = (self.width as usize).min(self.text.len());

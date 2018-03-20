@@ -69,7 +69,7 @@ impl Menu {
         self
     }
 
-    /// Sets weather the TextInput is focused.
+    /// Sets whether the TextInput is focused.
     pub fn with_focus(mut self, focused: bool) -> Menu {
         self.focused = focused;
         self

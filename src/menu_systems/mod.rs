@@ -35,7 +35,7 @@ pub trait InterfaceItem {
     fn is_dirty(&self) -> bool;
     /// Draw the InterfaceItem
     fn draw(&mut self, text_buffer: &mut TextBuffer);
-    /// Handle input for this InterfaceItem. Returns weather it handled any input.
+    /// Handle input for this InterfaceItem. Returns whether it handled any input.
     fn handle_input(&mut self, input: &Input) -> bool;
 }
 
