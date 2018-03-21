@@ -63,6 +63,8 @@ fn main() {
 }
 ```
 
+![What the example looks like](images/example_screenshot.png)
+
 ### Contributing & Code of Conduct
 You are welcome to contribute to this project, but before do review the [Contributing guidelines](CONTRIBUTING.md).
 
