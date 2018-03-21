@@ -1,11 +1,13 @@
 //! Menu systems enable easy interface creation
 
 mod text_input;
+mod text_label;
 mod menu;
 
 pub use self::text_input::TextInput;
+pub use self::text_label::TextLabel;
 pub use self::menu::Menu;
-pub use self::menu::MenuItem;
+pub use self::menu::MenuList;
 
 use std::collections::HashMap;
 

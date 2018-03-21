@@ -2,7 +2,7 @@ extern crate glerminal;
 
 use glerminal::terminal::TerminalBuilder;
 use glerminal::text_buffer::TextBuffer;
-use glerminal::menu_systems::{Filter, Menu, MenuItem, TextInput};
+use glerminal::menu_systems::{Filter, Menu, MenuList, TextInput, TextLabel};
 
 fn main() {
     let terminal = TerminalBuilder::new()
@@ -20,21 +20,21 @@ fn main() {
         .with_basic_numerals()
         .with_basic_special_symbols();
 
-    let mut text_input = MenuItem::new(
+    let mut text_label = TextLabel::new("Hello!", 15);
+
+    let mut text_input =
         TextInput::new(10)
             .with_prefix("Test: [")
             .with_suffix("]")
             .with_filter(filter.clone())
-            .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.2, 0.8, 0.2, 1.0])),
-    );
+            .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.2, 0.8, 0.2, 1.0]));
 
-    let mut text_input_2 = MenuItem::new(
+    let mut text_input_2 =
         TextInput::new(10)
             .with_prefix("Test 2:  [")
             .with_suffix("]")
             .with_filter(filter.clone())
-            .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.8, 0.2, 0.2, 1.0])),
-    );
+            .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.8, 0.2, 0.2, 1.0]));
 
     let mut menu = Menu::new().with_pos((5, 5)).with_focus(true);
 
@@ -51,20 +51,27 @@ fn main() {
 
         let input = terminal.get_current_input();
 
-        if menu.update(&input, &mut [&mut text_input, &mut text_input_2]) || fps_changed {
-            text_buffer.clear();
-            text_buffer.change_cursor_fg_color([0.8, 0.8, 0.8, 1.0]);
-            text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
-            text_buffer.move_cursor(5, 4);
-            text_buffer.move_cursor(5, 10);
-            text_buffer.write(format!(
-                "{} {}",
-                text_input.get_text(),
-                text_input_2.get_text()
-            ));
-            menu.draw(&mut text_buffer);
-            terminal.flush(&mut text_buffer);
-        }
+        if menu.update(
+            &input,
+            MenuList::new()
+                .with_item(&mut text_label)
+                .with_item(&mut text_input)
+                .with_item(&mut text_input_2),
+        ) || fps_changed
+            {
+                text_buffer.clear();
+                text_buffer.change_cursor_fg_color([0.8, 0.8, 0.8, 1.0]);
+                text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
+                text_buffer.move_cursor(5, 4);
+                text_buffer.move_cursor(5, 10);
+                text_buffer.write(format!(
+                    "{} {}",
+                    text_input.get_text(),
+                    text_input_2.get_text()
+                ));
+                menu.draw(&mut text_buffer);
+                terminal.flush(&mut text_buffer);
+            }
 
         terminal.draw(&text_buffer);
     }
