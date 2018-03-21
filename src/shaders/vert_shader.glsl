@@ -1,9 +1,9 @@
 #version 110
 
-in vec2 position;
-in vec2 texcoord;
-in vec4 color;
-in float shakiness;
+attribute vec2 position;
+attribute vec2 texcoord;
+attribute vec4 color;
+attribute float shakiness;
 
 varying vec2 f_texcoord;
 varying vec4 f_color;
