@@ -62,6 +62,7 @@ impl TextLabel {
     /// Sets the text of the TextLabel
     pub fn set_text<T: Into<String>>(&mut self, text: T) {
         self.text = text.into();
+        self.dirty = true;
     }
 
     /// Return the current text of the TextLabel
@@ -94,6 +95,9 @@ impl InterfaceItem for TextLabel {
     }
 
     fn set_focused(&mut self, focused: bool) {
+        if focused != self.focused {
+            self.dirty = true;
+        }
         self.focused = focused;
     }
 
@@ -101,7 +105,12 @@ impl InterfaceItem for TextLabel {
         self.dirty
     }
 
+    fn set_dirty(&mut self, dirty: bool) {
+        self.dirty = dirty;
+    }
+
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
+        self.dirty = false;
         if self.focused {
             text_buffer.change_cursor_bg_color([0.8, 0.8, 0.8, 1.0]);
             text_buffer.change_cursor_fg_color([0.2, 0.2, 0.2, 1.0]);

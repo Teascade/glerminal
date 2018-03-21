@@ -16,7 +16,7 @@ use input::Input;
 use glutin::VirtualKeyCode;
 
 /// Represents a single menu item: an item that is somewhere, can take input and can be drawn.
-pub trait InterfaceItem {
+pub trait InterfaceItem: InterfaceItemClone {
     /// Get the position of this InterfaceItem
     fn get_pos(&self) -> (u32, u32);
     /// Set the (absolute) position of this InterfaceItem
@@ -35,10 +35,33 @@ pub trait InterfaceItem {
     fn set_focused(&mut self, focused: bool);
     /// Should the InterfaceItem be redrawn (has changes happened, that mean it should be redrawn)
     fn is_dirty(&self) -> bool;
+    /// Set the dirtiness, this should only be called if something else does the drawing.
+    fn set_dirty(&mut self, dirty: bool);
     /// Draw the InterfaceItem
     fn draw(&mut self, text_buffer: &mut TextBuffer);
     /// Handle input for this InterfaceItem. Returns whether it handled any input.
     fn handle_input(&mut self, input: &Input) -> bool;
+}
+
+/// Represents a cloneable InterfaceItem; You should never implement this yourself, but instead
+/// derive Clone for all InterfaceItems.
+///
+/// E.g.
+/// ```
+/// #[derive(Clone)]
+/// pub struct Test {}
+///
+/// // Now you can implement only InterfaceItem safely to Test
+/// ```
+pub trait InterfaceItemClone {
+    /// Make a box of the cloned InterfaceItem
+    fn clone_box(&self) -> Box<InterfaceItem>;
+}
+
+impl<T: 'static + InterfaceItem + Clone> InterfaceItemClone for T {
+    fn clone_box(&self) -> Box<InterfaceItem> {
+        Box::new(self.clone())
+    }
 }
 
 /// Represents a HashMap from VirtualKeyCode to character. Used to filter out which characters get registered by the textinput.

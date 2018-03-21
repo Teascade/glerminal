@@ -155,11 +155,18 @@ impl InterfaceItem for TextInput {
     }
 
     fn set_focused(&mut self, focused: bool) {
+        if focused != self.focused {
+            self.dirty = true;
+        }
         self.focused = focused;
     }
 
     fn is_dirty(&self) -> bool {
         self.dirty
+    }
+
+    fn set_dirty(&mut self, dirty: bool) {
+        self.dirty = dirty;
     }
 
     fn draw(&mut self, text_buffer: &mut TextBuffer) {

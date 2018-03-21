@@ -7,8 +7,7 @@ use glutin::VirtualKeyCode;
 ///
 /// MenuList is used to draw and handle updates in the Menu and will also determines the order of the InferfaceItems in the menu.
 pub struct MenuList<'a> {
-    pub(crate) items_ref: Vec<Box<&'a mut InterfaceItem>>,
-    pub(crate) items: Vec<Box<InterfaceItem>>,
+    items_ref: Vec<Box<&'a mut InterfaceItem>>,
 }
 
 impl<'a> MenuList<'a> {
@@ -16,21 +15,26 @@ impl<'a> MenuList<'a> {
     pub fn new() -> MenuList<'a> {
         MenuList {
             items_ref: Vec::new(),
-            items: Vec::new(),
         }
     }
 
     /// Adds a InterfaceItem to the MenuList
     pub fn with_item<T: 'static + InterfaceItem + Clone>(mut self, item: &'a mut T) -> MenuList<'a> {
-        self.items.push(Box::new(item.clone()));
         self.items_ref.push(Box::new(item));
         self
     }
 
     /// Adds a InterfaceItem to the MenuList
     pub fn add_item<T: 'static + InterfaceItem + Clone>(&mut self, item: &'a mut T) {
-        self.items.push(Box::new(item.clone()));
         self.items_ref.push(Box::new(item));
+    }
+
+    pub(crate) fn get_cloned_list(&self) -> Vec<Box<InterfaceItem>> {
+        let mut list = Vec::new();
+        for item in &self.items_ref {
+            list.push(item.clone_box());
+        }
+        list
     }
 }
 
@@ -39,7 +43,7 @@ pub struct Menu {
     x: u32,
     y: u32,
     focused: bool,
-    dirty: bool,
+    is_dirty: bool,
     select_idx: u32,
     total_width: u32,
     total_height: u32,
@@ -53,7 +57,7 @@ impl Menu {
             x: 0,
             y: 0,
             focused: false,
-            dirty: true,
+            is_dirty: false,
             select_idx: 0,
             total_width: 0,
             total_height: 0,
@@ -113,43 +117,39 @@ impl Menu {
     pub fn update(
         &mut self,
         input: &Input,
-        children: MenuList,
+        list: &mut MenuList,
     ) -> bool {
         if !self.focused {
             return false;
         }
 
-        let items = children.items;
-        let mut items_ref = children.items_ref;
+        let length = list.items_ref.len();
 
         if input.was_just_pressed(VirtualKeyCode::Up) {
-            self.select_idx = (((self.select_idx as i32 + items.len() as i32) - 1)
-                % items.len() as i32) as u32;
-            self.dirty = true;
+            self.select_idx = (((self.select_idx as i32 + length as i32) - 1)
+                % length as i32) as u32;
         }
         if input.was_just_pressed(VirtualKeyCode::Down) {
-            self.select_idx = (((self.select_idx as i32) + 1) % items.len() as i32) as u32;
-            self.dirty = true;
+            self.select_idx = (((self.select_idx as i32) + 1) % length as i32) as u32;
         }
         let mut idx = 0;
-        for item in &mut items_ref {
+        for item in &mut list.items_ref {
             item.set_focused(self.select_idx == idx);
             idx += 1;
         }
-        if let Some(item) = (&mut items_ref).get_mut(self.select_idx as usize) {
+        if let Some(item) = (&mut list.items_ref).get_mut(self.select_idx as usize) {
             item.handle_input(input);
         }
 
-        let dirty = self.is_dirty(&items);
-        if dirty {
-            self.cloned_interface_items = items;
+        self.is_dirty = self.children_are_dirty(&mut list.items_ref);
+        if self.is_dirty {
+            self.cloned_interface_items = list.get_cloned_list();
         }
-        dirty
+        self.is_dirty
     }
 
     /// Draw the menu and any saved children (see [`update(input, children)`](#method.update))
     pub fn draw(&mut self, text_buffer: &mut TextBuffer) {
-        self.dirty = false;
         let mut h_off = 0;
         for item in &mut self.cloned_interface_items {
             item.set_pos((self.x, self.y + h_off));
@@ -158,11 +158,12 @@ impl Menu {
         }
     }
 
-    fn is_dirty(&self, children: &Vec<Box<InterfaceItem>>) -> bool {
+    fn children_are_dirty(&self, children: &mut Vec<Box<&mut InterfaceItem>>) -> bool {
         let mut children_are_dirty = false; // No lewding the dragon loli
         for item in children {
-            children_are_dirty = children_are_dirty || item.is_dirty()
+            children_are_dirty = children_are_dirty || item.is_dirty();
+            item.set_dirty(false);
         }
-        self.dirty || children_are_dirty
+        children_are_dirty
     }
 }
