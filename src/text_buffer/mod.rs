@@ -141,6 +141,7 @@ pub struct TextBuffer {
     pub(crate) width: i32,
     pub(crate) mesh: Option<TextBufferMesh>,
     pub(crate) background_mesh: Option<BackgroundMesh>,
+    pub(crate) aspect_ratio: f32,
     cursor: TermCursor,
 }
 
@@ -166,6 +167,10 @@ impl TextBuffer {
             mesh = Some(TextBufferMesh::new(terminal.get_program(), dimensions, &terminal.font));
             background_mesh = Some(BackgroundMesh::new(terminal.get_background_program(), dimensions));
         }
+
+        let true_height = height * terminal.font.line_height as i32;
+        let true_width = width * terminal.font.size as i32;
+
         Ok(TextBuffer {
             chars,
             height,
@@ -179,6 +184,7 @@ impl TextBuffer {
                 background_color: [0.0; 4],
                 shakiness: 0.0,
             },
+            aspect_ratio: true_width as f32 / true_height as f32,
         })
     }
 

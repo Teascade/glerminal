@@ -11,10 +11,12 @@ use glutin::VirtualKeyCode;
 
 pub struct Display {
     pub proj_matrix: Cell<Matrix4>,
+    aspect_ratio: Cell<f32>,
     window: GlWindow,
     input: RefCell<Input>,
     events_loop: RefCell<EventsLoop>,
-    aspect_ratio: f32,
+    width: Cell<u32>,
+    height: Cell<u32>,
 }
 
 impl Display {
@@ -55,8 +57,10 @@ impl Display {
             window: window,
             input: RefCell::new(Input::new()),
             events_loop: RefCell::new(events_loop),
-            aspect_ratio: aspect_ratio,
+            aspect_ratio: Cell::new(aspect_ratio),
             proj_matrix: Cell::new(proj_matrix),
+            width: Cell::new(width),
+            height: Cell::new(height),
         }
     }
 
@@ -93,11 +97,9 @@ impl Display {
             });
 
         if let Some((width, height)) = dimensions {
-            self.proj_matrix.set(renderer::create_proj_matrix(
-                (width as f32, height as f32),
-                self.aspect_ratio,
-            ));
-            renderer::update_viewport((width, height));
+            self.width.set(width);
+            self.height.set(height);
+            self.update_view();
         }
 
         running
@@ -115,10 +117,27 @@ impl Display {
         self.window.show();
     }
 
+    pub(crate) fn get_aspect_ratio(&self) -> f32 {
+        self.aspect_ratio.get()
+    }
+
+    pub(crate) fn set_aspect_ratio(&self, aspect_ratio: f32) {
+        self.aspect_ratio.set(aspect_ratio);
+        self.update_view()
+    }
+
     #[cfg(test)]
     pub(crate) fn update_virtual_keycode(&mut self, keycode: VirtualKeyCode, pressed: bool) {
         self.input
             .borrow_mut()
             .update_virtual_keycode(keycode, pressed);
+    }
+
+    fn update_view(&self) {
+        self.proj_matrix.set(renderer::create_proj_matrix(
+            (self.width.get() as f32, self.height.get() as f32),
+            self.aspect_ratio.get(),
+        ));
+        renderer::update_viewport((self.width.get(), self.height.get()));
     }
 }

@@ -1,6 +1,24 @@
-use super::{random_color, run_multiple_times, test_setup_text_buffer};
+use super::{random_color, run_multiple_times, test_setup_text_buffer, test_setup_text_buffer_with_terminal};
 use rand;
 use rand::distributions::{Range, Sample};
+
+#[test]
+fn test_text_buffer_aspect_ratio() {
+    run_multiple_times(10, || {
+        let mut range = Range::new(2i32, 100);
+        let mut rnd = rand::thread_rng();
+
+        let width = range.sample(&mut rnd);
+        let height = range.sample(&mut rnd);
+
+        let (text_buffer, terminal) = test_setup_text_buffer_with_terminal((width, height));
+        let ar_height = height * terminal.font.line_height as i32;
+        let ar_width = width * terminal.font.size as i32;
+        let ar = ar_width as f32 / ar_height as f32;
+
+        assert_eq!(text_buffer.aspect_ratio, ar);
+    });
+}
 
 #[test]
 fn test_text_buffer_size() {

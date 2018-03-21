@@ -42,6 +42,15 @@ fn test_setup_text_buffer(dimensions: (i32, i32)) -> TextBuffer {
     }
 }
 
+
+fn test_setup_text_buffer_with_terminal(dimensions: (i32, i32)) -> (TextBuffer, Terminal) {
+    let terminal = test_setup_open_terminal();
+    (match TextBuffer::new(&terminal, dimensions) {
+        Ok(buffer) => buffer,
+        Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
+    }, terminal)
+}
+
 fn run_multiple_times<F: Fn()>(how_many_times: u32, f: F) {
     for _ in 0..how_many_times {
         f();
