@@ -1,5 +1,5 @@
 use glutin::{ContextBuilder, ElementState, Event, EventsLoop, GlContext, GlWindow, WindowBuilder,
-             WindowEvent};
+             WindowEvent, GlRequest, Api};
 use gl;
 
 use renderer::{self, Matrix4};
@@ -34,7 +34,8 @@ impl Display {
             .with_title(title)
             .with_dimensions(width, height)
             .with_visibility(visibility);
-        let context = ContextBuilder::new().with_vsync(true);
+        let context = ContextBuilder::new().with_vsync(true)
+            .with_gl(GlRequest::Specific(Api::OpenGl, (2, 0)));
         let window = match GlWindow::new(window, context, &events_loop) {
             Ok(window) => window,
             Err(err) => panic!(err),
