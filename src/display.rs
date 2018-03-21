@@ -35,7 +35,7 @@ impl Display {
             .with_dimensions(width, height)
             .with_visibility(visibility);
         let context = ContextBuilder::new().with_vsync(true)
-            .with_gl(GlRequest::Specific(Api::OpenGl, (2, 0)));
+            .with_gl(GlRequest::Specific(Api::OpenGl, (3, 1)));
         let window = match GlWindow::new(window, context, &events_loop) {
             Ok(window) => window,
             Err(err) => panic!(err),

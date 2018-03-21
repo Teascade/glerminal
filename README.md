@@ -1,5 +1,5 @@
 # GLerminal, an OpenGL terminal
-[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=0.1.4)](https://travis-ci.org/Teascade/glerminal)
+[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=0.1.5)](https://travis-ci.org/Teascade/glerminal)
 [![Docs](https://docs.rs/glerminal/badge.svg)](https://docs.rs/glerminal)
 [![Crates.io](https://img.shields.io/crates/v/glerminal.svg)](https://crates.io/crates/glerminal)
 
@@ -14,7 +14,9 @@ Currently supported features include:
 - Changing foreground and background colors to whatever you want!
 - Shaking text
 - A text-parser that will make it easy to write whatever you want and make it look cool!
-  - Parseable text example: `"Hello, [fg=red]this is red[/fg] and [shake=1.0]this is shaking[/shake]."`
+  - Parseable text example: `"Hello, [fg=red]this is red[/fg] and [shake=1.0]this is shaking[/shake]."
+  
+***Note: Requires OpenGL 3.1+ support***
 
 ### Table of Contents
 - [How to use](#how-to-use)

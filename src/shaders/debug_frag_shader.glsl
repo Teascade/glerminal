@@ -1,8 +1,9 @@
-#version 110
+#version 140
 
-varying vec2 f_texcoord;
+in vec2 f_texcoord;
 
+out vec4 color;
 
 void main() {
-  gl_FragColor = vec4(0.1, 1, 0.1, 1);
+  color = vec4(0.1, 1, 0.1, 1);
 }
