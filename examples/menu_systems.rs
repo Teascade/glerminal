@@ -20,7 +20,7 @@ fn main() {
         .with_basic_numerals()
         .with_basic_special_symbols();
 
-    let mut text_label = TextLabel::new("FPS: -", 15);
+    let mut text_label = TextLabel::new("FPS: -", 30);
 
     let mut text_input = TextInput::new(10)
         .with_prefix("Test: [")
@@ -44,13 +44,14 @@ fn main() {
         let curr_fps = terminal.get_fps();
         if curr_fps != fps {
             fps = curr_fps;
-            text_label.set_text(format!("FPS: {}", fps));
+            text_label.set_text(format!("FPS: {}, delta_time: {}", fps, terminal.delta_time()));
         }
 
         let input = terminal.get_current_input();
 
         let dirty = menu.update(
             &input,
+            terminal.delta_time(),
             &mut MenuList::new()
                 .with_item(&mut text_label)
                 .with_item(&mut text_input)

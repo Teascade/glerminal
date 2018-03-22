@@ -1,5 +1,5 @@
 use super::{run_multiple_times, test_setup_open_terminal};
-use terminal::FrameCounter;
+use terminal::Timer;
 use rand;
 use rand::distributions::{Range, Sample};
 use std::time::Duration;
@@ -40,7 +40,7 @@ pub fn test_terminal_frame_counter() {
 
         let target_fps = range.sample(&mut rnd);
 
-        let mut frame_counter = FrameCounter::new();
+        let mut frame_counter = Timer::new();
         for _ in 0..target_fps {
             frame_counter.update();
         }

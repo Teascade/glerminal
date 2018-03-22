@@ -219,4 +219,6 @@ impl InterfaceItem for TextInput {
         }
         handled
     }
+
+    fn update(&mut self, _: f32) {}
 }

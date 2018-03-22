@@ -132,4 +132,6 @@ impl InterfaceItem for TextLabel {
     fn handle_input(&mut self, _: &Input) -> bool {
         false
     }
+
+    fn update(&mut self, _: f32) {}
 }

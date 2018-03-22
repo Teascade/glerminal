@@ -135,7 +135,8 @@ pub struct Terminal {
     pub(crate) headless: bool,
     since_start: SystemTime,
     pub(crate) font: Font,
-    frame_counter: RefCell<FrameCounter>,
+
+    timer: RefCell<Timer>,
 }
 
 impl Terminal {
@@ -180,7 +181,7 @@ impl Terminal {
             headless,
             since_start: SystemTime::now(),
             font,
-            frame_counter: RefCell::new(FrameCounter::new()),
+            timer: RefCell::new(Timer::new()),
         }
     }
 
@@ -195,9 +196,9 @@ impl Terminal {
     /// Refreshes the screen and returns whether the while-loop should continue (is the program running)
     #[cfg(debug_assertions)]
     pub fn refresh(&self) -> bool {
-        let mut frame_counter = self.frame_counter.borrow_mut();
-        frame_counter.update();
-        drop(frame_counter);
+        let mut timer = self.timer.borrow_mut();
+        timer.update();
+        drop(timer);
 
         if let Some(ref display) = self.display {
             let input = self.get_current_input();
@@ -213,9 +214,9 @@ impl Terminal {
     /// Refreshes the screen and returns whether the while-loop should continue (is the program running)
     #[cfg(not(debug_assertions))]
     pub fn refresh(&self) -> bool {
-        let mut frame_counter = self.frame_counter.borrow_mut();
-        frame_counter.update();
-        drop(frame_counter);
+        let mut timer = self.timer.borrow_mut();
+        timer.update();
+        drop(timer);
 
         if let Some(ref display) = self.display {
             display.refresh() && self.running.get()
@@ -285,7 +286,12 @@ impl Terminal {
 
     /// Returns the current fps; updates every second
     pub fn get_fps(&self) -> f32 {
-        self.frame_counter.borrow().get_fps()
+        self.timer.borrow().get_fps()
+    }
+
+    /// Get the delta-time (in seconds).
+    pub fn delta_time(&self) -> f32 {
+        self.timer.borrow().get_delta_time()
     }
 
     pub(crate) fn get_program(&self) -> renderer::Program {
@@ -318,32 +324,46 @@ impl Terminal {
     }
 }
 
-pub(crate) struct FrameCounter {
-    frames: u32,
+pub(crate) struct Timer {
     last_check: SystemTime,
+    delta_time: f32,
+    frames: u32,
     fps: f32,
+    since_last_fps: f32,
 }
 
-impl FrameCounter {
-    pub fn new() -> FrameCounter {
-        FrameCounter {
-            frames: 0,
+impl Timer {
+    pub fn new() -> Timer {
+        Timer {
             last_check: SystemTime::now(),
+            delta_time: 0.0,
+            frames: 0,
             fps: 0.0,
+            since_last_fps: 0.0,
         }
     }
 
     pub fn update(&mut self) {
         self.frames += 1;
         let current_time = SystemTime::now();
-        if current_time.duration_since(self.last_check).unwrap() > Duration::from_secs(1) {
+        let duration = current_time.duration_since(self.last_check).unwrap();
+        self.last_check = current_time;
+
+        self.delta_time = duration.as_secs() as f32 + duration.subsec_nanos() as f32 / 1_000_000_000.0;
+
+        self.since_last_fps += self.delta_time;
+        if self.since_last_fps >= 1.0 {
+            self.since_last_fps -= 1.0;
             self.fps = self.frames as f32;
-            self.last_check = current_time;
             self.frames = 0;
         }
     }
 
     pub fn get_fps(&self) -> f32 {
         self.fps
+    }
+
+    pub fn get_delta_time(&self) -> f32 {
+        self.delta_time
     }
 }

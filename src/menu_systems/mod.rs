@@ -41,8 +41,12 @@ pub trait InterfaceItem: InterfaceItemClone {
     fn set_dirty(&mut self, dirty: bool);
     /// Draw the InterfaceItem
     fn draw(&mut self, text_buffer: &mut TextBuffer);
-    /// Handle input for this InterfaceItem. Returns whether it handled any input.
+    /// Handle input for this InterfaceItem.
+    ///
+    /// Returns whether it handled any input.
     fn handle_input(&mut self, input: &Input) -> bool;
+    /// Update this InterfaceItem; delta is given in seconds. (see [Terminal.delta_time()](../struct.Terminal.html))
+    fn update(&mut self, delta: f32);
 }
 
 /// Represents a cloneable InterfaceItem; You should never implement this yourself, but instead

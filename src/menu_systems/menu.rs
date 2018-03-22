@@ -117,7 +117,7 @@ impl Menu {
 
     /// Update the menu, first handling any input if necessary, checking dirtyness,
     /// saving changes for later drawing and returning whether the menu should be redrawn or not.
-    pub fn update(&mut self, input: &Input, list: &mut MenuList) -> bool {
+    pub fn update(&mut self, input: &Input, delta: f32, list: &mut MenuList) -> bool {
         if !self.focused {
             return false;
         }
@@ -163,6 +163,7 @@ impl Menu {
         let mut idx = 0;
         for item in &mut list.items_ref {
             item.set_focused(self.select_idx == idx);
+            item.update(delta);
             idx += 1;
         }
         if let Some(item) = (&mut list.items_ref).get_mut(self.select_idx as usize) {
