@@ -23,6 +23,7 @@ pub struct TextInput {
     y: u32,
     min_width: Option<u32>,
     max_width: Option<u32>,
+    character_limit: Option<u32>,
     text: String,
     prefix: String,
     suffix: String,
@@ -54,6 +55,7 @@ impl TextInput {
             y: 0,
             min_width: actual_min_width,
             max_width: actual_max_width,
+            character_limit: None,
             text: String::new(),
             prefix: String::new(),
             suffix: String::new(),
@@ -152,6 +154,12 @@ impl TextInput {
         self
     }
 
+    /// Limtis the amount of characters that the TextInput will accept.
+    pub fn with_character_limit<T: Into<Option<u32>>>(mut self, char_limit: T) -> TextInput {
+        self.character_limit = char_limit.into();
+        self
+    }
+
     /// Sets the filter that will be used when taking inputs to write into the TextInput
     pub fn set_filter(&mut self, filter: Filter) {
         self.filter = filter;
@@ -180,6 +188,11 @@ impl TextInput {
         }
         self.min_width = actual_min_width;
         self.max_width = actual_max_width;
+    }
+
+    /// Limtis the amount of characters that the TextInput will accept.
+    pub fn set_character_limit<T: Into<Option<u32>>>(mut self, char_limit: T) {
+        self.character_limit = char_limit.into();
     }
 
     /// Gets the filter
@@ -310,18 +323,22 @@ impl InterfaceItem for TextInput {
                 handled = true;
             }
             for keycode in input.get_just_pressed_list() {
-                if let Some(mut character) = self.filter.get(&keycode) {
-                    let mut text = String::new();
-                    if input.is_pressed(VirtualKeyCode::LShift)
-                        || input.is_pressed(VirtualKeyCode::RShift)
-                    {
-                        text.push_str(&*character.to_uppercase().to_string());
-                    } else {
-                        text.push(*character);
+                if self.character_limit.is_none()
+                    || self.character_limit.unwrap() > self.text.len() as u32
+                {
+                    if let Some(mut character) = self.filter.get(&keycode) {
+                        let mut text = String::new();
+                        if input.is_pressed(VirtualKeyCode::LShift)
+                            || input.is_pressed(VirtualKeyCode::RShift)
+                        {
+                            text.push_str(&*character.to_uppercase().to_string());
+                        } else {
+                            text.push(*character);
+                        }
+                        self.text.push_str(&*text);
+                        self.dirty = true;
+                        handled = true;
                     }
-                    self.text.push_str(&*text);
-                    self.dirty = true;
-                    handled = true;
                 }
             }
         }
