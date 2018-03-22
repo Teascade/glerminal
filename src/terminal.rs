@@ -36,7 +36,7 @@
 #[allow(unused_imports)]
 use glutin::VirtualKeyCode;
 use std::cell::{Cell, RefCell};
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 
 use display::Display;
 use font::Font;
@@ -349,7 +349,8 @@ impl Timer {
         let duration = current_time.duration_since(self.last_check).unwrap();
         self.last_check = current_time;
 
-        self.delta_time = duration.as_secs() as f32 + duration.subsec_nanos() as f32 / 1_000_000_000.0;
+        self.delta_time =
+            duration.as_secs() as f32 + duration.subsec_nanos() as f32 / 1_000_000_000.0;
 
         self.since_last_fps += self.delta_time;
         if self.since_last_fps >= 1.0 {

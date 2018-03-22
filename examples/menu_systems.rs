@@ -21,6 +21,7 @@ fn main() {
         .with_basic_special_symbols();
 
     let mut text_label = TextLabel::new("FPS: -", 30);
+    let mut empty_space = TextLabel::new("", 0);
 
     let mut text_input = TextInput::new(10)
         .with_prefix("Test: [")
@@ -31,10 +32,11 @@ fn main() {
     let mut text_label_2 = TextLabel::new("Hello! Text in-between!", 25);
 
     let mut text_input_2 = TextInput::new(10)
-        .with_prefix("Test 2:  [")
+        .with_prefix("Test 2: [")
         .with_suffix("]")
         .with_filter(filter.clone())
-        .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.8, 0.2, 0.2, 1.0]));
+        .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.8, 0.2, 0.2, 1.0]))
+        .with_caret(0.0);
 
     let mut menu = Menu::new().with_pos((5, 5)).with_focus(true);
 
@@ -44,7 +46,11 @@ fn main() {
         let curr_fps = terminal.get_fps();
         if curr_fps != fps {
             fps = curr_fps;
-            text_label.set_text(format!("FPS: {}, delta_time: {}", fps, terminal.delta_time()));
+            text_label.set_text(format!(
+                "FPS: {}, delta_time: {}",
+                fps,
+                terminal.delta_time()
+            ));
         }
 
         let input = terminal.get_current_input();
@@ -54,6 +60,7 @@ fn main() {
             terminal.delta_time(),
             &mut MenuList::new()
                 .with_item(&mut text_label)
+                .with_item(&mut empty_space)
                 .with_item(&mut text_input)
                 .with_item(&mut text_label_2)
                 .with_item(&mut text_input_2),

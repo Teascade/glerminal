@@ -28,6 +28,10 @@ pub struct TextInput {
     filter: Filter,
     focused: bool,
     dirty: bool,
+
+    caret: f32,
+    caret_timer: f32,
+    caret_showing: bool,
 }
 
 impl TextInput {
@@ -36,7 +40,7 @@ impl TextInput {
         TextInput {
             x: 0,
             y: 0,
-            width: width,
+            width: width.max(1),
             text: String::new(),
             prefix: String::new(),
             suffix: String::new(),
@@ -47,6 +51,10 @@ impl TextInput {
             unfocused_fg: [0.8, 0.8, 0.8, 1.0],
             focused_bg: [0.8, 0.8, 0.8, 1.0],
             focused_fg: [0.2, 0.2, 0.2, 1.0],
+
+            caret: 0.5,
+            caret_timer: 0.0,
+            caret_showing: false,
         }
     }
 
@@ -60,7 +68,7 @@ impl TextInput {
 
     /// Sets the width of the TextInput.
     pub fn with_width(mut self, width: u32) -> TextInput {
-        self.width = width;
+        self.width = width.max(1);
         self
     }
 
@@ -94,6 +102,14 @@ impl TextInput {
         self
     }
 
+    /// Determines how often (in seconds) the caret's status should update.
+    ///
+    /// Set 0.0 for no caret.
+    pub fn with_caret(mut self, delay: f32) -> TextInput {
+        self.caret = delay;
+        self
+    }
+
     /// Sets the (fg, bg) colors for when the field is unfocused
     pub fn with_unfocused_colors(mut self, colors: (Color, Color)) -> TextInput {
         let (fg, bg) = colors;
@@ -113,6 +129,13 @@ impl TextInput {
     /// Sets the filter that will be used when taking inputs to write into the TextInput
     pub fn set_filter(&mut self, filter: Filter) {
         self.filter = filter;
+    }
+
+    /// Determines how often (in seconds) the caret's status should update.
+    ///
+    /// Set 0.0 for no caret.
+    pub fn set_caret(&mut self, delay: f32) {
+        self.caret = delay;
     }
 
     /// Gets the filter
@@ -184,12 +207,21 @@ impl InterfaceItem for TextInput {
             text_buffer.change_cursor_fg_color(self.unfocused_fg);
         }
         text_buffer.move_cursor(self.x as i32, self.y as i32);
-        let text_width = (self.width as usize).min(self.text.len());
-        let text: String = self.text[(self.text.len() - text_width)..].to_string();
+
+        let caret_offset = if self.caret_showing { 1 } else { 0 };
+
+        let text_width = (self.width as usize - if self.focused && self.caret != 0.0 { 1 } else { 0 }).min(self.text.len());
+
+        let mut text: String = self.text[(self.text.len() - text_width)..].to_string();
+        if self.caret_showing {
+            text.push('_');
+        }
+
         let spaces: String = repeat(" ")
-            .take(self.width as usize - text_width)
+            .take(self.width as usize - text_width - if self.caret_showing { 1 } else { 0 })
             .collect();
         let text = text + &*spaces;
+
         text_buffer.write(format!("{}{}{}", self.prefix, text, self.suffix));
     }
 
@@ -220,5 +252,17 @@ impl InterfaceItem for TextInput {
         handled
     }
 
-    fn update(&mut self, _: f32) {}
+    fn update(&mut self, delta: f32) {
+        if !self.focused || self.caret == 0.0 {
+            self.caret_timer = 0.0;
+            self.caret_showing = false;
+        } else {
+            self.caret_timer += delta;
+            if self.caret_timer >= self.caret {
+                self.caret_timer -= self.caret;
+                self.caret_showing = !self.caret_showing;
+                self.dirty = true;
+            }
+        }
+    }
 }

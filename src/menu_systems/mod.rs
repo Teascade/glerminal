@@ -45,7 +45,7 @@ pub trait InterfaceItem: InterfaceItemClone {
     ///
     /// Returns whether it handled any input.
     fn handle_input(&mut self, input: &Input) -> bool;
-    /// Update this InterfaceItem; delta is given in seconds. (see [Terminal.delta_time()](../struct.Terminal.html))
+    /// Update this InterfaceItem; delta is given in seconds. (see [Terminal.delta_time()](../terminal/struct.Terminal.html))
     fn update(&mut self, delta: f32);
 }
 
