@@ -23,15 +23,14 @@ fn main() {
     let mut text_label = TextLabel::new("FPS: -", 30);
     let mut empty_space = TextLabel::new("", 0);
 
-    let mut text_input = TextInput::new(10)
-        .with_prefix("Test: [")
-        .with_suffix("]")
+    let mut text_input = TextInput::new(None, None)
+        .with_prefix("Test your limits: ")
         .with_filter(filter.clone())
         .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.2, 0.8, 0.2, 1.0]));
 
     let mut text_label_2 = TextLabel::new("Hello! Text in-between!", 25);
 
-    let mut text_input_2 = TextInput::new(10)
+    let mut text_input_2 = TextInput::new(10, 10)
         .with_prefix("Test 2: [")
         .with_suffix("]")
         .with_filter(filter.clone())

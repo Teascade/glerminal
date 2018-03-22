@@ -1,4 +1,4 @@
-use super::{InterfaceItem, Filter};
+use super::{Filter, InterfaceItem};
 
 use std::iter::repeat;
 
@@ -21,7 +21,8 @@ pub struct TextInput {
     pub focused_fg: Color,
     x: u32,
     y: u32,
-    width: u32,
+    min_width: Option<u32>,
+    max_width: Option<u32>,
     text: String,
     prefix: String,
     suffix: String,
@@ -36,11 +37,23 @@ pub struct TextInput {
 
 impl TextInput {
     /// Initializes a new TextInput with the given position and width
-    pub fn new(width: u32) -> TextInput {
+    pub fn new<T: Into<Option<u32>>, U: Into<Option<u32>>>(
+        min_width: T,
+        max_width: U,
+    ) -> TextInput {
+        let mut actual_min_width = None;
+        let mut actual_max_width = None;
+        if let Some(min_w) = min_width.into() {
+            actual_min_width = Some(min_w.max(1));
+        }
+        if let Some(max_w) = max_width.into() {
+            actual_max_width = Some(max_w.max(1));
+        }
         TextInput {
             x: 0,
             y: 0,
-            width: width.max(1),
+            min_width: actual_min_width,
+            max_width: actual_max_width,
             text: String::new(),
             prefix: String::new(),
             suffix: String::new(),
@@ -67,8 +80,21 @@ impl TextInput {
     }
 
     /// Sets the width of the TextInput.
-    pub fn with_width(mut self, width: u32) -> TextInput {
-        self.width = width.max(1);
+    pub fn with_width<T: Into<Option<u32>>, U: Into<Option<u32>>>(
+        mut self,
+        min_width: T,
+        max_width: U,
+    ) -> TextInput {
+        let mut actual_min_width = None;
+        let mut actual_max_width = None;
+        if let Some(min_w) = min_width.into() {
+            actual_min_width = Some(min_w.max(1));
+        }
+        if let Some(max_w) = max_width.into() {
+            actual_max_width = Some(max_w.max(1));
+        }
+        self.min_width = actual_min_width;
+        self.max_width = actual_max_width;
         self
     }
 
@@ -138,6 +164,24 @@ impl TextInput {
         self.caret = delay;
     }
 
+    /// Sets the width of the TextInput.
+    pub fn set_width<T: Into<Option<u32>>, U: Into<Option<u32>>>(
+        mut self,
+        min_width: T,
+        max_width: U,
+    ) {
+        let mut actual_min_width = None;
+        let mut actual_max_width = None;
+        if let Some(min_w) = min_width.into() {
+            actual_min_width = Some(min_w.max(1));
+        }
+        if let Some(max_w) = max_width.into() {
+            actual_max_width = Some(max_w.max(1));
+        }
+        self.min_width = actual_min_width;
+        self.max_width = actual_max_width;
+    }
+
     /// Gets the filter
     pub fn get_filter(&self) -> &Filter {
         &self.filter
@@ -166,7 +210,15 @@ impl InterfaceItem for TextInput {
     }
 
     fn get_total_width(&self) -> u32 {
-        (self.prefix.len() + self.suffix.len()) as u32 + self.width
+        let text_width;
+        if let Some(max_width) = self.max_width {
+            text_width = max_width
+        } else if let Some(min_width) = self.min_width {
+            text_width = self.text.len().max(min_width as usize) as u32;
+        } else {
+            text_width = self.text.len() as u32;
+        }
+        (self.prefix.len() + self.suffix.len()) as u32 + text_width
     }
 
     fn get_total_height(&self) -> u32 {
@@ -208,9 +260,33 @@ impl InterfaceItem for TextInput {
         }
         text_buffer.move_cursor(self.x as i32, self.y as i32);
 
-        let caret_offset = if self.caret_showing { 1 } else { 0 };
+        let text_w_offset: u32;
+        if self.focused && self.caret != 0.0 {
+            text_w_offset = 1
+        } else {
+            text_w_offset = 0
+        }
+        let space_offset = if self.caret_showing { 1 } else { 0 };
 
-        let text_width = (self.width as usize - if self.focused && self.caret != 0.0 { 1 } else { 0 }).min(self.text.len());
+        let text_width;
+        let field_width;
+        if let (Some(min_width), Some(max_width)) = (self.min_width, self.max_width) {
+            // Max width and min width
+            text_width = ((max_width - text_w_offset) as usize).min(self.text.len());
+            field_width = min_width.max(self.text.len() as u32).min(max_width);
+        } else if let Some(min_width) = self.min_width {
+            // Only min width
+            text_width = self.text.len();
+            field_width = min_width.max(self.text.len() as u32 + text_w_offset);
+        } else if let Some(max_width) = self.max_width {
+            // Only max width
+            text_width = ((max_width - text_w_offset) as usize).min(self.text.len());
+            field_width = max_width.min(self.text.len() as u32 + 1);
+        } else {
+            // Neither
+            text_width = self.text.len();
+            field_width = (self.text.len() as u32 + text_w_offset).max(1);
+        }
 
         let mut text: String = self.text[(self.text.len() - text_width)..].to_string();
         if self.caret_showing {
@@ -218,7 +294,7 @@ impl InterfaceItem for TextInput {
         }
 
         let spaces: String = repeat(" ")
-            .take(self.width as usize - text_width - if self.caret_showing { 1 } else { 0 })
+            .take(field_width as usize - text_width - space_offset)
             .collect();
         let text = text + &*spaces;
 
@@ -238,9 +314,9 @@ impl InterfaceItem for TextInput {
                     let mut text = String::new();
                     if input.is_pressed(VirtualKeyCode::LShift)
                         || input.is_pressed(VirtualKeyCode::RShift)
-                        {
-                            text.push_str(&*character.to_uppercase().to_string());
-                        } else {
+                    {
+                        text.push_str(&*character.to_uppercase().to_string());
+                    } else {
                         text.push(*character);
                     }
                     self.text.push_str(&*text);
