@@ -1,4 +1,4 @@
-#version 140
+#version 330 core
 
 in vec2 f_texcoord;
 in vec4 f_color;
@@ -8,5 +8,5 @@ out vec4 color;
 uniform sampler2D tex;
 
 void main() {
-  color = texture2D(tex, f_texcoord) * f_color;
+  color = texture(tex, f_texcoord) * f_color;
 }

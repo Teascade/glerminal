@@ -1,4 +1,4 @@
-use glutin::{Api, ContextBuilder, ElementState, Event, EventsLoop, GlContext, GlRequest, GlWindow,
+use glutin::{ContextBuilder, ElementState, Event, EventsLoop, GlContext, GlRequest, GlWindow,
              WindowBuilder, WindowEvent};
 use gl;
 
