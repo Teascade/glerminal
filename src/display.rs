@@ -1,5 +1,5 @@
-use glutin::{ContextBuilder, ElementState, Event, EventsLoop, GlContext, GlWindow, WindowBuilder,
-             WindowEvent, GlRequest, Api};
+use glutin::{Api, ContextBuilder, ElementState, Event, EventsLoop, GlContext, GlRequest, GlWindow,
+             WindowBuilder, WindowEvent};
 use gl;
 
 use renderer::{self, Matrix4};
@@ -34,8 +34,9 @@ impl Display {
             .with_title(title)
             .with_dimensions(width, height)
             .with_visibility(visibility);
-        let context = ContextBuilder::new().with_vsync(true)
-            .with_gl(GlRequest::Specific(Api::OpenGl, (3, 1)));
+        let context = ContextBuilder::new()
+            .with_vsync(true)
+            .with_gl(GlRequest::Latest);
         let window = match GlWindow::new(window, context, &events_loop) {
             Ok(window) => window,
             Err(err) => panic!(err),
@@ -51,6 +52,11 @@ impl Display {
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         };
+
+        let gl_version = renderer::get_version();
+        if !renderer::is_gl_version_compatible(gl_version.clone()) {
+            panic!("GL version too low: OpenGL {}", gl_version);
+        }
 
         let proj_matrix = renderer::create_proj_matrix((width as f32, height as f32), aspect_ratio);
 
