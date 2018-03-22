@@ -19,7 +19,10 @@ impl<'a> MenuList<'a> {
     }
 
     /// Adds a InterfaceItem to the MenuList
-    pub fn with_item<T: 'static + InterfaceItem + Clone>(mut self, item: &'a mut T) -> MenuList<'a> {
+    pub fn with_item<T: 'static + InterfaceItem + Clone>(
+        mut self,
+        item: &'a mut T,
+    ) -> MenuList<'a> {
         self.items_ref.push(Box::new(item));
         self
     }
@@ -114,11 +117,7 @@ impl Menu {
 
     /// Update the menu, first handling any input if necessary, checking dirtyness,
     /// saving changes for later drawing and returning whether the menu should be redrawn or not.
-    pub fn update(
-        &mut self,
-        input: &Input,
-        list: &mut MenuList,
-    ) -> bool {
+    pub fn update(&mut self, input: &Input, list: &mut MenuList) -> bool {
         if !self.focused {
             return false;
         }
@@ -126,12 +125,41 @@ impl Menu {
         let length = list.items_ref.len();
 
         if input.was_just_pressed(VirtualKeyCode::Up) {
-            self.select_idx = (((self.select_idx as i32 + length as i32) - 1)
-                % length as i32) as u32;
+            self.select_idx =
+                (((self.select_idx as i32 + length as i32) - 1) % length as i32) as u32;
+
+            let start_idx = self.select_idx.min(length as u32 - 1).max(0);
+            while {
+                !list.items_ref
+                    .get(self.select_idx as usize)
+                    .unwrap()
+                    .can_be_focused()
+            } {
+                self.select_idx =
+                    (((self.select_idx as i32 + length as i32) - 1) % length as i32) as u32;
+                if self.select_idx == start_idx {
+                    break;
+                }
+            }
         }
         if input.was_just_pressed(VirtualKeyCode::Down) {
             self.select_idx = (((self.select_idx as i32) + 1) % length as i32) as u32;
         }
+
+        // Ensure that any unselectable menu items aren't selected. If none are found, c'est la vie
+        let start_idx = self.select_idx.min(length as u32 - 1).max(0);
+        while {
+            !list.items_ref
+                .get(self.select_idx as usize)
+                .unwrap()
+                .can_be_focused()
+        } {
+            self.select_idx = (((self.select_idx as i32) + 1) % length as i32) as u32;
+            if self.select_idx == start_idx {
+                break;
+            }
+        }
+
         let mut idx = 0;
         for item in &mut list.items_ref {
             item.set_focused(self.select_idx == idx);

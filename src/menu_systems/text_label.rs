@@ -1,13 +1,16 @@
 use super::InterfaceItem;
 use input::Input;
-use text_buffer::TextBuffer;
+use text_buffer::{TextBuffer, Color};
 
 /// Represents a TextLabel that simply shows a row of text in the menu
 #[derive(Debug, Clone)]
 pub struct TextLabel {
+    /// Background-color
+    pub fg_color: Color,
+    /// Background-color
+    pub bg_color: Color,
     x: u32,
     y: u32,
-    focused: bool,
     dirty: bool,
     max_width: u32,
     text: String,
@@ -21,10 +24,11 @@ impl TextLabel {
         TextLabel {
             x: 0,
             y: 0,
-            focused: false,
             dirty: true,
             max_width: max_width,
             text: text.into(),
+            bg_color: [0.0, 0.0, 0.0, 0.0],
+            fg_color: [0.8, 0.8, 0.8, 1.0],
         }
     }
 
@@ -33,12 +37,6 @@ impl TextLabel {
         let (x, y) = pos;
         self.x = x;
         self.y = y;
-        self
-    }
-
-    /// Sets whether the TextLabel is initially focused or not
-    pub fn with_focused(mut self, focused: bool) -> TextLabel {
-        self.focused = focused;
         self
     }
 
@@ -51,6 +49,14 @@ impl TextLabel {
     /// Sets the initial text of the TextLabel
     pub fn with_text<T: Into<String>>(mut self, text: T) -> TextLabel {
         self.text = text.into();
+        self
+    }
+
+    /// Set the initial colors of this TextLabel
+    pub fn with_colors(mut self, colors: (Color, Color)) -> TextLabel {
+        let (fg, bg) = colors;
+        self.fg_color = fg;
+        self.bg_color = bg;
         self
     }
 
@@ -68,6 +74,13 @@ impl TextLabel {
     /// Return the current text of the TextLabel
     pub fn get_text(&self) -> String {
         self.text.clone()
+    }
+
+    /// Set the colors of this TextLabel
+    pub fn set_colors(&mut self, colors: (Color, Color)) {
+        let (fg, bg) = colors;
+        self.fg_color = fg;
+        self.bg_color = bg;
     }
 }
 
@@ -91,14 +104,13 @@ impl InterfaceItem for TextLabel {
     }
 
     fn is_focused(&self) -> bool {
-        self.focused
+        false
     }
 
-    fn set_focused(&mut self, focused: bool) {
-        if focused != self.focused {
-            self.dirty = true;
-        }
-        self.focused = focused;
+    fn set_focused(&mut self, _: bool) {}
+
+    fn can_be_focused(&self) -> bool {
+        false
     }
 
     fn is_dirty(&self) -> bool {
@@ -111,13 +123,8 @@ impl InterfaceItem for TextLabel {
 
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
         self.dirty = false;
-        if self.focused {
-            text_buffer.change_cursor_bg_color([0.8, 0.8, 0.8, 1.0]);
-            text_buffer.change_cursor_fg_color([0.2, 0.2, 0.2, 1.0]);
-        } else {
-            text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
-            text_buffer.change_cursor_fg_color([0.8, 0.8, 0.8, 1.0]);
-        }
+        text_buffer.change_cursor_bg_color(self.bg_color);
+        text_buffer.change_cursor_fg_color(self.fg_color);
         text_buffer.move_cursor(self.x as i32, self.y as i32);
         text_buffer.write(self.text.chars().take(self.max_width as usize).collect::<String>());
     }

@@ -161,6 +161,10 @@ impl InterfaceItem for TextInput {
         self.focused = focused;
     }
 
+    fn can_be_focused(&self) -> bool {
+        true
+    }
+
     fn is_dirty(&self) -> bool {
         self.dirty
     }

@@ -28,6 +28,8 @@ fn main() {
         .with_filter(filter.clone())
         .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.2, 0.8, 0.2, 1.0]));
 
+    let mut text_label_2 = TextLabel::new("Hello! Text in-between!", 25);
+
     let mut text_input_2 = TextInput::new(10)
         .with_prefix("Test 2:  [")
         .with_suffix("]")
@@ -52,6 +54,7 @@ fn main() {
             &mut MenuList::new()
                 .with_item(&mut text_label)
                 .with_item(&mut text_input)
+                .with_item(&mut text_label_2)
                 .with_item(&mut text_input_2),
         );
 

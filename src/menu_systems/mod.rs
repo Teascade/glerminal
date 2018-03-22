@@ -33,6 +33,8 @@ pub trait InterfaceItem: InterfaceItemClone {
     fn is_focused(&self) -> bool;
     /// Un/Focus the InterfaceItem
     fn set_focused(&mut self, focused: bool);
+    /// Returns whether this InterfaceItem can be (or should be) focused at all.
+    fn can_be_focused(&self) -> bool;
     /// Should the InterfaceItem be redrawn (has changes happened, that mean it should be redrawn)
     fn is_dirty(&self) -> bool;
     /// Set the dirtiness, this should only be called if something else does the drawing.
