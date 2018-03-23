@@ -31,6 +31,9 @@ pub struct TextInput {
     suffix: String,
     filter: Filter,
 
+    button_press_inputs: Vec<VirtualKeyCode>,
+    pressed: bool,
+
     focused: bool,
     dirty: bool,
 
@@ -69,6 +72,9 @@ impl TextInput {
             prefix: String::new(),
             suffix: String::new(),
             filter: Filter::empty_filter(),
+
+            button_press_inputs: vec![VirtualKeyCode::Return],
+            pressed: false,
 
             focused: false,
             dirty: true,
@@ -171,6 +177,12 @@ impl TextInput {
         self.filter = filter;
     }
 
+    /// Set the buttons from which this TextInput triggers it's "was_just_pressed"
+    pub fn with_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) -> TextInput {
+        self.button_press_inputs = buttons;
+        self
+    }
+
     /// Determines how often (in seconds) the caret's status should update.
     ///
     /// Set 0.0 for no caret.
@@ -201,6 +213,11 @@ impl TextInput {
         self.character_limit = char_limit.into();
     }
 
+    /// Set the buttons from which this TextInput triggers it's "was_just_pressed"
+    pub fn set_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) {
+        self.button_press_inputs = buttons;
+    }
+
     /// Gets the filter
     pub fn get_filter(&self) -> &Filter {
         &self.filter
@@ -214,6 +231,11 @@ impl TextInput {
     /// Returns the current text in the input
     pub fn get_text(&self) -> String {
         self.text.clone()
+    }
+
+    /// Returns whether this TextInput was just pressed, meaning any of it's button_press_inputs were activated.
+    pub fn was_just_pressed(&self) -> bool {
+        self.pressed
     }
 }
 
@@ -321,8 +343,16 @@ impl InterfaceItem for TextInput {
     }
 
     fn handle_input(&mut self, input: &Input) -> bool {
+        self.pressed = false;
+
         let mut handled = false;
         if self.focused {
+            for curr in &self.button_press_inputs {
+                if input.was_just_pressed(*curr) {
+                    self.pressed = true;
+                    break;
+                }
+            }
             if input.was_just_pressed(VirtualKeyCode::Back) {
                 self.text.pop();
                 self.dirty = true;

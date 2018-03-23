@@ -20,7 +20,7 @@ fn main() {
         .with_basic_numerals()
         .with_basic_special_symbols();
 
-    let mut text_label = TextLabel::new("FPS: -", 30);
+    let mut text_label = TextLabel::new("FPS: -", 40);
     let mut empty_space = TextLabel::new("", 0);
 
     let mut text_input = TextInput::new(None, None)
@@ -49,9 +49,9 @@ fn main() {
         if curr_fps != fps {
             fps = curr_fps;
             text_label.set_text(format!(
-                "FPS: {}, delta_time: {}",
+                "FPS: {}, delta_time (ms): {:.6}",
                 fps,
-                terminal.delta_time()
+                terminal.delta_time() * 1000 as f32
             ));
         }
 
@@ -68,7 +68,7 @@ fn main() {
                 .with_item(&mut button),
         );
 
-        if button.was_just_pressed() {
+        if button.was_just_pressed() || text_input_2.was_just_pressed() {
             button_presses += 1;
             dirty = true;
         }
@@ -86,6 +86,7 @@ fn main() {
             text_buffer.move_cursor(5, 16);
             text_buffer.write(format!("Button presses: {}", button_presses));
             menu.draw(&mut text_buffer);
+
             terminal.flush(&mut text_buffer);
         }
 

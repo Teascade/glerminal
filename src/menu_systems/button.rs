@@ -22,7 +22,7 @@ pub struct Button {
     dirty: bool,
 
     was_just_pressed: bool,
-    accepted_inputs: Vec<VirtualKeyCode>,
+    button_press_inputs: Vec<VirtualKeyCode>,
 }
 
 impl Button {
@@ -41,7 +41,7 @@ impl Button {
             dirty: true,
 
             was_just_pressed: false,
-            accepted_inputs: vec![VirtualKeyCode::Return],
+            button_press_inputs: vec![VirtualKeyCode::Return],
         }
     }
 
@@ -88,8 +88,8 @@ impl Button {
     }
 
     /// Set the buttons from which this button triggers
-    pub fn with_accepted_inputs(mut self, buttons: Vec<VirtualKeyCode>) -> Button {
-        self.accepted_inputs = buttons;
+    pub fn with_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) -> Button {
+        self.button_press_inputs = buttons;
         self
     }
 
@@ -124,8 +124,8 @@ impl Button {
     }
 
     /// Set the buttons from which this button triggers
-    pub fn set_accepted_inputs(mut self, buttons: Vec<VirtualKeyCode>) {
-        self.accepted_inputs = buttons;
+    pub fn set_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) {
+        self.button_press_inputs = buttons;
     }
 
     /// Returns whether this button was just pressed.
@@ -196,7 +196,7 @@ impl InterfaceItem for Button {
 
     fn handle_input(&mut self, input: &Input) -> bool {
         self.was_just_pressed = false;
-        for curr in &self.accepted_inputs {
+        for curr in &self.button_press_inputs {
             if input.was_just_pressed(*curr) {
                 self.was_just_pressed = true;
                 return true;
