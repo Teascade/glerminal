@@ -32,7 +32,7 @@ pub struct TextInput {
     filter: Filter,
 
     button_press_inputs: Vec<VirtualKeyCode>,
-    pressed: bool,
+    was_just_pressed: bool,
 
     focused: bool,
     dirty: bool,
@@ -74,7 +74,7 @@ impl TextInput {
             filter: Filter::empty_filter(),
 
             button_press_inputs: vec![VirtualKeyCode::Return],
-            pressed: false,
+            was_just_pressed: false,
 
             focused: false,
             dirty: true,
@@ -235,7 +235,7 @@ impl TextInput {
 
     /// Returns whether this TextInput was just pressed, meaning any of it's button_press_inputs were activated.
     pub fn was_just_pressed(&self) -> bool {
-        self.pressed
+        self.was_just_pressed
     }
 }
 
@@ -343,13 +343,13 @@ impl InterfaceItem for TextInput {
     }
 
     fn handle_input(&mut self, input: &Input) -> bool {
-        self.pressed = false;
+        self.was_just_pressed = false;
 
         let mut handled = false;
         if self.focused {
             for curr in &self.button_press_inputs {
                 if input.was_just_pressed(*curr) {
-                    self.pressed = true;
+                    self.was_just_pressed = true;
                     break;
                 }
             }

@@ -2,7 +2,7 @@ extern crate glerminal;
 
 use glerminal::terminal::TerminalBuilder;
 use glerminal::text_buffer::TextBuffer;
-use glerminal::menu_systems::{Button, Filter, Menu, MenuList, TextInput, TextLabel};
+use glerminal::menu_systems::{Button, Checkbox, Filter, Menu, MenuList, TextInput, TextLabel};
 
 fn main() {
     let terminal = TerminalBuilder::new()
@@ -36,13 +36,17 @@ fn main() {
         .with_focused_colors(([0.8, 0.8, 0.8, 1.0], [0.8, 0.2, 0.2, 1.0]))
         .with_caret(0.0);
 
+    let mut checkbox = Checkbox::new("Thingamajigger: ")
+        .with_prefix("(")
+        .with_suffix(")")
+        .with_checked_text("CHECKED");
     let mut button = Button::new("Test button!", 15);
 
     let mut menu = Menu::new().with_pos((5, 5)).with_focus(true);
 
     let mut fps = 0.0;
-
     let mut button_presses = 0;
+    let mut checked = checkbox.is_checked();
 
     while terminal.refresh() {
         let curr_fps = terminal.get_fps();
@@ -65,11 +69,17 @@ fn main() {
                 .with_item(&mut empty_space)
                 .with_item(&mut text_input)
                 .with_item(&mut text_input_2)
+                .with_item(&mut checkbox)
                 .with_item(&mut button),
         );
 
         if button.was_just_pressed() || text_input_2.was_just_pressed() {
             button_presses += 1;
+            dirty = true;
+        }
+
+        if checkbox.is_checked() != checked {
+            checked = checkbox.is_checked();
             dirty = true;
         }
 
@@ -85,6 +95,8 @@ fn main() {
             ));
             text_buffer.move_cursor(5, 16);
             text_buffer.write(format!("Button presses: {}", button_presses));
+            text_buffer.move_cursor(5, 17);
+            text_buffer.write(format!("Checked: {}", checked));
             menu.draw(&mut text_buffer);
 
             terminal.flush(&mut text_buffer);
