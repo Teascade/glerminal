@@ -132,6 +132,60 @@ struct TermCursor {
     shakiness: f32,
 }
 
+struct TermLimits {
+    width: u32,
+    height: u32,
+    pub x_min: Option<u32>,
+    pub x_max: Option<u32>,
+    pub y_min: Option<u32>,
+    pub y_max: Option<u32>,
+}
+
+impl TermLimits {
+    pub fn new(width: u32, height: u32) -> TermLimits {
+        TermLimits {
+            width: width,
+            height: height,
+            x_min: None,
+            x_max: None,
+            y_min: None,
+            y_max: None,
+        }
+    }
+
+    pub fn get_min_x(&self) -> u32 {
+        if let Some(x_min) = self.x_min {
+            x_min.max(0)
+        } else {
+            0
+        }
+    }
+
+    pub fn get_max_x(&self) -> u32 {
+        if let Some(x_max) = self.x_max {
+            x_max.min(self.width)
+        } else {
+            self.width
+        }
+    }
+
+    pub fn get_min_y(&self) -> u32 {
+        if let Some(y_min) = self.y_min {
+            y_min.max(0)
+        } else {
+            0
+        }
+    }
+
+    pub fn get_max_y(&self) -> u32 {
+        if let Some(y_max) = self.y_max {
+            y_max.min(self.height)
+        } else {
+            self.height
+        }
+    }
+}
+
 /// Represents the text buffer of the terminal; contains the "grid of [`TermCharacters`](struct.TermCharacter.html)" that will be drawn.
 ///
 /// See [text_buffer mod](index.html) for examples and more detailed documentation.
@@ -142,6 +196,8 @@ pub struct TextBuffer {
     pub(crate) mesh: Option<TextBufferMesh>,
     pub(crate) background_mesh: Option<BackgroundMesh>,
     cursor: TermCursor,
+
+    limits: TermLimits,
 }
 
 impl TextBuffer {
@@ -163,8 +219,15 @@ impl TextBuffer {
             mesh = None;
             background_mesh = None;
         } else {
-            mesh = Some(TextBufferMesh::new(terminal.get_program(), dimensions, &terminal.font));
-            background_mesh = Some(BackgroundMesh::new(terminal.get_background_program(), dimensions));
+            mesh = Some(TextBufferMesh::new(
+                terminal.get_program(),
+                dimensions,
+                &terminal.font,
+            ));
+            background_mesh = Some(BackgroundMesh::new(
+                terminal.get_background_program(),
+                dimensions,
+            ));
         }
         Ok(TextBuffer {
             chars,
@@ -179,6 +242,7 @@ impl TextBuffer {
                 background_color: [0.0; 4],
                 shakiness: 0.0,
             },
+            limits: TermLimits::new(width as u32, height as u32),
         })
     }
 
@@ -187,10 +251,6 @@ impl TextBuffer {
             mesh.update(&self, font);
             background_mesh.update(&self);
         }
-    }
-
-    pub(crate) fn out_of_bounds(&self, x: i32, y: i32) -> bool {
-        (x < 0 || y < 0 || x >= self.width || y >= self.height)
     }
 
     /// Gets the TermChaacter in the given position
@@ -257,10 +317,12 @@ impl TextBuffer {
 
     /// Moves the cursor to a specified location in the terminal. If the location does not exist, nothing happens.
     pub fn move_cursor(&mut self, x: i32, y: i32) {
-        if !self.out_of_bounds(x, y) {
-            self.cursor.x = x;
-            self.cursor.y = y;
-        }
+        let x = x.max(self.limits.get_min_x() as i32)
+            .min(self.limits.get_max_x() as i32);
+        let y = y.max(self.limits.get_min_y() as i32)
+            .min(self.limits.get_max_y() as i32);
+        self.cursor.x = x;
+        self.cursor.y = y;
     }
 
     /// Returns the current position of the cursor
@@ -268,15 +330,30 @@ impl TextBuffer {
         (self.cursor.x, self.cursor.y)
     }
 
+    /// Set the limits for drawing, other than the current screen.
+    /// None means no limit in this direction.
+    pub fn set_limits(
+        &mut self,
+        x_min: Option<u32>,
+        x_max: Option<u32>,
+        y_min: Option<u32>,
+        y_max: Option<u32>,
+    ) {
+        self.limits.x_min = x_min;
+        self.limits.x_max = x_max;
+        self.limits.y_min = y_min;
+        self.limits.y_max = y_max;
+    }
+
     fn move_cursor_by(&mut self, amount: i32) {
         let new_pos = self.cursor.x + amount;
         if new_pos >= 0 {
             self.cursor.x += amount;
-            if self.cursor.x >= self.width {
-                self.cursor.x = 0;
+            if self.cursor.x >= self.limits.get_max_x() as i32 {
+                self.cursor.x = self.limits.get_min_x() as i32;
                 self.cursor.y += 1;
-                if self.cursor.y >= self.height {
-                    self.cursor.y = 0;
+                if self.cursor.y >= self.limits.get_max_y() as i32 {
+                    self.cursor.y = self.limits.get_min_y() as i32;
                 }
             }
         }
