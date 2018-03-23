@@ -19,15 +19,18 @@ pub struct TextInput {
     pub unfocused_fg: Color,
     /// Foreground-color for when the field is focused
     pub focused_fg: Color,
+
     x: u32,
     y: u32,
     min_width: Option<u32>,
     max_width: Option<u32>,
     character_limit: Option<u32>,
+
     text: String,
     prefix: String,
     suffix: String,
     filter: Filter,
+
     focused: bool,
     dirty: bool,
 
@@ -51,21 +54,24 @@ impl TextInput {
             actual_max_width = Some(max_w.max(1));
         }
         TextInput {
+            unfocused_bg: [0.0, 0.0, 0.0, 0.0],
+            unfocused_fg: [0.8, 0.8, 0.8, 1.0],
+            focused_bg: [0.8, 0.8, 0.8, 1.0],
+            focused_fg: [0.2, 0.2, 0.2, 1.0],
+
             x: 0,
             y: 0,
             min_width: actual_min_width,
             max_width: actual_max_width,
+
             character_limit: None,
             text: String::new(),
             prefix: String::new(),
             suffix: String::new(),
             filter: Filter::empty_filter(),
+
             focused: false,
             dirty: true,
-            unfocused_bg: [0.0, 0.0, 0.0, 0.0],
-            unfocused_fg: [0.8, 0.8, 0.8, 1.0],
-            focused_bg: [0.8, 0.8, 0.8, 1.0],
-            focused_fg: [0.2, 0.2, 0.2, 1.0],
 
             caret: 0.5,
             caret_timer: 0.0,

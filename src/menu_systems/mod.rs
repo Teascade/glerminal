@@ -2,10 +2,12 @@
 
 mod text_input;
 mod text_label;
+mod button;
 mod menu;
 
 pub use self::text_input::TextInput;
 pub use self::text_label::TextLabel;
+pub use self::button::Button;
 pub use self::menu::Menu;
 pub use self::menu::MenuList;
 

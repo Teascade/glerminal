@@ -2,7 +2,7 @@ extern crate glerminal;
 
 use glerminal::terminal::TerminalBuilder;
 use glerminal::text_buffer::TextBuffer;
-use glerminal::menu_systems::{Filter, Menu, MenuList, TextInput, TextLabel};
+use glerminal::menu_systems::{Button, Filter, Menu, MenuList, TextInput, TextLabel};
 
 fn main() {
     let terminal = TerminalBuilder::new()
@@ -24,23 +24,25 @@ fn main() {
     let mut empty_space = TextLabel::new("", 0);
 
     let mut text_input = TextInput::new(None, None)
-        .with_prefix("Test your limits: ")
+        .with_prefix("Test your might: ")
         .with_filter(filter.clone())
         .with_character_limit(10)
         .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.2, 0.8, 0.2, 1.0]));
-
-    let mut text_label_2 = TextLabel::new("Hello! Text in-between!", 25);
 
     let mut text_input_2 = TextInput::new(10, 10)
         .with_prefix("Test 2: [")
         .with_suffix("]")
         .with_filter(filter.clone())
-        .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.8, 0.2, 0.2, 1.0]))
+        .with_focused_colors(([0.8, 0.8, 0.8, 1.0], [0.8, 0.2, 0.2, 1.0]))
         .with_caret(0.0);
+
+    let mut button = Button::new("Test button!", 15);
 
     let mut menu = Menu::new().with_pos((5, 5)).with_focus(true);
 
     let mut fps = 0.0;
+
+    let mut button_presses = 0;
 
     while terminal.refresh() {
         let curr_fps = terminal.get_fps();
@@ -55,27 +57,34 @@ fn main() {
 
         let input = terminal.get_current_input();
 
-        let dirty = menu.update(
+        let mut dirty = menu.update(
             &input,
             terminal.delta_time(),
             &mut MenuList::new()
                 .with_item(&mut text_label)
                 .with_item(&mut empty_space)
                 .with_item(&mut text_input)
-                .with_item(&mut text_label_2)
-                .with_item(&mut text_input_2),
+                .with_item(&mut text_input_2)
+                .with_item(&mut button),
         );
+
+        if button.was_just_pressed() {
+            button_presses += 1;
+            dirty = true;
+        }
 
         if dirty {
             text_buffer.clear();
             text_buffer.change_cursor_fg_color([0.8, 0.8, 0.8, 1.0]);
             text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
-            text_buffer.move_cursor(5, 10);
+            text_buffer.move_cursor(5, 15);
             text_buffer.write(format!(
                 "Text: {} {}",
                 text_input.get_text(),
                 text_input_2.get_text()
             ));
+            text_buffer.move_cursor(5, 16);
+            text_buffer.write(format!("Button presses: {}", button_presses));
             menu.draw(&mut text_buffer);
             terminal.flush(&mut text_buffer);
         }

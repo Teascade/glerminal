@@ -1,6 +1,6 @@
 use super::InterfaceItem;
 use input::Input;
-use text_buffer::{TextBuffer, Color};
+use text_buffer::{Color, TextBuffer};
 
 /// Represents a TextLabel that simply shows a row of text in the menu
 #[derive(Debug, Clone)]
@@ -126,7 +126,12 @@ impl InterfaceItem for TextLabel {
         text_buffer.change_cursor_bg_color(self.bg_color);
         text_buffer.change_cursor_fg_color(self.fg_color);
         text_buffer.move_cursor(self.x as i32, self.y as i32);
-        text_buffer.write(self.text.chars().take(self.max_width as usize).collect::<String>());
+        text_buffer.write(
+            self.text
+                .chars()
+                .take(self.max_width as usize)
+                .collect::<String>(),
+        );
     }
 
     fn handle_input(&mut self, _: &Input) -> bool {
