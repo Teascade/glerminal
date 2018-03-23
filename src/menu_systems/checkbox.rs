@@ -5,6 +5,66 @@ use input::Input;
 use text_buffer::{Color, TextBuffer};
 use VirtualKeyCode;
 
+/// Represents a group of checkboxes that can be managed like they were radio buttons.
+///
+/// This allows you to make a CheckboxGroup of ie. 3 checkboxes and only one of them will be selected at a time.
+/// Updating this CheckboxGroup with the given Checkboxes will ensure that only one of the Checkboxes will remain checked.
+pub struct CheckboxGroup {
+    selected_idx: Option<u32>,
+}
+
+impl CheckboxGroup {
+    /// Creates a new CheckboxGroup with no selection.
+    pub fn new() -> CheckboxGroup {
+        CheckboxGroup { selected_idx: None }
+    }
+
+    /// Update this CheckboxGroup with the given Checkboxes, this will ensure that only one of the given Checkboxes will remain checked.
+    pub fn update(&mut self, checkboxes: &mut [&mut Checkbox]) {
+        let mut selection_changed = false;
+        let mut any_selected = false;
+        for idx in 0..checkboxes.len() {
+            let curr_is_checked;
+            if let Some(checkbox) = checkboxes.get(idx) {
+                curr_is_checked = checkbox.is_checked();;
+            } else {
+                curr_is_checked = false;
+            }
+
+            if curr_is_checked {
+                any_selected = true;
+            }
+
+            if let Some(selected_idx) = self.selected_idx {
+                if curr_is_checked && idx as u32 != selected_idx {
+                    if !selection_changed {
+                        if let Some(checkbox) = checkboxes.get_mut(selected_idx as usize) {
+                            checkbox.set_checked(false);
+                        }
+                        self.selected_idx = Some(idx as u32);
+                        selection_changed = true;
+                    } else {
+                        if let Some(checkbox) = checkboxes.get_mut(idx) {
+                            checkbox.set_checked(false);
+                        }
+                    }
+                }
+            } else if curr_is_checked {
+                self.selected_idx = Some(idx as u32);
+                selection_changed = true;
+            }
+        }
+        if !any_selected {
+            self.selected_idx = None;
+        }
+    }
+
+    /// Return the index that is currently selected, if any.
+    pub fn get_selection_idx(&self) -> Option<u32> {
+        self.selected_idx
+    }
+}
+
 /// Represents a Checkbox that can be checked or unchecked, and it's checkedness can be get.
 #[derive(Debug, Clone)]
 pub struct Checkbox {
@@ -187,6 +247,9 @@ impl Checkbox {
 
     /// Sets the checked-status for this checkbox.
     pub fn set_checked(&mut self, checked: bool) {
+        if self.checked != checked {
+            self.dirty = true;
+        }
         self.checked = checked;
     }
 

@@ -9,7 +9,7 @@ mod menu;
 pub use self::text_input::TextInput;
 pub use self::text_label::TextLabel;
 pub use self::button::Button;
-pub use self::checkbox::Checkbox;
+pub use self::checkbox::{Checkbox, CheckboxGroup};
 pub use self::menu::Menu;
 pub use self::menu::MenuList;
 
