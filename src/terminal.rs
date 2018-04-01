@@ -19,7 +19,7 @@
 //! In most cases you might just want to initialize the terminal as immutable, but in some, you will need to initialize it as mutable,
 //! allowing it to run some additional methods, such as `.show()` and `.set_title("title")`
 //!
-//1 #### Example of a mutable terminal:
+//! #### Example of a mutable terminal:
 //! ```no_run
 //! use glerminal::terminal::TerminalBuilder;
 //!
@@ -40,9 +40,9 @@ use std::time::{Duration, SystemTime};
 
 use display::Display;
 use font::Font;
-use text_buffer::TextBuffer;
-use renderer;
 use input::Input;
+use renderer;
+use text_buffer::TextBuffer;
 
 static IOSEVKA_SFL: &'static str = include_str!("../fonts/iosevka.sfl");
 static IOSEVKA_PNG: &'static [u8] = include_bytes!("../fonts/iosevka.png");
@@ -222,7 +222,9 @@ impl Terminal {
             if input.was_just_pressed(VirtualKeyCode::F3) {
                 self.set_debug(!self.debug.get());
             }
-            display.refresh() && self.running.get()
+            let running = display.refresh() && self.running.get();
+            renderer::clear();
+            running
         } else {
             self.running.get()
         }
@@ -236,7 +238,9 @@ impl Terminal {
         drop(frame_counter);
 
         if let Some(ref display) = self.display {
-            display.refresh() && self.running.get()
+            let running = display.refresh() && self.running.get();
+            renderer::clear();
+            running
         } else {
             self.running.get()
         }
@@ -256,10 +260,11 @@ impl Terminal {
             &text_buffer.mesh,
             &text_buffer.background_mesh,
         ) {
-            if self.text_buffer_aspect_ratio && text_buffer.aspect_ratio != display.get_aspect_ratio() {
+            if self.text_buffer_aspect_ratio
+                && text_buffer.aspect_ratio != display.get_aspect_ratio()
+            {
                 display.set_aspect_ratio(text_buffer.aspect_ratio);
             }
-            renderer::clear();
             let duration = SystemTime::now().duration_since(self.since_start).unwrap();
 
             let time = duration.as_secs() as f32 + duration.subsec_nanos() as f32 / 1_000_000_000.0;
