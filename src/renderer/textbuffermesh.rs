@@ -1,8 +1,8 @@
 use std::cell::Cell;
 
+use super::{Program, Renderable, Texture, Vao, Vbo};
 use font::Font;
 use text_buffer::TextBuffer;
-use super::{Program, Renderable, Texture, Vao, Vbo};
 
 pub struct TextBufferMesh {
     vao: Vao,
@@ -82,10 +82,8 @@ impl TextBufferMesh {
                 if character.get_char() == ' ' {
                     continue;
                 }
-                let char_data = match font.get_character(character.get_char()) {
-                    Ok(data) => data,
-                    Err(error) => panic!(error),
-                };
+                let char_data = font.get_character(character.get_char())
+                    .unwrap_or(font.get_character('?').unwrap());
                 let width = character_width * (char_data.width as f32 / font.size as f32);
                 let height = character_height * (char_data.height as f32 / font.line_height as f32);
 
