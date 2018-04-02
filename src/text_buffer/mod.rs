@@ -195,9 +195,11 @@ pub struct TextBuffer {
     pub(crate) width: i32,
     pub(crate) mesh: Option<TextBufferMesh>,
     pub(crate) background_mesh: Option<BackgroundMesh>,
+    pub(crate) aspect_ratio: f32,
     cursor: TermCursor,
 
     limits: TermLimits,
+    dirty: bool,
 }
 
 impl TextBuffer {
@@ -229,6 +231,10 @@ impl TextBuffer {
                 dimensions,
             ));
         }
+
+        let true_height = height * terminal.font.line_height as i32;
+        let true_width = width * terminal.font.size as i32;
+
         Ok(TextBuffer {
             chars,
             height,
@@ -243,13 +249,21 @@ impl TextBuffer {
                 shakiness: 0.0,
             },
             limits: TermLimits::new(width as u32, height as u32),
+            aspect_ratio: true_width as f32 / true_height as f32,
+
+            dirty: true,
         })
     }
 
-    pub(crate) fn swap_buffers(&self, font: &Font) {
-        if let (&Some(ref mesh), &Some(ref background_mesh)) = (&self.mesh, &self.background_mesh) {
-            mesh.update(&self, font);
-            background_mesh.update(&self);
+    pub(crate) fn swap_buffers(&mut self, font: &Font) {
+        if self.dirty {
+            if let (&Some(ref mesh), &Some(ref background_mesh)) =
+                (&self.mesh, &self.background_mesh)
+            {
+                mesh.update(&self, font);
+                background_mesh.update(&self);
+            }
+            self.dirty = false;
         }
     }
 
@@ -275,6 +289,8 @@ impl TextBuffer {
             self.cursor.shakiness,
         );
         self.move_cursor_by(1);
+
+        self.dirty = true;
     }
 
     /// Puts the given text the same way as put_char
@@ -343,6 +359,11 @@ impl TextBuffer {
         self.limits.x_max = x_max;
         self.limits.y_min = y_min;
         self.limits.y_max = y_max;
+    }
+
+    /// Returns whether the TextBuffer is dirty or not (whether flush will have any effect or not)
+    pub fn is_dirty(&self) -> bool {
+        self.dirty
     }
 
     fn move_cursor_by(&mut self, amount: i32) {

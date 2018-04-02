@@ -1,8 +1,7 @@
 # GLerminal, an OpenGL terminal
-[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=0.1.1)](https://travis-ci.org/Teascade/glerminal)
+[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=0.1.8)](https://travis-ci.org/Teascade/glerminal)
 [![Docs](https://docs.rs/glerminal/badge.svg)](https://docs.rs/glerminal)
 [![Crates.io](https://img.shields.io/crates/v/glerminal.svg)](https://crates.io/crates/glerminal)
-[![Codecov.io](https://img.shields.io/codecov/c/github/Teascade/glerminal.svg)](https://codecov.io/gh/Teascade/glerminal)
 
 
 Read our [Code of Conduct](CODE_OF_CONDUCT.md) and join our [Discord server](https://discord.gg/Wg6D2Rk) if you want to chat!
@@ -15,7 +14,9 @@ Currently supported features include:
 - Changing foreground and background colors to whatever you want!
 - Shaking text
 - A text-parser that will make it easy to write whatever you want and make it look cool!
-  - Parseable text example: `"Hello, [fg=red]this is red[/fg] and [shake=1.0]this is shaking[/shake]."`
+  - Parseable text example: `"Hello, [fg=red]this is red[/fg] and [shake=1.0]this is shaking[/shake]."
+  
+***Note: Requires OpenGL 3.3+ support***
 
 ### Table of Contents
 - [How to use](#how-to-use)
@@ -28,7 +29,7 @@ Extensive documentation can be found at: [docs.rs][docs].
 Just add the following line to your `Cargo.toml`:
 ```toml
 [dependencies]
-glerminal = "0.1.1"
+glerminal = "0.1"
 ```
 
 And simply add the following line to your `main.rs`:
@@ -62,6 +63,8 @@ fn main() {
     }
 }
 ```
+
+![What the example looks like](images/example_screenshot.png)
 
 ### Contributing & Code of Conduct
 You are welcome to contribute to this project, but before do review the [Contributing guidelines](CONTRIBUTING.md).

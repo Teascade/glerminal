@@ -57,6 +57,7 @@ pub struct TerminalBuilder {
     font: Font,
     visibility: bool,
     headless: bool,
+    text_buffer_aspect_ratio: bool,
 }
 
 #[allow(dead_code)]
@@ -70,6 +71,7 @@ impl TerminalBuilder {
             font: Font::load_raw(IOSEVKA_SFL, IOSEVKA_PNG),
             visibility: true,
             headless: false,
+            text_buffer_aspect_ratio: true,
         }
     }
 
@@ -109,6 +111,18 @@ impl TerminalBuilder {
         self
     }
 
+    /// Changes whether the aspect ratio should be retrieved from TextBuffer instead of the original resolution of the screen.
+    ///
+    /// If set to false, the aspect ratio used to make black bars for the screen will be fetched from the original resolution of the screen;
+    /// This will cause the fonts to strech a bit though.
+    ///
+    /// If set to true (default), the aspect ratio will be fetched from the TextBuffer, causing almost any resolution
+    /// to have black bars to make up for the missing spaces.
+    pub fn with_text_buffer_aspect_ratio(mut self, tbar: bool) -> TerminalBuilder {
+        self.text_buffer_aspect_ratio = tbar;
+        self
+    }
+
     /// Builds the actual terminal and opens the window
     pub fn build(self) -> Terminal {
         Terminal::new(
@@ -118,6 +132,7 @@ impl TerminalBuilder {
             self.font,
             self.visibility,
             self.headless,
+            self.text_buffer_aspect_ratio,
         )
     }
 }
@@ -137,6 +152,7 @@ pub struct Terminal {
     pub(crate) font: Font,
 
     timer: RefCell<Timer>,
+    text_buffer_aspect_ratio: bool,
 }
 
 impl Terminal {
@@ -147,6 +163,7 @@ impl Terminal {
         font: Font,
         visibility: bool,
         headless: bool,
+        text_buffer_aspect_ratio: bool,
     ) -> Terminal {
         let display;
         let program;
@@ -182,6 +199,7 @@ impl Terminal {
             since_start: SystemTime::now(),
             font,
             timer: RefCell::new(Timer::new()),
+            text_buffer_aspect_ratio,
         }
     }
 
@@ -239,6 +257,11 @@ impl Terminal {
             &text_buffer.mesh,
             &text_buffer.background_mesh,
         ) {
+            if self.text_buffer_aspect_ratio
+                && text_buffer.aspect_ratio != display.get_aspect_ratio()
+            {
+                display.set_aspect_ratio(text_buffer.aspect_ratio);
+            }
             renderer::clear();
             let duration = SystemTime::now().duration_since(self.since_start).unwrap();
 

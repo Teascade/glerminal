@@ -43,6 +43,30 @@ pub(crate) fn get_error(headless: bool) -> Option<u32> {
     }
 }
 
+pub(crate) fn get_version() -> String {
+    unsafe {
+        CStr::from_ptr(gl::GetString(gl::VERSION) as *const i8)
+            .to_str()
+            .unwrap()
+            .to_owned()
+    }
+}
+
+pub(crate) fn is_gl_version_compatible(text: String) -> bool {
+    let mut parts = text.split('.');
+    let error = &*format!("Invalid version value from GL driver: '{}'", text);
+    let major: i32 = parts.next().expect(error).parse().expect(error);
+    let minor: i32 = parts
+        .next()
+        .expect(error)
+        .split(' ')
+        .next()
+        .expect(error)
+        .parse()
+        .expect(error);
+    major > 3 || (major == 3 && minor >= 3)
+}
+
 pub(crate) fn clear() {
     unsafe {
         gl::Clear(gl::COLOR_BUFFER_BIT);

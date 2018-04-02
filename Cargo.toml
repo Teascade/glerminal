@@ -1,17 +1,17 @@
 [package]
 name = "glerminal"
 description = "A lightweight OpenGL terminal"
-version = "0.1.1"
+version = "0.1.8"
 authors = ["Teascade <teascade@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-keywords = []
-categories = []
+keywords = ["opengl", "terminal", "renderer", "console", "text"]
+categories = ["rendering::engine"]
 repository = "https://github.com/Teascade/glerminal"
 documentation = "https://docs.rs/glerminal"
 
 [badges]
-travis-ci = { repository = "Teascade/glerminal", branch = "0.1.1" }
+travis-ci = { repository = "Teascade/glerminal", branch = "0.1.8" }
 
 [features]
 default = ["menu_systems"]
