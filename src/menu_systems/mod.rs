@@ -1,15 +1,15 @@
-//! Menu systems enable easy interface creation
-
 mod text_input;
 mod text_label;
 mod button;
 mod checkbox;
+mod dialog;
 mod menu;
 
 pub use self::text_input::TextInput;
 pub use self::text_label::TextLabel;
 pub use self::button::Button;
 pub use self::checkbox::{Checkbox, CheckboxGroup};
+pub use self::dialog::Dialog;
 pub use self::menu::Menu;
 pub use self::menu::MenuList;
 

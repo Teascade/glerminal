@@ -2,8 +2,8 @@ extern crate glerminal;
 
 use glerminal::terminal::TerminalBuilder;
 use glerminal::text_buffer::TextBuffer;
-use glerminal::menu_systems::{Button, Checkbox, CheckboxGroup, Filter, Menu, MenuList, TextInput,
-                              TextLabel};
+use glerminal::menu_systems::{Button, Checkbox, CheckboxGroup, Dialog, Filter, Menu, MenuList,
+                              TextInput, TextLabel};
 
 fn main() {
     let terminal = TerminalBuilder::new()
@@ -46,6 +46,11 @@ fn main() {
     let mut menu = Menu::new().with_pos((5, 5)).with_focus(true);
     let mut checkbox_group = CheckboxGroup::new();
 
+    let mut empty_space_2 = TextLabel::new("", 0);
+    let mut dialog = Dialog::new(30, 3, 3).with_text(
+        "Hello! This is a test text with some stuff, this is supposed to test the dialog window.",
+    );
+
     let mut fps = 0.0;
     let mut button_presses = 0;
 
@@ -73,7 +78,9 @@ fn main() {
                 .with_item(&mut checkbox)
                 .with_item(&mut checkbox_2)
                 .with_item(&mut checkbox_3)
-                .with_item(&mut button),
+                .with_item(&mut button)
+                .with_item(&mut empty_space_2)
+                .with_item(&mut dialog),
         );
 
         checkbox_group.update(&mut [&mut checkbox, &mut checkbox_2, &mut checkbox_3]);
@@ -87,15 +94,15 @@ fn main() {
             text_buffer.clear();
             text_buffer.change_cursor_fg_color([0.8, 0.8, 0.8, 1.0]);
             text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
-            text_buffer.move_cursor(5, 15);
+            text_buffer.move_cursor(30, 15);
             text_buffer.write(format!(
                 "Text: {} {}",
                 text_input.get_text(),
                 text_input_2.get_text()
             ));
-            text_buffer.move_cursor(5, 16);
+            text_buffer.move_cursor(40, 16);
             text_buffer.write(format!("Button presses: {}", button_presses));
-            text_buffer.move_cursor(5, 17);
+            text_buffer.move_cursor(40, 17);
             text_buffer.write(format!("Checked: {:?}", checkbox_group.get_selection_idx()));
             menu.draw(&mut text_buffer);
 

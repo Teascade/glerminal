@@ -56,7 +56,7 @@
 //! With this struct you can simply pass a string that the parser will parse, and the `TextBuffer` will then change colors or shakiness of your text accordingly.
 //!
 //! Examples can be found at [`text_buffer`](text_buffer) module.
-#![deny(missing_docs)]
+#![warn(missing_docs)]
 
 #[cfg(test)]
 extern crate rand;

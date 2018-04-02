@@ -122,28 +122,36 @@ impl Menu {
             return false;
         }
 
+        let mut focused_handled_input = false;
+
+        if let Some(item) = (&mut list.items_ref).get_mut(self.select_idx as usize) {
+            focused_handled_input = item.handle_input(input);
+        }
+
         let length = list.items_ref.len();
 
-        if input.was_just_pressed(VirtualKeyCode::Up) {
-            self.select_idx =
-                (((self.select_idx as i32 + length as i32) - 1) % length as i32) as u32;
-
-            let start_idx = self.select_idx.min(length as u32 - 1).max(0);
-            while {
-                !list.items_ref
-                    .get(self.select_idx as usize)
-                    .unwrap()
-                    .can_be_focused()
-            } {
+        if !focused_handled_input {
+            if input.was_just_pressed(VirtualKeyCode::Up) {
                 self.select_idx =
                     (((self.select_idx as i32 + length as i32) - 1) % length as i32) as u32;
-                if self.select_idx == start_idx {
-                    break;
+
+                let start_idx = self.select_idx.min(length as u32 - 1).max(0);
+                while {
+                    !list.items_ref
+                        .get(self.select_idx as usize)
+                        .unwrap()
+                        .can_be_focused()
+                } {
+                    self.select_idx =
+                        (((self.select_idx as i32 + length as i32) - 1) % length as i32) as u32;
+                    if self.select_idx == start_idx {
+                        break;
+                    }
                 }
             }
-        }
-        if input.was_just_pressed(VirtualKeyCode::Down) {
-            self.select_idx = (((self.select_idx as i32) + 1) % length as i32) as u32;
+            if input.was_just_pressed(VirtualKeyCode::Down) {
+                self.select_idx = (((self.select_idx as i32) + 1) % length as i32) as u32;
+            }
         }
 
         // Ensure that any unselectable menu items aren't selected. If none are found, c'est la vie
@@ -165,9 +173,6 @@ impl Menu {
             item.set_focused(self.select_idx == idx);
             item.update(delta);
             idx += 1;
-        }
-        if let Some(item) = (&mut list.items_ref).get_mut(self.select_idx as usize) {
-            item.handle_input(input);
         }
 
         self.is_dirty = self.children_are_dirty(&mut list.items_ref);
