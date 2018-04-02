@@ -143,6 +143,8 @@ pub struct TextBuffer {
     pub(crate) background_mesh: Option<BackgroundMesh>,
     pub(crate) aspect_ratio: f32,
     cursor: TermCursor,
+
+    dirty: bool,
 }
 
 impl TextBuffer {
@@ -164,8 +166,15 @@ impl TextBuffer {
             mesh = None;
             background_mesh = None;
         } else {
-            mesh = Some(TextBufferMesh::new(terminal.get_program(), dimensions, &terminal.font));
-            background_mesh = Some(BackgroundMesh::new(terminal.get_background_program(), dimensions));
+            mesh = Some(TextBufferMesh::new(
+                terminal.get_program(),
+                dimensions,
+                &terminal.font,
+            ));
+            background_mesh = Some(BackgroundMesh::new(
+                terminal.get_background_program(),
+                dimensions,
+            ));
         }
 
         let true_height = height * terminal.font.line_height as i32;
@@ -185,13 +194,20 @@ impl TextBuffer {
                 shakiness: 0.0,
             },
             aspect_ratio: true_width as f32 / true_height as f32,
+
+            dirty: true,
         })
     }
 
-    pub(crate) fn swap_buffers(&self, font: &Font) {
-        if let (&Some(ref mesh), &Some(ref background_mesh)) = (&self.mesh, &self.background_mesh) {
-            mesh.update(&self, font);
-            background_mesh.update(&self);
+    pub(crate) fn swap_buffers(&mut self, font: &Font) {
+        if self.dirty {
+            if let (&Some(ref mesh), &Some(ref background_mesh)) =
+                (&self.mesh, &self.background_mesh)
+            {
+                mesh.update(&self, font);
+                background_mesh.update(&self);
+            }
+            self.dirty = false;
         }
     }
 
@@ -221,6 +237,8 @@ impl TextBuffer {
             self.cursor.shakiness,
         );
         self.move_cursor_by(1);
+
+        self.dirty = true;
     }
 
     /// Puts the given text the same way as put_char
@@ -272,6 +290,11 @@ impl TextBuffer {
     /// Returns the current position of the cursor
     pub fn get_cursor_position(&self) -> (i32, i32) {
         (self.cursor.x, self.cursor.y)
+    }
+
+    /// Returns whether the TextBuffer is dirty or not (whether flush will have any effect or not)
+    pub fn is_dirty(&self) -> bool {
+        self.dirty
     }
 
     fn move_cursor_by(&mut self, amount: i32) {
