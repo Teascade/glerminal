@@ -334,9 +334,9 @@ impl TextBuffer {
     /// Moves the cursor to a specified location in the terminal. If the location does not exist, nothing happens.
     pub fn move_cursor(&mut self, x: i32, y: i32) {
         let x = x.max(self.limits.get_min_x() as i32)
-            .min(self.limits.get_max_x() as i32);
+            .min(self.limits.get_max_x() as i32 - 1);
         let y = y.max(self.limits.get_min_y() as i32)
-            .min(self.limits.get_max_y() as i32);
+            .min(self.limits.get_max_y() as i32 - 1);
         self.cursor.x = x;
         self.cursor.y = y;
     }

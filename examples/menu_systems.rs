@@ -3,7 +3,7 @@ extern crate glerminal;
 use glerminal::terminal::TerminalBuilder;
 use glerminal::text_buffer::TextBuffer;
 use glerminal::menu_systems::{Button, Checkbox, CheckboxGroup, Dialog, Filter, Menu, MenuList,
-                              TextInput, TextLabel};
+                              TextInput, TextLabel, Window};
 
 fn main() {
     let terminal = TerminalBuilder::new()
@@ -54,6 +54,11 @@ fn main() {
     let mut fps = 0.0;
     let mut button_presses = 0;
 
+    let mut test_window = Window::new(70, 20)
+        .with_pos((1, 1))
+        .with_title("Hello, World!");
+    test_window.set_limits(&mut text_buffer);
+
     while terminal.refresh() {
         let curr_fps = terminal.get_fps();
         if curr_fps != fps {
@@ -92,6 +97,9 @@ fn main() {
 
         if dirty {
             text_buffer.clear();
+
+            test_window.draw(&mut text_buffer);
+
             text_buffer.change_cursor_fg_color([0.8, 0.8, 0.8, 1.0]);
             text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
             text_buffer.move_cursor(30, 15);

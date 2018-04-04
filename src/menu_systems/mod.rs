@@ -4,6 +4,7 @@ mod button;
 mod checkbox;
 mod dialog;
 mod menu;
+mod window;
 
 pub use self::text_input::TextInput;
 pub use self::text_label::TextLabel;
@@ -12,6 +13,7 @@ pub use self::checkbox::{Checkbox, CheckboxGroup};
 pub use self::dialog::Dialog;
 pub use self::menu::Menu;
 pub use self::menu::MenuList;
+pub use self::window::Window;
 
 use std::collections::HashMap;
 
