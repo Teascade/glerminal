@@ -65,8 +65,10 @@ extern crate gl;
 extern crate glutin;
 extern crate libc;
 extern crate png;
-extern crate regex;
 extern crate sfl_parser;
+
+#[cfg(feature = "parser")]
+extern crate regex;
 
 #[cfg(test)]
 mod tests;

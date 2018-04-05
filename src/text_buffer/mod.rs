@@ -69,6 +69,7 @@
 //! terminal.flush(&mut text_buffer);
 //! ```
 
+#[cfg(feature = "parser")]
 pub mod parser;
 
 use renderer::textbuffermesh::TextBufferMesh;
