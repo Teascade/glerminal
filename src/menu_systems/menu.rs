@@ -41,6 +41,18 @@ impl<'a> MenuList<'a> {
     }
 }
 
+/// Determines the direction where the Menu will expand/grow from it's position
+pub enum GrowthDirection {
+    /// Expand it lownwards
+    Down,
+    /// Expand it upwards
+    Up,
+    /// Expand it rightwards
+    Right,
+    /// Expand it leftwards
+    Left,
+}
+
 /// Represents a Menu
 pub struct Menu {
     x: u32,
@@ -51,6 +63,10 @@ pub struct Menu {
     total_width: u32,
     total_height: u32,
     cloned_interface_items: Vec<Box<InterfaceItem>>,
+
+    growth_direction: GrowthDirection,
+    previous_button: Option<VirtualKeyCode>,
+    next_button: Option<VirtualKeyCode>,
 }
 
 impl Menu {
@@ -65,6 +81,10 @@ impl Menu {
             total_width: 0,
             total_height: 0,
             cloned_interface_items: Vec::new(),
+
+            growth_direction: GrowthDirection::Down,
+            previous_button: None,
+            next_button: None,
         }
     }
 
@@ -82,9 +102,22 @@ impl Menu {
         self
     }
 
-    /// Get the position of the Menu
-    pub fn get_pos(&self) -> (u32, u32) {
-        (self.x, self.y)
+    /// Sets the initial growth direction of the Menu
+    pub fn with_growth_direction(mut self, growth_direction: GrowthDirection) -> Menu {
+        self.growth_direction = growth_direction;
+        self
+    }
+
+    /// Sets the initial previous button (selects previous item in the menu) for the Menu
+    pub fn with_previous_button<T: Into<Option<VirtualKeyCode>>>(mut self, button: T) -> Menu {
+        self.previous_button = button.into();
+        self
+    }
+
+    /// Sets the initial next button (selects next item in the menu) for the Menu
+    pub fn with_next_button<T: Into<Option<VirtualKeyCode>>>(mut self, button: T) -> Menu {
+        self.next_button = button.into();
+        self
     }
 
     /// Sets the position of the menu
@@ -92,6 +125,31 @@ impl Menu {
         let (x, y) = pos;
         self.x = x;
         self.y = y;
+    }
+
+    /// Set whether the menu is focused
+    pub fn set_focused(&mut self, focused: bool) {
+        self.focused = focused;
+    }
+
+    /// Sets the growth direction of the Menu
+    pub fn set_growth_direction(&mut self, growth_direction: GrowthDirection) {
+        self.growth_direction = growth_direction;
+    }
+
+    /// Sets the previous button (selects previous item in the menu) for the Menu
+    pub fn set_previous_button<T: Into<Option<VirtualKeyCode>>>(mut self, button: T) {
+        self.previous_button = button.into();
+    }
+
+    /// Sets the next button (selects next item in the menu) for the Menu
+    pub fn set_next_button<T: Into<Option<VirtualKeyCode>>>(mut self, button: T) {
+        self.next_button = button.into();
+    }
+
+    /// Get the position of the Menu
+    pub fn get_pos(&self) -> (u32, u32) {
+        (self.x, self.y)
     }
 
     /// Gets the width this Menu should take up when drawn
@@ -110,9 +168,32 @@ impl Menu {
         self.focused
     }
 
-    /// Set whether the menu is focused
-    pub fn set_focused(&mut self, focused: bool) {
-        self.focused = focused;
+    /// Returns the button that must be pressed in order to select the previous menu item.
+    pub fn get_previous_button(&self) -> VirtualKeyCode {
+        if let Some(button) = self.previous_button {
+            button
+        } else {
+            match self.growth_direction {
+                GrowthDirection::Up => VirtualKeyCode::Down,
+                GrowthDirection::Down => VirtualKeyCode::Up,
+                GrowthDirection::Left => VirtualKeyCode::Right,
+                GrowthDirection::Right => VirtualKeyCode::Left,
+            }
+        }
+    }
+
+    /// Returns the button that must be pressed in order to select the next menu item.
+    pub fn get_next_button(&self) -> VirtualKeyCode {
+        if let Some(button) = self.next_button {
+            button
+        } else {
+            match self.growth_direction {
+                GrowthDirection::Up => VirtualKeyCode::Up,
+                GrowthDirection::Down => VirtualKeyCode::Down,
+                GrowthDirection::Left => VirtualKeyCode::Left,
+                GrowthDirection::Right => VirtualKeyCode::Right,
+            }
+        }
     }
 
     /// Update the menu, first handling any input if necessary, checking dirtyness,
@@ -131,7 +212,7 @@ impl Menu {
         let length = list.items_ref.len();
 
         if !focused_handled_input {
-            if input.was_just_pressed(VirtualKeyCode::Up) {
+            if input.was_just_pressed(self.get_previous_button()) {
                 self.select_idx =
                     (((self.select_idx as i32 + length as i32) - 1) % length as i32) as u32;
 
@@ -149,7 +230,7 @@ impl Menu {
                     }
                 }
             }
-            if input.was_just_pressed(VirtualKeyCode::Down) {
+            if input.was_just_pressed(self.get_next_button()) {
                 self.select_idx = (((self.select_idx as i32) + 1) % length as i32) as u32;
             }
         }
@@ -184,11 +265,29 @@ impl Menu {
 
     /// Draw the menu and any saved children (see [`update(input, children)`](#method.update))
     pub fn draw(&mut self, text_buffer: &mut TextBuffer) {
-        let mut h_off = 0;
-        for item in &mut self.cloned_interface_items {
-            item.set_pos((self.x, self.y + h_off));
-            h_off += item.get_total_height();
-            item.draw(text_buffer);
+        let mut off: i32 = 0;
+
+        match self.growth_direction {
+            GrowthDirection::Down => for item in &mut self.cloned_interface_items {
+                item.set_pos((self.x, (self.y as i32 + off) as u32));
+                off += item.get_total_height() as i32;
+                item.draw(text_buffer);
+            },
+            GrowthDirection::Up => for item in &mut self.cloned_interface_items {
+                off -= item.get_total_height() as i32;
+                item.set_pos((self.x, (self.y as i32 + off).max(0) as u32));
+                item.draw(text_buffer);
+            },
+            GrowthDirection::Right => for item in &mut self.cloned_interface_items {
+                item.set_pos(((self.x as i32 + off) as u32, self.y));
+                off += item.get_total_width() as i32;
+                item.draw(text_buffer);
+            },
+            GrowthDirection::Left => for item in &mut self.cloned_interface_items {
+                off -= item.get_total_width() as i32;
+                item.set_pos(((self.x as i32 + off).max(0) as u32, self.y));
+                item.draw(text_buffer);
+            },
         }
     }
 

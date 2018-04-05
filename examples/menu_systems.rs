@@ -2,8 +2,8 @@ extern crate glerminal;
 
 use glerminal::terminal::TerminalBuilder;
 use glerminal::text_buffer::TextBuffer;
-use glerminal::menu_systems::{Button, Checkbox, CheckboxGroup, Dialog, Filter, Menu, MenuList,
-                              TextInput, TextLabel, Window};
+use glerminal::menu_systems::{Button, Checkbox, CheckboxGroup, Dialog, Filter, GrowthDirection,
+                              Menu, MenuList, TextInput, TextLabel, Window};
 
 fn main() {
     let terminal = TerminalBuilder::new()
@@ -43,7 +43,11 @@ fn main() {
 
     let mut button = Button::new("Test button!", 15);
 
-    let mut menu = Menu::new().with_pos((5, 5)).with_focus(true);
+    let mut menu = Menu::new()
+        .with_pos((5, 5))
+        .with_focus(true)
+        .with_growth_direction(GrowthDirection::Down);
+
     let mut checkbox_group = CheckboxGroup::new();
 
     let mut empty_space_2 = TextLabel::new("", 0);
