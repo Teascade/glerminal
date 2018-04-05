@@ -132,17 +132,19 @@ struct TermCursor {
     shakiness: f32,
 }
 
-struct TermLimits {
+/// Represents the limits of the terminal.
+#[derive(Clone)]
+pub struct TermLimits {
     width: u32,
     height: u32,
-    pub x_min: Option<u32>,
-    pub x_max: Option<u32>,
-    pub y_min: Option<u32>,
-    pub y_max: Option<u32>,
+    x_min: Option<u32>,
+    x_max: Option<u32>,
+    y_min: Option<u32>,
+    y_max: Option<u32>,
 }
 
 impl TermLimits {
-    pub fn new(width: u32, height: u32) -> TermLimits {
+    fn new(width: u32, height: u32) -> TermLimits {
         TermLimits {
             width: width,
             height: height,
@@ -153,6 +155,7 @@ impl TermLimits {
         }
     }
 
+    /// Represents the smallest x-coordinate you should be able to write to (e.g. 0).
     pub fn get_min_x(&self) -> u32 {
         if let Some(x_min) = self.x_min {
             x_min.max(0)
@@ -161,6 +164,7 @@ impl TermLimits {
         }
     }
 
+    /// Represents the largest x-coordinate, where you should not be able to write anymore. (e.g. screen width)
     pub fn get_max_x(&self) -> u32 {
         if let Some(x_max) = self.x_max {
             x_max.min(self.width)
@@ -169,6 +173,7 @@ impl TermLimits {
         }
     }
 
+    /// Represents the smallest y-coordinate, where you should be able to write to (e.g. 0).
     pub fn get_min_y(&self) -> u32 {
         if let Some(y_min) = self.y_min {
             y_min.max(0)
@@ -177,6 +182,7 @@ impl TermLimits {
         }
     }
 
+    /// Represents the largest y-coordinate, where you should not be able to write anymore. (e.g. screen height)
     pub fn get_max_y(&self) -> u32 {
         if let Some(y_max) = self.y_max {
             y_max.min(self.height)
@@ -265,6 +271,11 @@ impl TextBuffer {
             }
             self.dirty = false;
         }
+    }
+
+    /// Sets the character at the specified position. It is the user's responsibility to check if such a position exists.
+    pub fn set_char(&mut self, x: u32, y: u32, character: TermCharacter) {
+        self.chars[(y * self.width as u32 + x) as usize] = character;
     }
 
     /// Gets the TermChaacter in the given position
@@ -359,6 +370,11 @@ impl TextBuffer {
         self.limits.x_max = x_max;
         self.limits.y_min = y_min;
         self.limits.y_max = y_max;
+    }
+
+    /// Get the current term limits of the terminal.
+    pub fn get_limits(&self) -> TermLimits {
+        self.limits.clone()
     }
 
     /// Returns whether the TextBuffer is dirty or not (whether flush will have any effect or not)
