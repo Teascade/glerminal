@@ -18,7 +18,7 @@ Other rules may be added later on if they become necessary.
 Currently you can report violations of the code of conduct via  
 - [teascade@gmail.com](mailto:teascade@gmail.com), 
 - [GLerminal's discord channel](https://discord.gg/Wg6D2Rk), 
-- or just via [mastodon](https://social.targaryen.house/@teascade)
+- or just via [mastodon/pleroma/etc](https://cybergay.space/users/teascade)
 
 Violations of the code may result in a kick/ban from the discord server 
 and/or the inability to participate in the project.
