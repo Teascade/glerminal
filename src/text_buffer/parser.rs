@@ -7,7 +7,7 @@ use super::{Color, TextBuffer};
 
 /// Represents a parser, that is able to read given texts and use [`TextBuffer`](struct.TextBuffer.html) accordingly, to write text and styles matching to the text.
 ///
-/// See [text_buffer mod](../index.html) for examples and more detailed documentation.
+/// See [TextBuffer](struct.TextBuffer.html) for examples and more detailed documentation.
 pub struct Parser {
     colors: HashMap<String, Color>,
 }
@@ -29,9 +29,7 @@ impl Parser {
     ///
     /// Example:
     /// ```no_run
-    /// use glerminal::terminal::TerminalBuilder;
-    /// use glerminal::text_buffer::TextBuffer;
-    /// use glerminal::text_buffer::parser::Parser;
+    /// use glerminal::{TerminalBuilder, TextBuffer, Parser};
     ///
     /// // Initialize a terminal to use
     /// let terminal = TerminalBuilder::new()

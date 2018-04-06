@@ -1,38 +1,3 @@
-//! This module acts as the window and "canvas" of the terminal, handling most behind-the-sceneries
-//!
-//! The [`Terminal`](struct.Terminal.html) is used to create the window and canvas for the [`TextBuffer`](text_buffer/struct.TextBuffer.html)
-//! which can then draw it, close the window, reset the title of the window or handle input.
-//!
-//! **Note** when building with debug-mode, you are able to press `F3` to toggle between debug and non-debug. see ([`Terminal`](struct.Terminal.html#method.set_debug)) for more information.
-//!
-//! ### Terminal example:
-//! ```no_run
-//! use glerminal::terminal::TerminalBuilder;
-//!
-//! let terminal = TerminalBuilder::new()
-//!     .with_title("Hello GLerminal!")
-//!     .with_dimensions((1280, 720))
-//!     .build();
-//! ```
-//!
-//! ### `let mut terminal` vs `let terminal`
-//! In most cases you might just want to initialize the terminal as immutable, but in some, you will need to initialize it as mutable,
-//! allowing it to run some additional methods, such as `.show()` and `.set_title("title")`
-//!
-//1 #### Example of a mutable terminal:
-//! ```no_run
-//! use glerminal::terminal::TerminalBuilder;
-//!
-//! let mut terminal = TerminalBuilder::new()
-//!     .with_title("Hello GLerminal!")
-//!     .with_dimensions((1280, 720))
-//!     .with_visibility(false)
-//!     .build();
-//!
-//! terminal.set_title("Changed title!");
-//! terminal.show();
-//! ```
-
 #[allow(unused_imports)]
 use glutin::VirtualKeyCode;
 use std::cell::{Cell, RefCell};
@@ -137,9 +102,40 @@ impl TerminalBuilder {
     }
 }
 
-/// Represents the Terminal itself.
+/// The Terminal acts as the window and "canvas" of the terminal, handling most behind-the-sceneries
 ///
-/// See [terminal mod](index.html) for examples and more detailed documentation.
+/// The Terminal is used to create the window and canvas for the [`TextBuffer`](text_buffer/struct.TextBuffer.html)
+/// which can then draw it, close the window, reset the title of the window or handle input.
+///
+/// **Note** when building with debug-mode, you are able to press `F3` to toggle between debug and non-debug. see ([`set_debug`](#method.set_debug)) for more information.
+///
+/// ### Terminal example:
+/// ```no_run
+/// use glerminal::TerminalBuilder;
+///
+/// let terminal = TerminalBuilder::new()
+///     .with_title("Hello GLerminal!")
+///     .with_dimensions((1280, 720))
+///     .build();
+/// ```
+///
+/// ### `let mut terminal` vs `let terminal`
+/// In most cases you might just want to initialize the terminal as immutable, but in some, you will need to initialize it as mutable,
+/// allowing it to run some additional methods, such as `.show()` and `.set_title("title")`
+///
+/// #### Example of a mutable terminal:
+/// ```no_run
+/// use glerminal::TerminalBuilder;
+///
+/// let mut terminal = TerminalBuilder::new()
+///     .with_title("Hello GLerminal!")
+///     .with_dimensions((1280, 720))
+///     .with_visibility(false)
+///     .build();
+///
+/// terminal.set_title("Changed title!");
+/// terminal.show();
+/// ```
 pub struct Terminal {
     display: Option<Display>,
     program: renderer::Program,

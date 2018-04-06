@@ -14,8 +14,7 @@
 //! ```no_run
 //! extern crate glerminal;
 //!
-//! use glerminal::terminal::TerminalBuilder;
-//! use glerminal::text_buffer::TextBuffer;
+//! use glerminal::{TerminalBuilder, TextBuffer};
 //!
 //! fn main() {
 //!     let terminal = TerminalBuilder::new()
@@ -38,24 +37,24 @@
 //! ```
 //!
 //! # terminal
-//! [`Terminal`](terminal/struct.Terminal.html) (and [`TerminalBuilder`](terminal/struct.TerminalBuilder.html)) will be the first struct(s) that you'll have to deal with:
+//! [`Terminal`](struct.Terminal.html) (and [`TerminalBuilder`](struct.TerminalBuilder.html)) will be the first struct(s) that you'll have to deal with:
 //!
 //! `TerminalBuilder` is used to build the terminal, and `Terminal` is used as sort of a 'window' or 'canvas' for everything else, like the [`TextBuffer`](#text_buffer).
-//! The `Terminal` is able to change the title of the screen with [`.set_title`](terminal/struct.Terminal.html#method.set_title),
-//! get input with [`.get_input`](terminal/struct.Terminal.html#method.get_input), draw the latest flush with [`.draw`](terminal/struct.Terminal.html#method.draw)
-//! or (like mentioned earlier), flush the `TextBuffer` with [`.flush`](terminal/struct.Terminal.html#method.flush).
+//! The `Terminal` is able to change the title of the screen with [`.set_title`](struct.Terminal.html#method.set_title),
+//! get input with [`.get_input`](struct.Terminal.html#method.get_input), draw the latest flush with [`.draw`](struct.Terminal.html#method.draw)
+//! or (like mentioned earlier), flush the `TextBuffer` with [`.flush`](struct.Terminal.html#method.flush).
 //!
-//! Examples can be found at [`terminal`](terminal) module.
+//! Examples can be found at [`Terminal`](struct.Terminal.html) struct.
 //!
 //!
 //! # text_buffer
-//! [`TextBuffer`](text_buffer/struct.TextBuffer.html) is the struct that will be used the most.
+//! [`TextBuffer`](struct.TextBuffer.html) is the struct that will be used the most.
 //! With this struct you will be writing, clearing and changing colors of the text you are writing, for example.
 //!
-//! Another important struct that you might be using however, is the [`Parser`](text_buffer/parser/struct.Parser.html).
+//! Another important struct that you might be using however, is the [`Parser`](struct.Parser.html).
 //! With this struct you can simply pass a string that the parser will parse, and the `TextBuffer` will then change colors or shakiness of your text accordingly.
 //!
-//! Examples can be found at [`text_buffer`](text_buffer) module.
+//! Examples can be found at [`TextBuffer`](struct.TextBuffer.html) struct.
 #![warn(missing_docs)]
 
 #[cfg(test)]
@@ -75,10 +74,16 @@ mod tests;
 
 mod display;
 mod renderer;
-pub mod input;
-pub mod font;
-pub mod text_buffer;
-pub mod terminal;
+mod input;
+mod font;
+mod text_buffer;
+mod terminal;
+
+pub use input::Input;
+pub use font::{CharacterData, Font};
+pub use text_buffer::{TermLimits, TextBuffer};
+pub use text_buffer::parser::Parser;
+pub use terminal::{Terminal, TerminalBuilder};
 
 #[cfg(feature = "menu_systems")]
 pub mod menu_systems;

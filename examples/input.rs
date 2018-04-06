@@ -1,9 +1,6 @@
 extern crate glerminal;
 
-use glerminal::VirtualKeyCode;
-use glerminal::terminal::TerminalBuilder;
-use glerminal::text_buffer::TextBuffer;
-use glerminal::text_buffer::parser::Parser;
+use glerminal::{Parser, TerminalBuilder, TextBuffer, VirtualKeyCode};
 
 fn main() {
     let terminal = TerminalBuilder::new()

@@ -1,34 +1,3 @@
-//! This module is used to load fonts that can be used in the [`TextBuffer`](text_buffer/struct.TextBuffer.html)
-//!
-//! The [`Font`](struct.Font.html) can be loaded from an `.sfl` file and then used in the `TextBuffer`, in example:
-//! ```
-//! use glerminal::terminal::TerminalBuilder;
-//! use glerminal::font::Font;
-//!
-//! let mut terminal = TerminalBuilder::new()
-//!     .with_title("Hello glerminal::font::Font!")
-//!     .with_dimensions((1280, 720))
-//!     .with_font(Font::load("fonts/iosevka.sfl"))
-//!     .with_headless(true)
-//!     .build();
-//! ```
-//!
-//! Alternatively you can use `load_raw` to load the font straight with `include_str!` and `include_bytes!`, example:
-//! ```
-//! use glerminal::terminal::TerminalBuilder;
-//! use glerminal::font::Font;
-//!
-//! static IOSEVKA_SFL: &'static str = include_str!("../fonts/iosevka.sfl");
-//! static IOSEVKA_PNG: &'static [u8] = include_bytes!("../fonts/iosevka.png");
-//!
-//! let mut terminal = TerminalBuilder::new()
-//!     .with_title("Hello glerminal::font::Font!")
-//!     .with_dimensions((1280, 720))
-//!     .with_font(Font::load_raw(IOSEVKA_SFL, IOSEVKA_PNG))
-//!     .with_headless(true)
-//!     .build();
-//! ```
-
 use png::{ColorType, Decoder};
 use std::io::Read;
 use std::fs::File;
@@ -51,7 +20,34 @@ pub struct CharacterData {
     pub(crate) y_off: i32,
 }
 
-/// Represents the font when it's loaded.
+/// The Font is used to load fonts that can be used in the [`TextBuffer`](text_buffer/struct.TextBuffer.html)
+///
+/// The Font can be loaded from an `.sfl` file and then used in the `TextBuffer`, in example:
+/// ```
+/// use glerminal::{TerminalBuilder, Font};
+///
+/// let mut terminal = TerminalBuilder::new()
+///     .with_title("Hello glerminal::font::Font!")
+///     .with_dimensions((1280, 720))
+///     .with_font(Font::load("fonts/iosevka.sfl"))
+///     .with_headless(true)
+///     .build();
+/// ```
+///
+/// Alternatively you can use `load_raw` to load the font straight with `include_str!` and `include_bytes!`, example:
+/// ```
+/// use glerminal::{TerminalBuilder, Font};
+///
+/// static IOSEVKA_SFL: &'static str = include_str!("../fonts/iosevka.sfl");
+/// static IOSEVKA_PNG: &'static [u8] = include_bytes!("../fonts/iosevka.png");
+///
+/// let mut terminal = TerminalBuilder::new()
+///     .with_title("Hello glerminal::font::Font!")
+///     .with_dimensions((1280, 720))
+///     .with_font(Font::load_raw(IOSEVKA_SFL, IOSEVKA_PNG))
+///     .with_headless(true)
+///     .build();
+/// ```
 #[derive(Debug, PartialEq)]
 pub struct Font {
     /// The name of the font
@@ -71,7 +67,7 @@ impl Font {
     /// Loads the font fron the given .sfl file, for example:
     ///
     /// ```
-    /// use glerminal::font::Font;
+    /// use glerminal::Font;
     /// let font = Font::load("fonts/iosevka.sfl");
     /// ```
     pub fn load<T: Into<PathBuf>>(fnt_path: T) -> Font {
@@ -93,7 +89,7 @@ impl Font {
     /// Loads the font from the given string (.sfl file contents) and Read (image read)
     ///
     /// ```
-    /// use glerminal::font::Font;
+    /// use glerminal::Font;
     /// use std::fs::File;
     ///
     /// let font = Font::load_raw(include_str!("../fonts/iosevka.sfl"), File::open("fonts/iosevka.png").unwrap());
@@ -168,7 +164,7 @@ impl Font {
     /// Gets the CharacterData from the Font with the given char, if the charcter exists, otherwise returns an error as a String. Example:
     ///
     /// ```
-    /// use glerminal::font::Font;
+    /// use glerminal::Font;
     /// let a_char_data = Font::load("fonts/iosevka.sfl").get_character('a');
     /// ```
     pub fn get_character(&self, character: char) -> Result<CharacterData, String> {

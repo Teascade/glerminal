@@ -7,8 +7,7 @@ use glutin::VirtualKeyCode;
 /// It's usage is quite simple, but an Input must be retrieved via a Terminal. Example:
 ///
 /// ```no_run
-/// use glerminal::terminal::TerminalBuilder;
-/// use glerminal::VirtualKeyCode;
+/// use glerminal::{TerminalBuilder, VirtualKeyCode};
 ///
 /// let terminal = TerminalBuilder::new()
 ///     .with_title("Hello GLerminal!")
