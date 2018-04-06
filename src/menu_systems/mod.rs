@@ -11,7 +11,7 @@ pub use self::text_label::TextLabel;
 pub use self::button::Button;
 pub use self::checkbox::{Checkbox, CheckboxGroup};
 pub use self::dialog::Dialog;
-pub use self::menu::{GrowthDirection, Menu, MenuList};
+pub use self::menu::{GrowthDirection, Menu, MenuList, MenuPosition};
 pub use self::window::Window;
 
 use std::collections::HashMap;

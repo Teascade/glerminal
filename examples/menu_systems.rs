@@ -2,7 +2,7 @@ extern crate glerminal;
 
 use glerminal::{TerminalBuilder, TextBuffer};
 use glerminal::menu_systems::{Button, Checkbox, CheckboxGroup, Dialog, Filter, GrowthDirection,
-                              Menu, MenuList, TextInput, TextLabel, Window};
+                              Menu, MenuList, MenuPosition, TextInput, TextLabel, Window};
 
 fn main() {
     let terminal = TerminalBuilder::new()
@@ -21,7 +21,6 @@ fn main() {
         .with_basic_special_symbols();
 
     let mut text_label = TextLabel::new("FPS: -", 40);
-    let mut empty_space = TextLabel::new("", 0);
 
     let mut text_input = TextInput::new(None, None)
         .with_prefix("Test your might: ")
@@ -49,7 +48,6 @@ fn main() {
 
     let mut checkbox_group = CheckboxGroup::new();
 
-    let mut empty_space_2 = TextLabel::new("", 0);
     let mut dialog = Dialog::new(30, 3, 3).with_text(
         "Hello! This is a test text with some stuff, this is supposed to test the dialog window.",
     );
@@ -57,7 +55,7 @@ fn main() {
     let mut fps = 0.0;
     let mut button_presses = 0;
 
-    let mut test_window = Window::new(70, 20)
+    let test_window = Window::new(70, 20)
         .with_pos((1, 1))
         .with_title("Hello, World!");
     test_window.set_limits(&mut text_buffer);
@@ -79,16 +77,14 @@ fn main() {
             &input,
             terminal.delta_time(),
             &mut MenuList::new()
-                .with_item(&mut text_label)
-                .with_item(&mut empty_space)
-                .with_item(&mut text_input)
-                .with_item(&mut text_input_2)
-                .with_item(&mut checkbox)
-                .with_item(&mut checkbox_2)
-                .with_item(&mut checkbox_3)
-                .with_item(&mut button)
-                .with_item(&mut empty_space_2)
-                .with_item(&mut dialog),
+                .with_item(&mut text_label, None)
+                .with_item(&mut text_input, MenuPosition::RelativeToLast(0, 1))
+                .with_item(&mut text_input_2, None)
+                .with_item(&mut checkbox, None)
+                .with_item(&mut checkbox_2, None)
+                .with_item(&mut checkbox_3, None)
+                .with_item(&mut button, None)
+                .with_item(&mut dialog, MenuPosition::RelativeToLast(0, 1)),
         );
 
         checkbox_group.update(&mut [&mut checkbox, &mut checkbox_2, &mut checkbox_3]);
