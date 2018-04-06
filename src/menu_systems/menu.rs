@@ -70,7 +70,7 @@ pub enum GrowthDirection {
     Left,
 }
 
-//// Represents the position of a menu item in the menu
+/// Represents the position of a menu item in the menu
 pub enum MenuPosition {
     /// Relative to the menu's default positioning. (Relative(0, 0) = default position)
     Relative(i32, i32),
