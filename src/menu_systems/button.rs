@@ -1,5 +1,5 @@
 use super::InterfaceItem;
-use input::Input;
+use events::Events;
 use text_buffer::{Color, TextBuffer};
 use VirtualKeyCode;
 
@@ -194,10 +194,10 @@ impl InterfaceItem for Button {
         );
     }
 
-    fn handle_input(&mut self, input: &Input) -> bool {
+    fn handle_events(&mut self, events: &Events) -> bool {
         self.was_just_pressed = false;
         for curr in &self.button_press_inputs {
-            if input.was_just_pressed(*curr) {
+            if events.keyboard.was_just_pressed(*curr) {
                 self.was_just_pressed = true;
                 return true;
             }

@@ -2,7 +2,7 @@ use glutin::VirtualKeyCode;
 
 use super::InterfaceItem;
 use text_buffer::{Color, TextBuffer};
-use input::Input;
+use events::Events;
 
 use std::iter::repeat;
 
@@ -253,14 +253,14 @@ impl InterfaceItem for Dialog {
         }
     }
 
-    fn handle_input(&mut self, input: &Input) -> bool {
-        if input.was_just_pressed(VirtualKeyCode::Down) {
+    fn handle_events(&mut self, events: &Events) -> bool {
+        if events.keyboard.was_just_pressed(VirtualKeyCode::Down) {
             if self.scroll_idx + 1 < self.rows.len() as u32 {
                 self.scroll_idx += 1;
                 self.dirty = true;
                 return true;
             }
-        } else if input.was_just_pressed(VirtualKeyCode::Up) {
+        } else if events.keyboard.was_just_pressed(VirtualKeyCode::Up) {
             if self.scroll_idx > 0 {
                 self.scroll_idx -= 1;
                 self.dirty = true;

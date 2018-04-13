@@ -23,11 +23,11 @@ fn main() {
     while terminal.refresh() {
         terminal.draw(&text_buffer);
 
-        let input = terminal.get_current_input();
-        if input.was_just_pressed(VirtualKeyCode::Space) {
+        let events = terminal.get_current_events();
+        if events.keyboard.was_just_pressed(VirtualKeyCode::Space) {
             update_text(&parser, &mut text_buffer, true);
             terminal.flush(&mut text_buffer);
-        } else if input.was_just_released(VirtualKeyCode::Space) {
+        } else if events.keyboard.was_just_released(VirtualKeyCode::Space) {
             update_text(&parser, &mut text_buffer, false);
             terminal.flush(&mut text_buffer);
         }

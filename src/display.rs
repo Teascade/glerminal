@@ -3,7 +3,7 @@ use glutin::{ContextBuilder, ElementState, Event, EventsLoop, GlContext, GlReque
 use gl;
 
 use renderer::{self, Matrix4};
-use input::Input;
+use events::Events;
 use std::cell::{Cell, RefCell};
 
 #[cfg(test)]
@@ -13,7 +13,7 @@ pub struct Display {
     pub proj_matrix: Cell<Matrix4>,
     aspect_ratio: Cell<f32>,
     window: GlWindow,
-    input: RefCell<Input>,
+    events: RefCell<Events>,
     events_loop: RefCell<EventsLoop>,
     width: Cell<u32>,
     height: Cell<u32>,
@@ -62,7 +62,7 @@ impl Display {
 
         Display {
             window: window,
-            input: RefCell::new(Input::new()),
+            events: RefCell::new(Events::new()),
             events_loop: RefCell::new(events_loop),
             aspect_ratio: Cell::new(aspect_ratio),
             proj_matrix: Cell::new(proj_matrix),
@@ -76,8 +76,8 @@ impl Display {
 
         let mut dimensions: Option<(u32, u32)> = None;
 
-        let input = self.input.borrow_mut().clear_just_lists();
-        drop(input);
+        let events = self.events.borrow_mut().clear_just_lists();
+        drop(events);
 
         self.window.swap_buffers().ok();
 
@@ -93,8 +93,9 @@ impl Display {
                     }
                     WindowEvent::KeyboardInput { input, .. } => {
                         if let (state, Some(keycode)) = (input.state, input.virtual_keycode) {
-                            self.input
+                            self.events
                                 .borrow_mut()
+                                .keyboard
                                 .update_virtual_keycode(keycode, state == ElementState::Pressed);
                         }
                     }
@@ -112,8 +113,8 @@ impl Display {
         running
     }
 
-    pub fn get_current_input(&self) -> Input {
-        self.input.borrow().clone()
+    pub fn get_current_events(&self) -> Events {
+        self.events.borrow().clone()
     }
 
     pub fn set_title(&mut self, title: &str) {
@@ -135,7 +136,8 @@ impl Display {
 
     #[cfg(test)]
     pub(crate) fn update_virtual_keycode(&mut self, keycode: VirtualKeyCode, pressed: bool) {
-        self.input
+        self.events
+            .keyboard
             .borrow_mut()
             .update_virtual_keycode(keycode, pressed);
     }

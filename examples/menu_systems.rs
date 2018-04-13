@@ -71,10 +71,10 @@ fn main() {
             ));
         }
 
-        let input = terminal.get_current_input();
+        let events = terminal.get_current_events();
 
         let mut dirty = menu.update(
-            &input,
+            &events,
             terminal.delta_time(),
             &mut MenuList::new()
                 .with_item(&mut text_label, None)

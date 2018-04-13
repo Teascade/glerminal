@@ -41,7 +41,7 @@
 //!
 //! `TerminalBuilder` is used to build the terminal, and `Terminal` is used as sort of a 'window' or 'canvas' for everything else, like the [`TextBuffer`](#text_buffer).
 //! The `Terminal` is able to change the title of the screen with [`.set_title`](struct.Terminal.html#method.set_title),
-//! get input with [`.get_input`](struct.Terminal.html#method.get_input), draw the latest flush with [`.draw`](struct.Terminal.html#method.draw)
+//! get events with [`.get_current_events`](struct.Terminal.html#method.get_current_events), draw the latest flush with [`.draw`](struct.Terminal.html#method.draw)
 //! or (like mentioned earlier), flush the `TextBuffer` with [`.flush`](struct.Terminal.html#method.flush).
 //!
 //! Examples can be found at [`Terminal`](struct.Terminal.html) struct.
@@ -74,12 +74,12 @@ mod tests;
 
 mod display;
 mod renderer;
-mod input;
+mod events;
 mod font;
 mod text_buffer;
 mod terminal;
 
-pub use input::Input;
+pub use events::{Events, Input};
 pub use font::{CharacterData, Font};
 pub use text_buffer::{TermLimits, TextBuffer};
 pub use text_buffer::parser::Parser;

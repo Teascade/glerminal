@@ -17,10 +17,10 @@ pub use self::window::Window;
 use std::collections::HashMap;
 
 use text_buffer::TextBuffer;
-use input::Input;
+use events::Events;
 use glutin::VirtualKeyCode;
 
-/// Represents a single menu item: an item that is somewhere, can take input and can be drawn.
+/// Represents a single menu item: an item that is somewhere, can handle events and can be drawn.
 pub trait InterfaceItem: InterfaceItemClone {
     /// Get the position of this InterfaceItem
     fn get_pos(&self) -> (u32, u32);
@@ -46,10 +46,10 @@ pub trait InterfaceItem: InterfaceItemClone {
     fn set_dirty(&mut self, dirty: bool);
     /// Draw the InterfaceItem
     fn draw(&mut self, text_buffer: &mut TextBuffer);
-    /// Handle input for this InterfaceItem.
+    /// Handle events for this InterfaceItem.
     ///
-    /// Returns whether it handled any input.
-    fn handle_input(&mut self, input: &Input) -> bool;
+    /// Returns whether it handled any events.
+    fn handle_events(&mut self, events: &Events) -> bool;
     /// Update this InterfaceItem; delta is given in seconds. (see [Terminal.delta_time()](../terminal/struct.Terminal.html))
     fn update(&mut self, delta: f32);
 }

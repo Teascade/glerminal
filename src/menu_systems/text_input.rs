@@ -4,11 +4,11 @@ use std::iter::repeat;
 
 use glutin::VirtualKeyCode;
 use text_buffer::TextBuffer;
-use input::Input;
+use events::Events;
 use text_buffer::Color;
 
-/// Represents a text-input field, that can be focused, takes in input (text),
-/// and it's possible to get the input with get_text
+/// Represents a text-input field, that can be focused, takes in events (.keyboard, text),
+/// and it's possible to get the input text with get_text
 #[derive(Debug, Clone)]
 pub struct TextInput {
     /// Background-color for when the field is unfocused
@@ -342,30 +342,30 @@ impl InterfaceItem for TextInput {
         text_buffer.write(format!("{}{}{}", self.prefix, text, self.suffix));
     }
 
-    fn handle_input(&mut self, input: &Input) -> bool {
+    fn handle_events(&mut self, events: &Events) -> bool {
         self.was_just_pressed = false;
 
         let mut handled = false;
         if self.focused {
             for curr in &self.button_press_inputs {
-                if input.was_just_pressed(*curr) {
+                if events.keyboard.was_just_pressed(*curr) {
                     self.was_just_pressed = true;
                     break;
                 }
             }
-            if input.was_just_pressed(VirtualKeyCode::Back) {
+            if events.keyboard.was_just_pressed(VirtualKeyCode::Back) {
                 self.text.pop();
                 self.dirty = true;
                 handled = true;
             }
-            for keycode in input.get_just_pressed_list() {
+            for keycode in events.keyboard.get_just_pressed_list() {
                 if self.character_limit.is_none()
                     || self.character_limit.unwrap() > self.text.len() as u32
                 {
                     if let Some(mut character) = self.filter.get(&keycode) {
                         let mut text = String::new();
-                        if input.is_pressed(VirtualKeyCode::LShift)
-                            || input.is_pressed(VirtualKeyCode::RShift)
+                        if events.keyboard.is_pressed(VirtualKeyCode::LShift)
+                            || events.keyboard.is_pressed(VirtualKeyCode::RShift)
                         {
                             text.push_str(&*character.to_uppercase().to_string());
                         } else {

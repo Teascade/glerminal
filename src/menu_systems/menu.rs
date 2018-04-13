@@ -1,5 +1,5 @@
 use super::InterfaceItem;
-use input::Input;
+use events::Events;
 use text_buffer::TextBuffer;
 use glutin::VirtualKeyCode;
 
@@ -223,9 +223,9 @@ impl Menu {
         }
     }
 
-    /// Update the menu, first handling any input if necessary, checking dirtyness,
+    /// Update the menu, first handling any events if necessary, checking dirtyness,
     /// saving changes for later drawing and returning whether the menu should be redrawn or not.
-    pub fn update(&mut self, input: &Input, delta: f32, list: &mut MenuList) -> bool {
+    pub fn update(&mut self, events: &Events, delta: f32, list: &mut MenuList) -> bool {
         if !self.focused {
             return false;
         }
@@ -233,14 +233,14 @@ impl Menu {
         // Handle input for focused child and consume input if necessary.
         let mut focused_handled_input = false;
         if let Some(item) = (&mut list.items_ref).get_mut(self.select_idx as usize) {
-            focused_handled_input = item.handle_input(input);
+            focused_handled_input = item.handle_events(events);
         }
 
         let length = list.items_ref.len();
 
         // Handle input for the menu (selecting), if focused child didn't consume the last inpout
         if !focused_handled_input {
-            if input.was_just_pressed(self.get_previous_button()) {
+            if events.keyboard.was_just_pressed(self.get_previous_button()) {
                 self.select_idx =
                     (((self.select_idx as i32 + length as i32) - 1) % length as i32) as u32;
 
@@ -258,7 +258,7 @@ impl Menu {
                     }
                 }
             }
-            if input.was_just_pressed(self.get_next_button()) {
+            if events.keyboard.was_just_pressed(self.get_next_button()) {
                 self.select_idx = (((self.select_idx as i32) + 1) % length as i32) as u32;
             }
         }

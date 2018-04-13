@@ -1,5 +1,5 @@
 use super::InterfaceItem;
-use input::Input;
+use events::Events;
 use text_buffer::{Color, TextBuffer};
 
 /// Represents a TextLabel that simply shows a row of text in the menu
@@ -134,7 +134,7 @@ impl InterfaceItem for TextLabel {
         );
     }
 
-    fn handle_input(&mut self, _: &Input) -> bool {
+    fn handle_events(&mut self, _: &Events) -> bool {
         false
     }
 

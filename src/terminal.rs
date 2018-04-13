@@ -7,7 +7,7 @@ use display::Display;
 use font::Font;
 use text_buffer::TextBuffer;
 use renderer;
-use input::Input;
+use events::Events;
 
 static IOSEVKA_SFL: &'static str = include_str!("../fonts/iosevka.sfl");
 static IOSEVKA_PNG: &'static [u8] = include_bytes!("../fonts/iosevka.png");
@@ -105,7 +105,7 @@ impl TerminalBuilder {
 /// The Terminal acts as the window and "canvas" of the terminal, handling most behind-the-sceneries
 ///
 /// The Terminal is used to create the window and canvas for the [`TextBuffer`](text_buffer/struct.TextBuffer.html)
-/// which can then draw it, close the window, reset the title of the window or handle input.
+/// which can then draw it, close the window, reset the title of the window or handle events.
 ///
 /// **Note** when building with debug-mode, you are able to press `F3` to toggle between debug and non-debug. see ([`set_debug`](#method.set_debug)) for more information.
 ///
@@ -215,8 +215,8 @@ impl Terminal {
         drop(timer);
 
         if let Some(ref display) = self.display {
-            let input = self.get_current_input();
-            if input.was_just_pressed(VirtualKeyCode::F3) {
+            let events = self.get_current_events();
+            if events.keyboard.was_just_pressed(VirtualKeyCode::F3) {
                 self.set_debug(!self.debug.get());
             }
             display.refresh() && self.running.get()
@@ -273,12 +273,12 @@ impl Terminal {
         }
     }
 
-    /// Gets the current Input, must be retrieved every time you want new inputs. (ie. every frame)
-    pub fn get_current_input(&self) -> Input {
+    /// Gets the current Events, must be retrieved every time you want new events. (ie. every frame)
+    pub fn get_current_events(&self) -> Events {
         if let Some(ref display) = self.display {
-            display.get_current_input()
+            display.get_current_events()
         } else {
-            Input::new()
+            Events::new()
         }
     }
 
