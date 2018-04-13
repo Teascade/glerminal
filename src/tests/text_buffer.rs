@@ -1,9 +1,10 @@
-use super::{random_color, run_multiple_times, test_setup_text_buffer, test_setup_text_buffer_with_terminal};
+use super::{random_color, run_multiple_times, test_setup_text_buffer,
+            test_setup_text_buffer_with_terminal};
 use rand;
 use rand::distributions::{Range, Sample};
 
 #[test]
-fn test_text_buffer_aspect_ratio() {
+fn aspect_ratio() {
     run_multiple_times(10, || {
         let mut range = Range::new(2i32, 100);
         let mut rnd = rand::thread_rng();
@@ -21,7 +22,7 @@ fn test_text_buffer_aspect_ratio() {
 }
 
 #[test]
-fn test_text_buffer_size() {
+fn size() {
     run_multiple_times(10, || {
         let mut range = Range::new(2i32, 100);
         let mut rnd = rand::thread_rng();
@@ -37,7 +38,7 @@ fn test_text_buffer_size() {
 }
 
 #[test]
-fn test_text_buffer_chars_get_char_empty() {
+fn get_char_empty() {
     let text_buffer = test_setup_text_buffer((2, 2));
     let character = text_buffer.get_character(0, 0);
     assert_eq!(character.get_char(), ' ');
@@ -47,7 +48,7 @@ fn test_text_buffer_chars_get_char_empty() {
 }
 
 #[test]
-fn test_text_buffer_chars_put_single_character() {
+fn put_single_character() {
     run_multiple_times(10, || {
         let character = rand::random::<char>();
         let mut text_buffer = test_setup_text_buffer((2, 2));
@@ -59,7 +60,7 @@ fn test_text_buffer_chars_put_single_character() {
 }
 
 #[test]
-fn test_text_buffer_chars_write_three_characters() {
+fn write_three_characters() {
     run_multiple_times(10, || {
         let mut text = String::new();
         for _ in 0..3 {
@@ -79,7 +80,7 @@ fn test_text_buffer_chars_write_three_characters() {
 }
 
 #[test]
-fn test_text_buffer_chars_put_single_styled_character() {
+fn put_single_styled_character() {
     run_multiple_times(10, || {
         let fg_color = random_color();
         let bg_color = random_color();
@@ -99,7 +100,7 @@ fn test_text_buffer_chars_put_single_styled_character() {
 }
 
 #[test]
-fn test_text_buffer_cursor_move() {
+fn cursor_move() {
     run_multiple_times(100, || {
         let mut range = Range::new(3i32, 100);
         let mut rnd = rand::thread_rng();
@@ -122,7 +123,7 @@ fn test_text_buffer_cursor_move() {
 }
 
 #[test]
-fn test_text_buffer_cursor_styles() {
+fn cursor_styles() {
     run_multiple_times(100, || {
         let mut text_buffer = test_setup_text_buffer((2, 2));
         let fg = random_color();

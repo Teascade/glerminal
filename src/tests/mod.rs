@@ -11,7 +11,7 @@ mod font;
 use rand;
 
 #[test]
-fn test_for_gl_error() {
+fn gl_error() {
     let terminal = test_setup_open_terminal();
     let mut buffer = match TextBuffer::new(&terminal, (2, 2)) {
         Ok(buffer) => buffer,

@@ -3,7 +3,7 @@ use glutin::VirtualKeyCode;
 use super::test_setup_open_terminal;
 
 #[test]
-fn test_input_was_just_pressed() {
+fn was_just_pressed() {
     let button = VirtualKeyCode::A;
 
     let mut events = Events::new();
@@ -14,7 +14,7 @@ fn test_input_was_just_pressed() {
 }
 
 #[test]
-fn test_input_was_just_released() {
+fn was_just_released() {
     let button = VirtualKeyCode::A;
 
     let mut events = Events::new();
@@ -28,7 +28,7 @@ fn test_input_was_just_released() {
 }
 
 #[test]
-fn test_input_is_pressed() {
+fn is_pressed() {
     let button = VirtualKeyCode::A;
 
     let mut events = Events::new();
@@ -39,7 +39,7 @@ fn test_input_is_pressed() {
 }
 
 #[test]
-fn test_input_was_just_pressed_with_terminal() {
+fn was_just_pressed_with_terminal() {
     let button = VirtualKeyCode::A;
     let mut terminal = test_setup_open_terminal();
     if !terminal.headless {

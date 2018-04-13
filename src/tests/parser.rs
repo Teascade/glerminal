@@ -1,9 +1,9 @@
-use super::{random_color, test_setup_text_buffer, run_multiple_times};
+use super::{random_color, run_multiple_times, test_setup_text_buffer};
 use text_buffer::parser::Parser;
 use rand;
 
 #[test]
-fn test_parser_add_color() {
+fn add_color() {
     run_multiple_times(1000, || {
         let mut parser = Parser::new();
 
@@ -14,7 +14,7 @@ fn test_parser_add_color() {
 }
 
 #[test]
-fn test_parser_write() {
+fn write() {
     run_multiple_times(10, || {
         let mut text_buffer = test_setup_text_buffer((2, 2));
 
@@ -22,7 +22,10 @@ fn test_parser_write() {
         let color = random_color();
         let shake = rand::random::<f32>();
         parser.add_color("test", color);
-        parser.write(&mut text_buffer, format!("[fg=test]a[/fg][bg=test]a[/bg][shake={}]a[/shake]", shake));
+        parser.write(
+            &mut text_buffer,
+            format!("[fg=test]a[/fg][bg=test]a[/bg][shake={}]a[/shake]", shake),
+        );
 
         let character = text_buffer.get_character(0, 0);
         assert_eq!(character.get_fg_color(), color);

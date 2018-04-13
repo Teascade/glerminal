@@ -12,56 +12,56 @@ fn test_load_font_raw() -> Font {
 }
 
 #[test]
-fn test_font_name() {
+fn name() {
     assert_eq!(test_load_font().name, "Iosevka");
 }
 
 #[test]
-fn test_load_font_raw_eq_regular_load() {
+fn load_raw_eq_load() {
     assert_eq!(test_load_font(), test_load_font_raw());
 }
 
 #[test]
-fn test_font_size() {
+fn size() {
     let font = test_load_font();
     assert_eq!(font.width, 393);
     assert_eq!(font.height, 374);
 }
 
 #[test]
-fn test_font_line_height_and_size() {
+fn line_height_and_size() {
     let font = test_load_font();
     assert_eq!(font.line_height, 56);
     assert_eq!(font.size, 32);
 }
 
 #[test]
-fn test_font_character_amount() {
+fn character_amount() {
     let font = test_load_font();
     assert_eq!(font.characters.keys().len(), 191);
 }
 
 #[test]
-fn test_font_single_character_width() {
+fn single_character_width() {
     let font = test_load_font();
     assert_eq!(font.get_character('a').unwrap().width, 18);
 }
 
 #[test]
-fn test_font_single_character_height() {
+fn single_character_height() {
     let font = test_load_font();
     assert_eq!(font.get_character('a').unwrap().height, 24);
 }
 
 #[test]
-fn test_font_single_character_offsets() {
+fn single_character_offsets() {
     let font = test_load_font();
     assert_eq!(font.get_character('a').unwrap().x_off, 2);
     assert_eq!(font.get_character('a').unwrap().y_off, 32);
 }
 
 #[test]
-fn test_font_single_character_id() {
+fn single_character_id() {
     let font = test_load_font();
     assert_eq!(font.get_character('a').unwrap().id, 97);
 }

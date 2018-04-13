@@ -6,7 +6,7 @@ use std::time::Duration;
 use std::thread;
 
 #[test]
-fn test_terminal_open_refresh_and_close() {
+fn open_refresh_and_close() {
     let terminal = test_setup_open_terminal();
     while terminal.refresh() {
         terminal.close();
@@ -14,7 +14,7 @@ fn test_terminal_open_refresh_and_close() {
 }
 
 #[test]
-fn test_terminal_programs_debug_shaders() {
+fn programs_debug_shaders() {
     let terminal = test_setup_open_terminal();
     if !terminal.headless {
         let program = terminal.get_program();
@@ -33,7 +33,7 @@ fn test_terminal_programs_debug_shaders() {
 }
 
 #[test]
-pub fn test_terminal_frame_counter() {
+pub fn frame_counter() {
     run_multiple_times(10, || {
         let mut range = Range::new(1i32, 100);
         let mut rnd = rand::thread_rng();
