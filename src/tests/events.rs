@@ -7,7 +7,7 @@ fn test_input_was_just_pressed() {
     let button = VirtualKeyCode::A;
 
     let mut events = Events::new();
-    events.keyboard.update_virtual_keycode(button, true);
+    events.keyboard.update_button_press(button, true);
     assert_eq!(events.keyboard.was_just_pressed(button), true);
     events.keyboard.clear_just_lists();
     assert_eq!(events.keyboard.was_just_pressed(button), false);
@@ -18,9 +18,9 @@ fn test_input_was_just_released() {
     let button = VirtualKeyCode::A;
 
     let mut events = Events::new();
-    events.keyboard.update_virtual_keycode(button, true);
+    events.keyboard.update_button_press(button, true);
     events.keyboard.clear_just_lists();
-    events.keyboard.update_virtual_keycode(button, false);
+    events.keyboard.update_button_press(button, false);
     assert_eq!(events.keyboard.was_just_pressed(button), false);
     assert_eq!(events.keyboard.was_just_released(button), true);
     events.keyboard.clear_just_lists();
@@ -32,7 +32,7 @@ fn test_input_is_pressed() {
     let button = VirtualKeyCode::A;
 
     let mut events = Events::new();
-    events.keyboard.update_virtual_keycode(button, true);
+    events.keyboard.update_button_press(button, true);
     assert_eq!(events.keyboard.is_pressed(button), true);
     events.keyboard.clear_just_lists();
     assert_eq!(events.keyboard.is_pressed(button), true);

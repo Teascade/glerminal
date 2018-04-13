@@ -96,7 +96,7 @@ impl Display {
                             self.events
                                 .borrow_mut()
                                 .keyboard
-                                .update_virtual_keycode(keycode, state == ElementState::Pressed);
+                                .update_button_press(keycode, state == ElementState::Pressed);
                         }
                     }
                     _ => (),
@@ -137,9 +137,9 @@ impl Display {
     #[cfg(test)]
     pub(crate) fn update_virtual_keycode(&mut self, keycode: VirtualKeyCode, pressed: bool) {
         self.events
-            .keyboard
             .borrow_mut()
-            .update_virtual_keycode(keycode, pressed);
+            .keyboard
+            .update_button_press(keycode, pressed);
     }
 
     fn update_view(&self) {

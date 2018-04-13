@@ -62,53 +62,53 @@ impl<T: PartialEq + Copy> Input<T> {
         self.just_released.clear();
     }
 
-    pub(crate) fn update_virtual_keycode(&mut self, keycode: T, pressed: bool) {
-        if pressed && !self.pressed.contains(&keycode) {
-            self.pressed.push(keycode);
-            self.just_pressed.push(keycode);
-        } else if !pressed && self.pressed.contains(&keycode) {
-            self.just_released.push(keycode);
-            if let Some(idx) = self.find_keycode_idx_from_pressed(keycode) {
+    pub(crate) fn update_button_press(&mut self, button: T, pressed: bool) {
+        if pressed && !self.pressed.contains(&button) {
+            self.pressed.push(button);
+            self.just_pressed.push(button);
+        } else if !pressed && self.pressed.contains(&button) {
+            self.just_released.push(button);
+            if let Some(idx) = self.find_buttonpress_idx_from_pressed(button) {
                 self.pressed.remove(idx);
             }
         }
     }
 
-    /// Returns wether the keycode is currently pressed. Does not care when it was pressed.
-    pub fn is_pressed(&self, keycode: T) -> bool {
-        self.pressed.contains(&keycode)
+    /// Returns wether the button is currently pressed. Does not care when it was pressed.
+    pub fn is_pressed(&self, button: T) -> bool {
+        self.pressed.contains(&button)
     }
 
-    /// Returns wether the keycode was pressed this frame.
-    pub fn was_just_pressed(&self, keycode: T) -> bool {
-        self.just_pressed.contains(&keycode)
+    /// Returns wether the button was pressed this frame.
+    pub fn was_just_pressed(&self, button: T) -> bool {
+        self.just_pressed.contains(&button)
     }
 
-    /// Returns wether the keycode was released this frame.
-    pub fn was_just_released(&self, keycode: T) -> bool {
-        self.just_released.contains(&keycode)
+    /// Returns wether the button was released this frame.
+    pub fn was_just_released(&self, button: T) -> bool {
+        self.just_released.contains(&button)
     }
 
-    /// Returns an entire list of keys that were just pressed.
+    /// Returns an entire list of buttons that were just pressed.
     pub fn get_just_pressed_list(&self) -> Vec<T> {
         self.just_pressed.clone()
     }
 
-    /// Returns an entire list of keys that were just released.
+    /// Returns an entire list of buttons that were just released.
     pub fn get_just_released_list(&self) -> Vec<T> {
         self.just_released.clone()
     }
 
-    /// Returns an entire list of keys that are pressed right now.
+    /// Returns an entire list of buttons that are pressed right now.
     pub fn get_pressed_list(&self) -> Vec<T> {
         self.pressed.clone()
     }
 
-    fn find_keycode_idx_from_pressed(&self, keycode: T) -> Option<usize> {
+    fn find_buttonpress_idx_from_pressed(&self, button: T) -> Option<usize> {
         let mut idx: usize = 0;
         let mut found = false;
         for i in 0..self.pressed.len() {
-            if keycode == self.pressed[i] {
+            if button == self.pressed[i] {
                 idx = i;
                 found = true;
             }
