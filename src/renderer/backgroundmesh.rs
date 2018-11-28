@@ -57,10 +57,12 @@ impl BackgroundMesh {
         }
 
         let vertex_buffer_col = vec![0.0; (width * height * 24) as usize];
+        let vertex_buffer_shakiness = vec![0.0; (width * height * 6) as usize];
 
         let vbo_pos = super::create_vbo(vertex_buffer_pos);
         let vbo_col = super::create_vbo(vertex_buffer_col);
-        let vao = super::create_vao(program, vbo_pos, vbo_col, None);
+        let vbo_shakiness = super::create_vbo(vertex_buffer_shakiness);
+        let vao = super::create_vao(program, vbo_pos, vbo_col, vbo_shakiness, None);
 
         let count = width * height * 6;
 

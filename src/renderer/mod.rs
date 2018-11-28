@@ -1,12 +1,12 @@
-pub(crate) mod textbuffermesh;
 pub(crate) mod backgroundmesh;
+pub(crate) mod textbuffermesh;
 
 use gl;
+use std::ffi::{CStr, CString};
 use std::mem;
 use std::os::raw::c_void;
 use std::ptr;
 use std::str::from_utf8;
-use std::ffi::{CStr, CString};
 
 pub(crate) static VERT_SHADER: &'static str = include_str!("../shaders/vert_shader.glsl");
 pub(crate) static FRAG_SHADER: &'static str = include_str!("../shaders/frag_shader.glsl");
@@ -203,7 +203,8 @@ pub(crate) fn create_vao(
     program: Program,
     vbo_pos: Vbo,
     vbo_col: Vbo,
-    vbo_tuple: Option<(Vbo, Vbo)>,
+    vbo_shakiness: Vbo,
+    vbo_tex: Option<Vbo>,
 ) -> Vao {
     unsafe {
         let mut vao = 0;
@@ -223,18 +224,18 @@ pub(crate) fn create_vao(
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo_col);
         gl::VertexAttribPointer(attrib_location, 4, gl::FLOAT, gl::FALSE, 0, ptr::null());
 
-        if let Some((vbo_tex, vbo_shakiness)) = vbo_tuple {
+        let attrib_location = get_attrib_location(program, "shakiness");
+
+        gl::EnableVertexAttribArray(attrib_location);
+        gl::BindBuffer(gl::ARRAY_BUFFER, vbo_shakiness);
+        gl::VertexAttribPointer(attrib_location, 1, gl::FLOAT, gl::FALSE, 0, ptr::null());
+
+        if let Some(vbo_tex) = vbo_tex {
             let attrib_location = get_attrib_location(program, "texcoord");
 
             gl::EnableVertexAttribArray(attrib_location);
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo_tex);
             gl::VertexAttribPointer(attrib_location, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
-
-            let attrib_location = get_attrib_location(program, "shakiness");
-
-            gl::EnableVertexAttribArray(attrib_location);
-            gl::BindBuffer(gl::ARRAY_BUFFER, vbo_shakiness);
-            gl::VertexAttribPointer(attrib_location, 1, gl::FLOAT, gl::FALSE, 0, ptr::null());
         }
 
         vao

@@ -1,8 +1,8 @@
 use std::cell::Cell;
 
+use super::{Program, Renderable, Texture, Vao, Vbo};
 use font::Font;
 use text_buffer::TextBuffer;
-use super::{Program, Renderable, Texture, Vao, Vbo};
 
 pub struct TextBufferMesh {
     vao: Vao,
@@ -41,7 +41,7 @@ impl TextBufferMesh {
         let vbo_col = super::create_vbo(vertex_buffer_col);
         let vbo_tex = super::create_vbo(vertex_buffer_tex);
         let vbo_shakiness = super::create_vbo(vertex_buffer_shakiness);
-        let vao = super::create_vao(program, vbo_pos, vbo_col, Some((vbo_tex, vbo_shakiness)));
+        let vao = super::create_vao(program, vbo_pos, vbo_col, vbo_shakiness, Some(vbo_tex));
 
         let tex = super::create_texture(&font.image_buffer, font.width, font.height);
         TextBufferMesh {
@@ -91,10 +91,10 @@ impl TextBufferMesh {
 
                 let font_offset = -(font.min_offset_y as i32);
 
-                let bmoffset_x =
-                    character_width * (char_data.x_off as i32 as f32 / font.size as f32);
-                let bmoffset_y = character_height
-                    * ((char_data.y_off as i32 + font_offset) as f32 / font.line_height as f32);
+                let bmoffset_x = character_width *
+                    (char_data.x_off as i32 as f32 / font.size as f32);
+                let bmoffset_y = character_height *
+                    ((char_data.y_off as i32 + font_offset) as f32 / font.line_height as f32);
 
                 let x_off = x as f32 * character_width + bmoffset_x;
                 let y_off = y as f32 * character_height + bmoffset_y;
