@@ -14,7 +14,7 @@ Currently supported features include:
 - Changing foreground and background colors to whatever you want!
 - Shaking text
 - A text-parser that will make it easy to write whatever you want and make it look cool!
-  - Parseable text example: `"Hello, [fg=red]this is red[/fg] and [shake=1.0]this is shaking[/shake]."
+  - Parseable text example: `"Hello, [fg=red]this is red[/fg] and [shake=1.0]this is shaking[/shake]."`
   
 ***Note: Requires OpenGL 3.3+ support***
 
