@@ -1,8 +1,10 @@
 extern crate glerminal;
 
+use glerminal::menu_systems::{
+    Button, Checkbox, CheckboxGroup, Dialog, Filter, GrowthDirection, Menu, MenuList, MenuPosition,
+    TextInput, TextLabel, Window,
+};
 use glerminal::{TerminalBuilder, TextBuffer};
-use glerminal::menu_systems::{Button, Checkbox, CheckboxGroup, Dialog, Filter, GrowthDirection,
-                              Menu, MenuList, MenuPosition, TextInput, TextLabel, Window};
 
 fn main() {
     let terminal = TerminalBuilder::new()

@@ -4,10 +4,10 @@ use std::cell::{Cell, RefCell};
 use std::time::SystemTime;
 
 use display::Display;
-use font::Font;
-use text_buffer::TextBuffer;
-use renderer;
 use events::Events;
+use font::Font;
+use renderer;
+use text_buffer::TextBuffer;
 
 static IOSEVKA_SFL: &'static str = include_str!("../fonts/iosevka.sfl");
 static IOSEVKA_PNG: &'static [u8] = include_bytes!("../fonts/iosevka.png");

@@ -1,9 +1,11 @@
-use glutin::{ContextBuilder, ElementState, Event, EventsLoop, GlContext, GlRequest, GlWindow,
-             WindowBuilder, WindowEvent};
 use gl;
+use glutin::{
+    ContextBuilder, ElementState, Event, EventsLoop, GlContext, GlRequest, GlWindow, WindowBuilder,
+    WindowEvent,
+};
 
-use renderer::{self, Matrix4};
 use events::Events;
+use renderer::{self, Matrix4};
 use std::cell::{Cell, RefCell};
 
 #[cfg(test)]

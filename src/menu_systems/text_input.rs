@@ -2,10 +2,10 @@ use super::{Filter, InterfaceItem};
 
 use std::iter::repeat;
 
-use glutin::VirtualKeyCode;
-use text_buffer::TextBuffer;
 use events::Events;
+use glutin::VirtualKeyCode;
 use text_buffer::Color;
+use text_buffer::TextBuffer;
 
 /// Represents a text-input field, that can be focused, takes in events (.keyboard, text),
 /// and it's possible to get the input text with get_text

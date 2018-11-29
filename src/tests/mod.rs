@@ -1,12 +1,12 @@
+use renderer;
 use terminal::{Terminal, TerminalBuilder};
 use text_buffer::TextBuffer;
-use renderer;
 
-mod terminal;
 mod events;
-mod text_buffer;
-mod parser;
 mod font;
+mod parser;
+mod terminal;
+mod text_buffer;
 
 use rand;
 

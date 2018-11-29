@@ -1,8 +1,8 @@
 use glutin::VirtualKeyCode;
 
 use super::InterfaceItem;
-use text_buffer::{Color, TextBuffer};
 use events::Events;
+use text_buffer::{Color, TextBuffer};
 
 use std::iter::repeat;
 
@@ -241,10 +241,9 @@ impl InterfaceItem for Dialog {
         for idx in 0..self.get_total_height() {
             let text: String;
             if let Some(row) = self.rows.get((self.scroll_idx + idx) as usize) {
-                text = row.to_owned()
-                    + &*repeat(' ')
-                        .take(self.width as usize - row.len())
-                        .collect::<String>();
+                text = row.to_owned() + &*repeat(' ')
+                    .take(self.width as usize - row.len())
+                    .collect::<String>();
             } else {
                 text = repeat(' ').take(self.width as usize).collect();
             }

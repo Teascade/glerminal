@@ -1,6 +1,6 @@
 use super::{random_color, run_multiple_times, test_setup_text_buffer};
-use text_buffer::parser::Parser;
 use rand;
+use text_buffer::parser::Parser;
 
 #[test]
 fn add_color() {

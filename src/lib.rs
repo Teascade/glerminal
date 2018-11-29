@@ -73,17 +73,17 @@ extern crate regex;
 mod tests;
 
 mod display;
-mod renderer;
 mod events;
 mod font;
-mod text_buffer;
+mod renderer;
 mod terminal;
+mod text_buffer;
 
 pub use events::{Events, Input};
 pub use font::{CharacterData, Font};
-pub use text_buffer::{TermLimits, TextBuffer};
-pub use text_buffer::parser::Parser;
 pub use terminal::{Terminal, TerminalBuilder};
+pub use text_buffer::parser::Parser;
+pub use text_buffer::{TermLimits, TextBuffer};
 
 #[cfg(feature = "menu_systems")]
 pub mod menu_systems;

@@ -1,6 +1,6 @@
+use super::test_setup_open_terminal;
 use events::Events;
 use glutin::VirtualKeyCode;
-use super::test_setup_open_terminal;
 
 #[test]
 fn was_just_pressed() {

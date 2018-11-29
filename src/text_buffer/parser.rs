@@ -2,8 +2,8 @@
 
 use std::collections::HashMap;
 
-use regex::Regex;
 use super::{Color, TextBuffer};
+use regex::Regex;
 
 /// Represents a parser, that is able to read given texts and use [`TextBuffer`](struct.TextBuffer.html) accordingly, to write text and styles matching to the text.
 ///

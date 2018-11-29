@@ -1,5 +1,6 @@
-use super::{random_color, run_multiple_times, test_setup_text_buffer,
-            test_setup_text_buffer_with_terminal};
+use super::{
+    random_color, run_multiple_times, test_setup_text_buffer, test_setup_text_buffer_with_terminal,
+};
 use rand;
 use rand::distributions::{Range, Sample};
 

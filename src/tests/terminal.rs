@@ -1,9 +1,9 @@
 use super::{run_multiple_times, test_setup_open_terminal};
-use terminal::Timer;
 use rand;
 use rand::distributions::{Range, Sample};
-use std::time::Duration;
 use std::thread;
+use std::time::Duration;
+use terminal::Timer;
 
 #[test]
 fn open_refresh_and_close() {

@@ -1,7 +1,7 @@
 use super::InterfaceItem;
 use events::Events;
-use text_buffer::TextBuffer;
 use glutin::VirtualKeyCode;
+use text_buffer::TextBuffer;
 
 /// Represents a list of InterfaceItems that is passed to the Menu when updating
 ///
@@ -246,7 +246,8 @@ impl Menu {
 
                 let start_idx = self.select_idx.min(length as u32 - 1).max(0);
                 while {
-                    !list.items_ref
+                    !list
+                        .items_ref
                         .get(self.select_idx as usize)
                         .unwrap()
                         .can_be_focused()
@@ -266,7 +267,8 @@ impl Menu {
         // Ensure that any unselectable menu items aren't selected. If none are found, c'est la vie
         let start_idx = self.select_idx.min(length as u32 - 1).max(0);
         while {
-            !list.items_ref
+            !list
+                .items_ref
                 .get(self.select_idx as usize)
                 .unwrap()
                 .can_be_focused()

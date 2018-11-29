@@ -1,24 +1,24 @@
-mod text_input;
-mod text_label;
 mod button;
 mod checkbox;
 mod dialog;
 mod menu;
+mod text_input;
+mod text_label;
 mod window;
 
-pub use self::text_input::TextInput;
-pub use self::text_label::TextLabel;
 pub use self::button::Button;
 pub use self::checkbox::{Checkbox, CheckboxGroup};
 pub use self::dialog::Dialog;
 pub use self::menu::{GrowthDirection, Menu, MenuList, MenuPosition};
+pub use self::text_input::TextInput;
+pub use self::text_label::TextLabel;
 pub use self::window::Window;
 
 use std::collections::HashMap;
 
-use text_buffer::TextBuffer;
 use events::Events;
 use glutin::VirtualKeyCode;
+use text_buffer::TextBuffer;
 
 /// Represents a single menu item: an item that is somewhere, can handle events and can be drawn.
 pub trait InterfaceItem: InterfaceItemClone {
