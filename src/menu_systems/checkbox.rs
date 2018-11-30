@@ -26,7 +26,7 @@ impl CheckboxGroup {
         for idx in 0..checkboxes.len() {
             let curr_is_checked;
             if let Some(checkbox) = checkboxes.get(idx) {
-                curr_is_checked = checkbox.is_checked();;
+                curr_is_checked = checkbox.is_checked();
             } else {
                 curr_is_checked = false;
             }
