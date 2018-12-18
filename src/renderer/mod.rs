@@ -16,12 +16,41 @@ pub(crate) static DEBUG_FRAG_SHADER: &'static str =
 
 pub(crate) type Matrix4 = [f32; 16];
 
-pub(crate) type Program = u32;
 pub(crate) type Vao = u32;
 pub(crate) type Vbo = u32;
 pub(crate) type Texture = u32;
 
-pub trait Renderable {
+// Represents a shader and it's uniform pointers
+#[derive(PartialEq, Debug, Copy, Clone)]
+pub(crate) struct Program {
+    shader_program: u32,
+
+    attrib_position: u32,
+    attrib_color: u32,
+    attrib_shakiness: u32,
+    attrib_texcoord: Option<u32>,
+
+    uniform_proj_mat: i32,
+    uniform_time: i32,
+}
+
+impl Program {
+    pub fn empty() -> Program {
+        Program {
+            shader_program: 0,
+
+            attrib_position: 0,
+            attrib_color: 0,
+            attrib_shakiness: 0,
+            attrib_texcoord: None,
+
+            uniform_proj_mat: 0,
+            uniform_time: 0,
+        }
+    }
+}
+
+pub(crate) trait Renderable {
     fn get_vao(&self) -> Vao;
     fn get_count(&self) -> i32;
     fn get_texture(&self) -> Option<Texture>;
@@ -92,17 +121,15 @@ pub(crate) fn set_debug(debug: bool) {
 
 pub(crate) fn draw(program: Program, proj_matrix: Matrix4, time: f32, renderable: &Renderable) {
     unsafe {
-        gl::UseProgram(program);
+        gl::UseProgram(program.shader_program);
         if let Some(texture) = renderable.get_texture() {
             gl::BindTexture(gl::TEXTURE_2D, texture);
         }
         gl::BindVertexArray(renderable.get_vao());
 
-        let loc = get_uniform_location("proj_mat".to_owned(), program);
-        gl::UniformMatrix4fv(loc, 1, gl::TRUE, proj_matrix.as_ptr());
+        gl::UniformMatrix4fv(program.uniform_proj_mat, 1, gl::TRUE, proj_matrix.as_ptr());
 
-        let loc = get_uniform_location("time".to_owned(), program);
-        gl::Uniform1fv(loc, 1, vec![time].as_ptr());
+        gl::Uniform1fv(program.uniform_time, 1, vec![time].as_ptr());
 
         gl::DrawArrays(gl::TRIANGLES, 0, renderable.get_count());
     }
@@ -213,29 +240,28 @@ pub(crate) fn create_vao(
 
         gl::BindVertexArray(vao);
 
-        let attrib_location = get_attrib_location(program, "position");
+        let attrib_location = program.attrib_position;
+
         gl::EnableVertexAttribArray(attrib_location);
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo_pos);
         gl::VertexAttribPointer(attrib_location, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
 
-        let attrib_location = get_attrib_location(program, "color");
+        let attrib_location = program.attrib_color;
 
         gl::EnableVertexAttribArray(attrib_location);
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo_col);
         gl::VertexAttribPointer(attrib_location, 4, gl::FLOAT, gl::FALSE, 0, ptr::null());
 
-        let attrib_location = get_attrib_location(program, "shakiness");
+        let attrib_location = program.attrib_shakiness;
 
         gl::EnableVertexAttribArray(attrib_location);
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo_shakiness);
         gl::VertexAttribPointer(attrib_location, 1, gl::FLOAT, gl::FALSE, 0, ptr::null());
 
-        if let Some(vbo_tex) = vbo_tex {
-            let attrib_location = get_attrib_location(program, "texcoord");
-
-            gl::EnableVertexAttribArray(attrib_location);
+        if let (Some(vbo_tex), Some(attrib_texcoord)) = (vbo_tex, program.attrib_texcoord) {
+            gl::EnableVertexAttribArray(attrib_texcoord);
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo_tex);
-            gl::VertexAttribPointer(attrib_location, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
+            gl::VertexAttribPointer(attrib_texcoord, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
         }
 
         vao
@@ -254,7 +280,25 @@ pub(crate) fn create_program(vert_shader: &str, frag_shader: &str) -> Program {
 
         gl::LinkProgram(program);
 
-        program
+        let texcoord_loc = get_attrib_location(program, "texcoord");
+        let texcoord;
+        if texcoord_loc == -1 {
+            texcoord = None;
+        } else {
+            texcoord = Some(texcoord_loc as u32);
+        }
+
+        Program {
+            shader_program: program,
+
+            attrib_position: get_attrib_location(program, "position") as u32,
+            attrib_color: get_attrib_location(program, "color") as u32,
+            attrib_shakiness: get_attrib_location(program, "shakiness") as u32,
+            attrib_texcoord: texcoord,
+
+            uniform_proj_mat: get_uniform_location(program, "proj_mat"),
+            uniform_time: get_uniform_location(program, "time"),
+        }
     }
 }
 
@@ -292,16 +336,16 @@ fn create_shader(shader_text: &str, shader_type: u32) -> u32 {
     }
 }
 
-unsafe fn get_attrib_location(program: Program, attribute: &str) -> u32 {
+unsafe fn get_attrib_location(shader_ptr: u32, attribute: &str) -> i32 {
     gl::GetAttribLocation(
-        program,
+        shader_ptr,
         CString::new(attribute).unwrap().as_ptr() as *const i8,
-    ) as u32
+    ) as i32
 }
 
-unsafe fn get_uniform_location(uniform: String, program: Program) -> i32 {
+unsafe fn get_uniform_location(shader_ptr: u32, uniform: &str) -> i32 {
     gl::GetUniformLocation(
-        program,
-        CString::new(uniform.to_string()).unwrap().as_ptr() as *const i8,
+        shader_ptr,
+        CString::new(uniform).unwrap().as_ptr() as *const i8,
     ) as i32
 }

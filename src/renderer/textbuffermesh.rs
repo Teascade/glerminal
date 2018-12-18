@@ -4,7 +4,7 @@ use super::{Program, Renderable, Texture, Vao, Vbo};
 use font::Font;
 use text_buffer::TextBuffer;
 
-pub struct TextBufferMesh {
+pub(crate) struct TextBufferMesh {
     vao: Vao,
     vbo_pos: Vbo,
     vbo_col: Vbo,

@@ -3,7 +3,7 @@ use std::cell::Cell;
 use super::{Program, Renderable, Texture, Vao, Vbo};
 use text_buffer::TextBuffer;
 
-pub struct BackgroundMesh {
+pub(crate) struct BackgroundMesh {
     width: i32,
     height: i32,
     vbo_pos: Vbo,

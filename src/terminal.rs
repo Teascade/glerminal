@@ -7,6 +7,7 @@ use display::Display;
 use events::Events;
 use font::Font;
 use renderer;
+use renderer::Program;
 use text_buffer::TextBuffer;
 
 static IOSEVKA_SFL: &'static str = include_str!("../fonts/iosevka.sfl");
@@ -138,9 +139,9 @@ impl TerminalBuilder {
 /// ```
 pub struct Terminal {
     display: Option<Display>,
-    program: renderer::Program,
-    background_program: renderer::Program,
-    debug_program: renderer::Program,
+    program: Program,
+    background_program: Program,
+    debug_program: Program,
     debug: Cell<bool>,
     running: Cell<bool>,
     pub(crate) headless: bool,
@@ -167,9 +168,9 @@ impl Terminal {
         let debug_program;
         if headless {
             display = None;
-            program = 0;
-            background_program = 0;
-            debug_program = 0;
+            program = Program::empty();
+            background_program = Program::empty();
+            debug_program = Program::empty();
         } else {
             display = Some(Display::new(
                 title,
@@ -308,7 +309,7 @@ impl Terminal {
         self.timer.borrow().get_delta_time()
     }
 
-    pub(crate) fn get_program(&self) -> renderer::Program {
+    pub(crate) fn get_program(&self) -> Program {
         if self.headless {
             panic!("Unable to get program from headless terminal");
         }
@@ -319,7 +320,7 @@ impl Terminal {
         }
     }
 
-    pub(crate) fn get_background_program(&self) -> renderer::Program {
+    pub(crate) fn get_background_program(&self) -> Program {
         if self.headless {
             panic!("Unable to get program from headless terminal");
         }
