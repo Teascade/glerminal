@@ -60,7 +60,7 @@ pub struct Font {
     /// Size of the font (width)
     pub size: u32,
     pub(crate) min_offset_y: i32,
-    pub(crate) characters: HashMap<u8, CharacterData>,
+    pub(crate) characters: HashMap<u16, CharacterData>,
 }
 
 impl Font {
@@ -121,7 +121,7 @@ impl Font {
         }
 
         // Load the font
-        let mut characters = HashMap::<u8, CharacterData>::new();
+        let mut characters = HashMap::<u16, CharacterData>::new();
         let width_float = info.width as f32;
         let height_float = info.height as f32;
         let mut min_off_y = 100_000;
@@ -135,7 +135,7 @@ impl Font {
             }
 
             characters.insert(
-                *key as u8,
+                *key as u16,
                 CharacterData {
                     id: value.id,
                     x1,
@@ -165,14 +165,13 @@ impl Font {
     ///
     /// ```
     /// use glerminal::Font;
-    /// let a_char_data = Font::load("fonts/iosevka.sfl").get_character('a');
+    /// let a_char_data = Font::load("fonts/iosevka.sfl").get_character('a' as u16);
     /// ```
-    pub fn get_character(&self, character: char) -> Result<CharacterData, String> {
-        let character_code = character as u8;
-        if let Some(character_data) = self.characters.get(&character_code) {
+    pub fn get_character(&self, character: u16) -> Result<CharacterData, String> {
+        if let Some(character_data) = self.characters.get(&character) {
             Ok(character_data.clone())
         } else {
-            Err(format!("Character not found: '{}'", character_code))
+            Err(format!("Character not found: '{}'", character))
         }
     }
 }

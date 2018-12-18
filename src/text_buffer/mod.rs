@@ -9,6 +9,9 @@ use terminal::Terminal;
 /// Represents a color with values from 0.0 to 1.0 (red, green, blue, alpha)
 pub type Color = [f32; 4];
 
+/// Represents a raw encoded character.
+pub type RawCharacter = u16;
+
 /// The `TextBuffer` acts as a "state machine" where you can set foreground color, background color and shakiness for the cursor,
 /// move the cursor around, clear the screen and write with the cursor (using the cursor's styles).
 /// It's often the most efficient way to write things, especially if you have a very structured way of displaying things, but for a more simple-to-use
@@ -98,8 +101,10 @@ impl TextBuffer {
             );
         }
 
-        let chars =
-            vec![TermCharacter::new(' ', [0.0; 4], [0.0; 4], 0.0); (width * height) as usize];
+        let chars = vec![
+            TermCharacter::new(' ' as u16, [0.0; 4], [0.0; 4], 0.0);
+            (width * height) as usize
+        ];
         let mesh;
         let background_mesh;
         if terminal.headless {
@@ -165,13 +170,25 @@ impl TextBuffer {
     /// Clears the screen (makes every character empty and resets their style)
     pub fn clear(&mut self) {
         self.chars = vec![
-            TermCharacter::new(' ', [0.0; 4], [0.0; 4], 0.0);
+            TermCharacter::new(' ' as u16, [0.0; 4], [0.0; 4], 0.0);
             (self.width * self.height) as usize
         ];
     }
 
-    /// Puts a character to the current position of the cursor with the cursor's style
+    /// Puts a regular character to the current position of the cursor with the cursor's style
     pub fn put_char(&mut self, character: char) {
+        if character.len_utf16() > 1 {
+            panic!("Can not insert over 16-bit characters");
+        } else {
+            let mut bytes = [0; 1];
+            character.encode_utf16(&mut bytes);
+
+            self.put_raw_char(bytes[0]);
+        }
+    }
+
+    /// Puts a raw 16-bit character to the current position of the cursor with the cursor's style
+    pub fn put_raw_char(&mut self, character: RawCharacter) {
         self.chars[(self.cursor.y * self.width + self.cursor.x) as usize] = TermCharacter::new(
             character,
             self.cursor.foreground_color,
@@ -186,8 +203,8 @@ impl TextBuffer {
     /// Puts the given text the same way as put_char
     pub fn write<T: Into<String>>(&mut self, text: T) {
         let text = text.into();
-        for c in text.chars() {
-            self.put_char(c);
+        for c in text.to_owned().encode_utf16() {
+            self.put_raw_char(c);
         }
     }
 
@@ -281,7 +298,7 @@ impl TextBuffer {
 /// Represents a single character in a [`TextBuffer`](struct.TextBuffer.html)
 #[derive(Clone, Copy)]
 pub struct TermCharacter {
-    character: char,
+    character: RawCharacter,
     fg_color: Color,
     bg_color: Color,
     shakiness: f32,
@@ -289,7 +306,7 @@ pub struct TermCharacter {
 
 impl TermCharacter {
     pub(crate) fn new(
-        character: char,
+        character: RawCharacter,
         fg_color: Color,
         bg_color: Color,
         shakiness: f32,
@@ -303,8 +320,12 @@ impl TermCharacter {
     }
 
     /// Gets the char in the TermCharacter
-    pub fn get_char(&self) -> char {
+    pub fn get_raw_char(&self) -> RawCharacter {
         self.character
+    }
+
+    pub fn get_char(&self) -> char {
+        String::from_utf16(&[self.character]).unwrap().remove(0)
     }
 
     /// Gets the foreground Color in the TermCharacter

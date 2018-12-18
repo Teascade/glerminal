@@ -76,19 +76,19 @@ impl TextBufferMesh {
         let character_width = 1.0 / text_buffer.width as f32;
         let character_height = 1.0 / text_buffer.height as f32;
 
-        let default_char_data = match font.get_character('?') {
+        let default_char_data = match font.get_character('?' as u16) {
             Ok(data) => data,
-            Err(_) => font.get_character(' ').ok().unwrap(),
+            Err(_) => font.get_character(' ' as u16).ok().unwrap(),
         };
 
         for y in 0..text_buffer.height {
             for x in 0..text_buffer.width {
                 // Calculate pos vertex coords
                 let character = text_buffer.get_character(x, y);
-                if character.get_char() == ' ' {
+                if character.get_raw_char() == (' ' as u16) {
                     continue;
                 }
-                let char_data = match font.get_character(character.get_char()) {
+                let char_data = match font.get_character(character.get_raw_char()) {
                     Ok(data) => data,
                     Err(_) => default_char_data.clone(),
                 };

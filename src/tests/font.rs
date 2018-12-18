@@ -24,8 +24,8 @@ fn load_raw_eq_load() {
 #[test]
 fn size() {
     let font = test_load_font();
-    assert_eq!(font.width, 393);
-    assert_eq!(font.height, 374);
+    assert_eq!(font.width, 664);
+    assert_eq!(font.height, 653);
 }
 
 #[test]
@@ -38,30 +38,30 @@ fn line_height_and_size() {
 #[test]
 fn character_amount() {
     let font = test_load_font();
-    assert_eq!(font.characters.keys().len(), 191);
+    assert_eq!(font.characters.keys().len(), 478);
 }
 
 #[test]
 fn single_character_width() {
     let font = test_load_font();
-    assert_eq!(font.get_character('a').unwrap().width, 18);
+    assert_eq!(font.get_character('a' as u16).unwrap().width, 18);
 }
 
 #[test]
 fn single_character_height() {
     let font = test_load_font();
-    assert_eq!(font.get_character('a').unwrap().height, 24);
+    assert_eq!(font.get_character('a' as u16).unwrap().height, 24);
 }
 
 #[test]
 fn single_character_offsets() {
     let font = test_load_font();
-    assert_eq!(font.get_character('a').unwrap().x_off, 2);
-    assert_eq!(font.get_character('a').unwrap().y_off, 32);
+    assert_eq!(font.get_character('a' as u16).unwrap().x_off, 2);
+    assert_eq!(font.get_character('a' as u16).unwrap().y_off, 32);
 }
 
 #[test]
 fn single_character_id() {
     let font = test_load_font();
-    assert_eq!(font.get_character('a').unwrap().id, 97);
+    assert_eq!(font.get_character('a' as u16).unwrap().id, 97);
 }

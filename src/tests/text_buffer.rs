@@ -49,9 +49,22 @@ fn get_char_empty() {
 }
 
 #[test]
+fn get_raw_char() {
+    let text_buffer = test_setup_text_buffer((2, 2));
+    let character = text_buffer.get_character(0, 0);
+    assert_eq!(character.get_raw_char(), 32);
+}
+
+#[test]
 fn put_single_character() {
     run_multiple_times(10, || {
-        let character = rand::random::<char>();
+        let mut character = ' ';
+        while character == ' ' {
+            character = match String::from_utf16(&[rand::random::<u16>()]) {
+                Ok(mut string) => string.remove(0),
+                Err(_) => ' ',
+            }
+        }
         let mut text_buffer = test_setup_text_buffer((2, 2));
         text_buffer.put_char(character);
 
@@ -64,8 +77,15 @@ fn put_single_character() {
 fn write_three_characters() {
     run_multiple_times(10, || {
         let mut text = String::new();
-        for _ in 0..3 {
-            text.push(rand::random::<char>());
+        while text.len() == 0 {
+            text = match String::from_utf16(&[
+                rand::random::<u16>(),
+                rand::random::<u16>(),
+                rand::random::<u16>(),
+            ]) {
+                Ok(text) => text,
+                Err(_) => String::new(),
+            }
         }
 
         let mut text_buffer = test_setup_text_buffer((2, 2));
@@ -102,7 +122,7 @@ fn put_single_styled_character() {
 
 #[test]
 fn cursor_move() {
-    run_multiple_times(100, || {
+    run_multiple_times(10, || {
         let mut range = Range::new(3i32, 100);
         let mut rnd = rand::thread_rng();
 
@@ -125,7 +145,7 @@ fn cursor_move() {
 
 #[test]
 fn cursor_styles() {
-    run_multiple_times(100, || {
+    run_multiple_times(10, || {
         let mut text_buffer = test_setup_text_buffer((2, 2));
         let fg = random_color();
         let bg = random_color();

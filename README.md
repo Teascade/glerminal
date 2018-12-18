@@ -20,6 +20,7 @@ Currently supported features include:
 
 ### Table of Contents
 - [How to use](#how-to-use)
+- [Custom font?](#custom-font)
 - [Contributing & Code of Conduct](#contributing-&-code-of-conduct)
 - [License](#license)
 
@@ -66,6 +67,15 @@ fn main() {
 
 ![What the example looks like](images/example_screenshot.png)
 
+### Custom font?
+The default font that comes with GLerminal only supports basic latin and some extended characters, as well as characters used for box creating, to save space on the end product (the default font is compiled into the library).
+
+Using a custom font currently can be a little difficult, as the only format [`sfl_parser`][sfl_parser] currently supports, is `.sfl`, 
+so you will need to create font files of that sort.  
+Sadly currently the only sofware I know of that can produce .sfl files is [fontbuilder][fontbuilder], and it currently cannot produce .sfl files on the Windows release available on the GitHub page. the version in Arch Linux AUR repository can however, and that is the one I've been using.
+
+Support for more popular bitmap font standards are on the way for [`sfl_parser`][sfl_parser], but it might take some time. Pull requests, and suggestions for a more popular format are welcome!
+
 ### Contributing & Code of Conduct
 You are welcome to contribute to this project, but before do review the [Contributing guidelines](CONTRIBUTING.md).
 
@@ -80,3 +90,5 @@ This crate also uses a font as a default font, called [Iosevka][iosevka], which 
 [license]: LICENSE.md
 [iosevka]: https://github.com/be5invis/Iosevka
 [license-iosevka]: LICENSE-IOSEVKA.md
+[fontbuilder]: https://github.com/andryblack/fontbuilder
+[sfl_parser]: https://github.com/teascade/sfl_parser
