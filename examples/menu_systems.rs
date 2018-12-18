@@ -54,23 +54,26 @@ fn main() {
         "Hello! This is a test text with some stuff, this is supposed to test the dialog window.",
     );
 
-    let mut fps = 0.0;
-    let mut button_presses = 0;
-
     let test_window = Window::new(70, 20)
         .with_pos((1, 1))
         .with_title("Hello, World!");
     test_window.set_limits(&mut text_buffer);
 
+    let mut frames = 0;
+    let mut timer = 0.0;
+    let mut button_presses = 0;
+
     while terminal.refresh() {
-        let curr_fps = terminal.get_fps();
-        if curr_fps != fps {
-            fps = curr_fps;
+        timer += terminal.delta_time();
+        frames += 1;
+        if timer > 1.0 {
+            timer -= 1.0;
             text_label.set_text(format!(
                 "FPS: {}, delta_time (ms): {:.6}",
-                fps,
+                frames,
                 terminal.delta_time() * 1000 as f32
             ));
+            frames = 0;
         }
 
         let events = terminal.get_current_events();

@@ -303,11 +303,6 @@ impl Terminal {
         }
     }
 
-    /// Returns the current fps; updates every second
-    pub fn get_fps(&self) -> f32 {
-        self.timer.borrow().get_fps()
-    }
-
     /// Get the delta-time (in seconds).
     pub fn delta_time(&self) -> f32 {
         self.timer.borrow().get_delta_time()
@@ -346,9 +341,6 @@ impl Terminal {
 pub(crate) struct Timer {
     last_check: SystemTime,
     delta_time: f32,
-    frames: u32,
-    fps: f32,
-    since_last_fps: f32,
 }
 
 impl Timer {
@@ -356,31 +348,16 @@ impl Timer {
         Timer {
             last_check: SystemTime::now(),
             delta_time: 0.0,
-            frames: 0,
-            fps: 0.0,
-            since_last_fps: 0.0,
         }
     }
 
     pub fn update(&mut self) {
-        self.frames += 1;
         let current_time = SystemTime::now();
         let duration = current_time.duration_since(self.last_check).unwrap();
         self.last_check = current_time;
 
         self.delta_time =
             duration.as_secs() as f32 + duration.subsec_nanos() as f32 / 1_000_000_000.0;
-
-        self.since_last_fps += self.delta_time;
-        if self.since_last_fps >= 1.0 {
-            self.since_last_fps -= 1.0;
-            self.fps = self.frames as f32;
-            self.frames = 0;
-        }
-    }
-
-    pub fn get_fps(&self) -> f32 {
-        self.fps
     }
 
     pub fn get_delta_time(&self) -> f32 {
