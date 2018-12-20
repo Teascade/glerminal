@@ -101,6 +101,11 @@ impl Display {
                                 .update_button_press(keycode, state == ElementState::Pressed);
                         }
                     }
+                    WindowEvent::MouseInput { button, state, .. } => self
+                        .events
+                        .borrow_mut()
+                        .mouse
+                        .update_button_press(button, state == ElementState::Pressed),
                     _ => (),
                 },
                 _ => (),

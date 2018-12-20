@@ -89,3 +89,4 @@ pub use text_buffer::{TermLimits, TextBuffer};
 pub mod menu_systems;
 
 pub use glutin::VirtualKeyCode;
+pub use glutin::MouseButton;
