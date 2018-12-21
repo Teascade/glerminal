@@ -88,8 +88,8 @@ impl CursorPosition {
             && location.1 > self.overflows.1
             && location.1 < 1.0 - self.overflows.1
         {
-            let x = location.0 * self.relative_dimensions.0 - self.overflows.0;
-            let y = location.1 * self.relative_dimensions.1 - self.overflows.1;
+            let x = (location.0 - self.overflows.0) * self.relative_dimensions.0;
+            let y = (location.1 - self.overflows.1) * self.relative_dimensions.1;
 
             self.location = Some((x, y));
         } else {
