@@ -1,4 +1,5 @@
 use glutin::{MouseButton, VirtualKeyCode};
+use TextBuffer;
 
 /// Represents all the events that happen in glerminal, such as keyboard events, mouse events, resize, and close events.
 ///
@@ -20,6 +21,8 @@ pub struct Events {
     pub keyboard: Input<VirtualKeyCode>,
     /// Represents mouse events.
     pub mouse: Input<MouseButton>,
+    /// Allows getting information related to cursor position
+    pub cursor_position: CursorPosition,
 }
 
 impl Events {
@@ -27,16 +30,99 @@ impl Events {
         Events {
             keyboard: Input::new(),
             mouse: Input::new(),
+            cursor_position: CursorPosition::new(),
         }
     }
 
     pub(crate) fn clear_just_lists(&mut self) {
         self.keyboard.clear_just_lists();
         self.mouse.clear_just_lists();
+        self.cursor_position.clear_just_moved();
     }
 }
 
-/// Input contains the necessary infoamtions to satisfy all your input-gathering needs!
+#[derive(Clone)]
+pub struct CursorPosition {
+    location: Option<(f32, f32)>,
+    just_moved: bool,
+    overflows: (f32, f32),
+    relative_dimensions: (f32, f32),
+}
+
+impl CursorPosition {
+    pub(crate) fn new() -> CursorPosition {
+        CursorPosition {
+            location: None,
+            just_moved: false,
+            overflows: (0.0, 0.0),
+            relative_dimensions: (0.0, 0.0),
+        }
+    }
+
+    pub(crate) fn update_overflows(&mut self, dimensions: (f32, f32), aspect_ratio: f32) {
+        let (width, height) = dimensions;
+        let true_width = height * aspect_ratio;
+        let true_height = width / aspect_ratio;
+
+        let mut overflow_width = 0f32;
+        let mut overflow_height = 0f32;
+        let mut relative_width = 1.0;
+        let mut relative_height = 1.0;
+        if true_width < width {
+            overflow_width = (width - true_width) / width;
+            relative_width = width / true_width;
+        } else {
+            overflow_height = (height - true_height) / height;
+            relative_height = height / true_height;
+        }
+
+        self.overflows = (overflow_width / 2.0, overflow_height / 2.0);
+        self.relative_dimensions = (relative_width, relative_height);
+    }
+
+    pub(crate) fn update_location(&mut self, location: (f32, f32)) {
+        self.just_moved = true;
+
+        if location.0 > self.overflows.0
+            && location.0 < 1.0 - self.overflows.0
+            && location.1 > self.overflows.1
+            && location.1 < 1.0 - self.overflows.1
+        {
+            let x = location.0 * self.relative_dimensions.0 - self.overflows.0;
+            let y = location.1 * self.relative_dimensions.1 - self.overflows.1;
+
+            self.location = Some((x, y));
+        } else {
+            self.location = None;
+        }
+    }
+
+    pub(crate) fn cursor_left(&mut self) {
+        self.just_moved = true;
+        self.location = None;
+    }
+
+    pub(crate) fn clear_just_moved(&mut self) {
+        self.just_moved = false;
+    }
+
+    pub fn cursor_just_moved(&self) -> bool {
+        self.just_moved
+    }
+
+    pub fn get_location(&self, text_buffer: &TextBuffer) -> Option<(i32, i32)> {
+        if let Some(location) = self.location {
+            Some((
+                (location.0 * text_buffer.width as f32).floor() as i32,
+                (location.1 * text_buffer.height as f32).floor() as i32,
+            ))
+        } else {
+            None
+        }
+    }
+}
+
+/// Input contains the necessary infoamtions to satisfy all your binary input-gathering needs!
 ///
 /// Input is used for keyboard input (VirtualKeyCode) and mouse input (MouseButton).
 /// See Events-documentation for usage information.
@@ -47,7 +133,6 @@ pub struct Input<T: PartialEq + Copy> {
     just_pressed: Vec<T>,
 }
 
-#[allow(dead_code)]
 impl<T: PartialEq + Copy> Input<T> {
     pub(crate) fn new() -> Input<T> {
         Input {

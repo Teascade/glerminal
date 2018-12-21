@@ -163,8 +163,12 @@ impl TextBuffer {
     }
 
     /// Gets the TermChaacter in the given position
-    pub fn get_character(&self, x: i32, y: i32) -> TermCharacter {
-        self.chars[(y * self.width + x) as usize]
+    pub fn get_character(&self, x: i32, y: i32) -> Option<TermCharacter> {
+        if x < 0 || x >= self.width || y < 0 || y >= self.height {
+            None
+        } else {
+            Some(self.chars[(y * self.width + x) as usize])
+        }
     }
 
     /// Clears the screen (makes every character empty and resets their style)

@@ -135,6 +135,7 @@ pub(crate) fn draw(program: Program, proj_matrix: Matrix4, time: f32, renderable
     }
 }
 
+
 pub(crate) fn create_proj_matrix(dimensions: (f32, f32), aspect_ratio: f32) -> Matrix4 {
     let (width, height) = dimensions;
     let true_width = height * aspect_ratio;

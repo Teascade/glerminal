@@ -27,15 +27,15 @@ fn write() {
             format!("[fg=test]a[/fg][bg=test]a[/bg][shake={}]a[/shake]", shake),
         );
 
-        let character = text_buffer.get_character(0, 0);
+        let character = text_buffer.get_character(0, 0).unwrap();
         assert_eq!(character.get_fg_color(), color);
         assert_eq!(character.get_bg_color(), [0.0; 4]);
         assert_eq!(character.get_shakiness(), 0.0);
-        let character = text_buffer.get_character(1, 0);
+        let character = text_buffer.get_character(1, 0).unwrap();
         assert_eq!(character.get_fg_color(), [1.0; 4]);
         assert_eq!(character.get_bg_color(), color);
         assert_eq!(character.get_shakiness(), 0.0);
-        let character = text_buffer.get_character(0, 1);
+        let character = text_buffer.get_character(0, 1).unwrap();
         assert_eq!(character.get_fg_color(), [1.0; 4]);
         assert_eq!(character.get_bg_color(), [0.0; 4]);
         assert_eq!(character.get_shakiness(), shake);

@@ -30,13 +30,32 @@ fn main() {
             || events.keyboard.was_just_released(VirtualKeyCode::Space)
             || events.mouse.was_just_pressed(MouseButton::Left)
             || events.mouse.was_just_released(MouseButton::Left)
+            || events.cursor_position.cursor_just_moved()
         {
+            text_buffer.clear();
+
+            // Show button inputs
             let space = events.keyboard.is_pressed(VirtualKeyCode::Space);
-            println!("{}", events.keyboard.is_pressed(VirtualKeyCode::Space));
             let lmb = events.mouse.is_pressed(MouseButton::Left);
             update_texts(&parser, &mut text_buffer, space, lmb);
-            terminal.flush(&mut text_buffer);
+
+            // Show cursor position
+            let loc = events.cursor_position.get_location(&text_buffer);
+            let text = format!("cursor pos: {:?}", loc);
+            text_buffer.move_cursor(0, 3);
+            text_buffer.write(text);
+
+            // Draw a green bg where the cursor is
+            if let Some(loc) = loc {
+                if let Some(c) = text_buffer.get_character(loc.0, loc.1) {
+                    text_buffer.move_cursor(loc.0, loc.1);
+                    text_buffer.change_cursor_bg_color([0.2, 0.2, 1.0, 1.0]);
+                    text_buffer.put_char(c.get_char());
+                    text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
+                }
+            }
         }
+        terminal.flush(&mut text_buffer);
     }
 }
 

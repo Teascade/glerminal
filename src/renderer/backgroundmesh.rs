@@ -91,7 +91,7 @@ impl BackgroundMesh {
         let character_height = 1.0 / self.height as f32;
         for y in 0..text_buffer.height {
             for x in 0..text_buffer.width {
-                let character = text_buffer.get_character(x, y);
+                let character = text_buffer.get_character(x, y).unwrap();
 
                 if character.get_bg_color() == [0.0; 4] {
                     continue;

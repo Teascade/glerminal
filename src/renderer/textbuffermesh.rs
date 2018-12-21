@@ -84,7 +84,7 @@ impl TextBufferMesh {
         for y in 0..text_buffer.height {
             for x in 0..text_buffer.width {
                 // Calculate pos vertex coords
-                let character = text_buffer.get_character(x, y);
+                let character = text_buffer.get_character(x, y).unwrap();
                 if character.get_raw_char() == (' ' as u16) {
                     continue;
                 }

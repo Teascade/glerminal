@@ -62,9 +62,14 @@ impl Display {
 
         let proj_matrix = renderer::create_proj_matrix((width as f32, height as f32), aspect_ratio);
 
+        let mut events = Events::new();
+        events
+            .cursor_position
+            .update_overflows((width as f32, height as f32), aspect_ratio);
+
         Display {
             window: window,
-            events: RefCell::new(Events::new()),
+            events: RefCell::new(events),
             events_loop: RefCell::new(events_loop),
             aspect_ratio: Cell::new(aspect_ratio),
             proj_matrix: Cell::new(proj_matrix),
@@ -106,6 +111,15 @@ impl Display {
                         .borrow_mut()
                         .mouse
                         .update_button_press(button, state == ElementState::Pressed),
+                    WindowEvent::CursorMoved { position, .. } => {
+                        self.events.borrow_mut().cursor_position.update_location((
+                            position.0 as f32 / self.width.get() as f32,
+                            position.1 as f32 / self.height.get() as f32,
+                        ));
+                    }
+                    WindowEvent::CursorLeft { device_id: _ } => {
+                        self.events.borrow_mut().cursor_position.cursor_left()
+                    }
                     _ => (),
                 },
                 _ => (),
@@ -154,6 +168,10 @@ impl Display {
             (self.width.get() as f32, self.height.get() as f32),
             self.aspect_ratio.get(),
         ));
+        self.events.borrow_mut().cursor_position.update_overflows(
+            (self.width.get() as f32, self.height.get() as f32),
+            self.aspect_ratio.get(),
+        );
         renderer::update_viewport((self.width.get(), self.height.get()));
     }
 }
