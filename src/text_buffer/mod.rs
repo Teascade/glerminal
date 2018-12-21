@@ -163,6 +163,8 @@ impl TextBuffer {
     }
 
     /// Gets the TermChaacter in the given position
+    /// 
+    /// Returns None if x/y are out of bounds
     pub fn get_character(&self, x: i32, y: i32) -> Option<TermCharacter> {
         if x < 0 || x >= self.width || y < 0 || y >= self.height {
             None

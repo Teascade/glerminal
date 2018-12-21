@@ -45,7 +45,7 @@ fn main() {
             text_buffer.move_cursor(0, 3);
             text_buffer.write(text);
 
-            // Draw a green bg where the cursor is
+            // Draw a blue bg where the cursor is
             if let Some(loc) = loc {
                 if let Some(c) = text_buffer.get_character(loc.0, loc.1) {
                     text_buffer.move_cursor(loc.0, loc.1);
@@ -54,8 +54,9 @@ fn main() {
                     text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
                 }
             }
+
+            terminal.flush(&mut text_buffer);
         }
-        terminal.flush(&mut text_buffer);
     }
 }
 

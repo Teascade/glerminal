@@ -20,7 +20,7 @@ use TextBuffer;
 ///
 /// let events = terminal.get_current_events();
 /// println!("Was A just pressed: {}", events.keyboard.was_just_pressed(VirtualKeyCode::A));
-/// println!("Cursor position: {}", events.cursor.get_location(&text_buffer));
+/// println!("Cursor position: {:?}", events.cursor.get_location(&text_buffer));
 /// ```
 #[derive(Clone)]
 pub struct Events {
@@ -122,7 +122,7 @@ impl Cursor {
         self.just_moved
     }
 
-    /// Returns the current position of the cursor (as coordinates on the text buffer).
+    /// Returns the current position of the cursor (the coordinates on the text buffer).
     pub fn get_location(&self, text_buffer: &TextBuffer) -> Option<(i32, i32)> {
         if let Some(location) = self.location {
             Some((
