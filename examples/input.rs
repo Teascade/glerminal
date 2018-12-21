@@ -30,7 +30,7 @@ fn main() {
             || events.keyboard.was_just_released(VirtualKeyCode::Space)
             || events.mouse.was_just_pressed(MouseButton::Left)
             || events.mouse.was_just_released(MouseButton::Left)
-            || events.cursor_position.cursor_just_moved()
+            || events.cursor.cursor_just_moved()
         {
             text_buffer.clear();
 
@@ -40,7 +40,7 @@ fn main() {
             update_texts(&parser, &mut text_buffer, space, lmb);
 
             // Show cursor position
-            let loc = events.cursor_position.get_location(&text_buffer);
+            let loc = events.cursor.get_location(&text_buffer);
             let text = format!("cursor pos: {:?}", loc);
             text_buffer.move_cursor(0, 3);
             text_buffer.write(text);

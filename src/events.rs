@@ -12,8 +12,15 @@ use TextBuffer;
 ///     .with_dimensions((1280, 720))
 ///     .build();
 ///
+/// let mut text_buffer;
+/// match TextBuffer::new(&terminal, (80, 24)) {
+///     Ok(buffer) => text_buffer = buffer,
+///     Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
+/// }
+///
 /// let events = terminal.get_current_events();
 /// println!("Was A just pressed: {}", events.keyboard.was_just_pressed(VirtualKeyCode::A));
+/// println!("Cursor position: {}", events.cursor.get_location(&text_buffer));
 /// ```
 #[derive(Clone)]
 pub struct Events {
@@ -22,7 +29,7 @@ pub struct Events {
     /// Represents mouse events.
     pub mouse: Input<MouseButton>,
     /// Allows getting information related to cursor position
-    pub cursor_position: CursorPosition,
+    pub cursor: Cursor,
 }
 
 impl Events {
@@ -30,28 +37,32 @@ impl Events {
         Events {
             keyboard: Input::new(),
             mouse: Input::new(),
-            cursor_position: CursorPosition::new(),
+            cursor: Cursor::new(),
         }
     }
 
     pub(crate) fn clear_just_lists(&mut self) {
         self.keyboard.clear_just_lists();
         self.mouse.clear_just_lists();
-        self.cursor_position.clear_just_moved();
+        self.cursor.clear_just_moved();
     }
 }
 
+/// Cursor has the ability to get the position in the text buffer where the cursor currently is.
+///
+/// Just call `events.cursor.get_location(&text_buffer);`
+/// See Events-documentation for usage information.
 #[derive(Clone)]
-pub struct CursorPosition {
+pub struct Cursor {
     location: Option<(f32, f32)>,
     just_moved: bool,
     overflows: (f32, f32),
     relative_dimensions: (f32, f32),
 }
 
-impl CursorPosition {
-    pub(crate) fn new() -> CursorPosition {
-        CursorPosition {
+impl Cursor {
+    pub(crate) fn new() -> Cursor {
+        Cursor {
             location: None,
             just_moved: false,
             overflows: (0.0, 0.0),
@@ -106,10 +117,12 @@ impl CursorPosition {
         self.just_moved = false;
     }
 
+    /// Weather the cursor has moved within the last frame
     pub fn cursor_just_moved(&self) -> bool {
         self.just_moved
     }
 
+    /// Returns the current position of the cursor (as coordinates on the text buffer).
     pub fn get_location(&self, text_buffer: &TextBuffer) -> Option<(i32, i32)> {
         if let Some(location) = self.location {
             Some((

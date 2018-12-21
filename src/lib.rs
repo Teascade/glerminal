@@ -79,7 +79,7 @@ mod renderer;
 mod terminal;
 mod text_buffer;
 
-pub use events::{Events, Input};
+pub use events::{Cursor, Events, Input};
 pub use font::{CharacterData, Font};
 pub use terminal::{Terminal, TerminalBuilder};
 pub use text_buffer::parser::Parser;
@@ -88,5 +88,5 @@ pub use text_buffer::{TermLimits, TextBuffer};
 #[cfg(feature = "menu_systems")]
 pub mod menu_systems;
 
-pub use glutin::VirtualKeyCode;
 pub use glutin::MouseButton;
+pub use glutin::VirtualKeyCode;

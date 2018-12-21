@@ -64,7 +64,7 @@ impl Display {
 
         let mut events = Events::new();
         events
-            .cursor_position
+            .cursor
             .update_overflows((width as f32, height as f32), aspect_ratio);
 
         Display {
@@ -112,13 +112,13 @@ impl Display {
                         .mouse
                         .update_button_press(button, state == ElementState::Pressed),
                     WindowEvent::CursorMoved { position, .. } => {
-                        self.events.borrow_mut().cursor_position.update_location((
+                        self.events.borrow_mut().cursor.update_location((
                             position.0 as f32 / self.width.get() as f32,
                             position.1 as f32 / self.height.get() as f32,
                         ));
                     }
                     WindowEvent::CursorLeft { device_id: _ } => {
-                        self.events.borrow_mut().cursor_position.cursor_left()
+                        self.events.borrow_mut().cursor.cursor_left()
                     }
                     _ => (),
                 },
@@ -168,7 +168,7 @@ impl Display {
             (self.width.get() as f32, self.height.get() as f32),
             self.aspect_ratio.get(),
         ));
-        self.events.borrow_mut().cursor_position.update_overflows(
+        self.events.borrow_mut().cursor.update_overflows(
             (self.width.get() as f32, self.height.get() as f32),
             self.aspect_ratio.get(),
         );
