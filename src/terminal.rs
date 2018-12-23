@@ -256,7 +256,8 @@ impl Terminal {
     }
 
     /// Draws a single `TextBuffer`. Does not clear at first to enable drawing multiple text buffers.
-    /// See `clear` for clearing before drawing
+    /// Only use `clear` + `draw_single` or `draw`, not both.
+    /// See `clear` for clearing before drawing.
     pub fn draw_single(&self, text_buffer: &TextBuffer) {
         if let (&Some(ref display), &Some(ref mesh), &Some(ref background_mesh)) = (
             &self.display,
@@ -284,7 +285,7 @@ impl Terminal {
         }
     }
 
-    /// Draws the `TextBuffer`, this should be called every time in the while-loop.
+    /// Clears and draws a `TextBuffer`, used if only using one `TextBuffer`. This should be called every frame.
     pub fn draw(&self, text_buffer: &TextBuffer) {
         self.clear();
         self.draw_single(&text_buffer);

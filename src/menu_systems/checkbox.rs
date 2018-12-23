@@ -11,12 +11,24 @@ use VirtualKeyCode;
 /// Updating this CheckboxGroup with the given Checkboxes will ensure that only one of the Checkboxes will remain checked.
 pub struct CheckboxGroup {
     selected_idx: Option<u32>,
+    force_one_checked: Option<u32>,
 }
 
 impl CheckboxGroup {
     /// Creates a new CheckboxGroup with no selection.
     pub fn new() -> CheckboxGroup {
-        CheckboxGroup { selected_idx: None }
+        CheckboxGroup {
+            selected_idx: None,
+            force_one_checked: None,
+        }
+    }
+
+    /// Some forces something to be always checked, None (default) allows everything to be unchecked.
+    /// Put an index that should be checked as default, if given index doesn't exist 0 is used.
+    /// Selected index will result to None only if no checkboxes are given.
+    pub fn with_force_one_checked(mut self, force_one_checked: Option<u32>) -> CheckboxGroup {
+        self.force_one_checked = force_one_checked;
+        self
     }
 
     /// Update this CheckboxGroup with the given Checkboxes, this will ensure that only one of the given Checkboxes will remain checked.
@@ -55,7 +67,25 @@ impl CheckboxGroup {
             }
         }
         if !any_selected {
-            self.selected_idx = None;
+            if let Some(forced_idx) = self.force_one_checked {
+                if let Some(idx) = self.selected_idx {
+                    if let Some(checkbox) = checkboxes.get_mut(idx as usize) {
+                        checkbox.set_checked(true);
+                    }
+                } else {
+                    if checkboxes.len() > forced_idx as usize {
+                        let checkbox = checkboxes.get_mut(forced_idx as usize).unwrap();
+                        checkbox.set_checked(true);
+                        self.selected_idx = Some(forced_idx);
+                    } else if let Some(checkbox) = checkboxes.get_mut(0) {
+                        checkbox.set_checked(true);
+                        self.selected_idx = Some(0);
+                    }
+                    self.selected_idx = None;
+                }
+            } else {
+                self.selected_idx = None;
+            }
         }
     }
 

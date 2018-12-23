@@ -48,7 +48,7 @@ fn main() {
         .with_focus(true)
         .with_growth_direction(GrowthDirection::Down);
 
-    let mut checkbox_group = CheckboxGroup::new();
+    let mut checkbox_group = CheckboxGroup::new().with_force_one_checked(Some(0));
 
     let mut dialog = Dialog::new(30, 3, 3).with_text(
         "Hello! This is a test text with some stuff, this is supposed to test the dialog window.",
