@@ -7,7 +7,7 @@ use TextBuffer;
 ///
 /// ### Example usage:
 /// ```no_run
-/// use glerminal::{TerminalBuilder, VirtualKeyCode};
+/// use glerminal::{TerminalBuilder, VirtualKeyCode, TextBuffer};
 ///
 /// let terminal = TerminalBuilder::new()
 ///     .with_title("Hello GLerminal!")

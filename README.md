@@ -15,6 +15,7 @@ Currently supported features include:
 - Shaking text
 - A text-parser that will make it easy to write whatever you want and make it look cool!
   - Parseable text example: `"Hello, [fg=red]this is red[/fg] and [shake=1.0]this is shaking[/shake]."`
+- Drawing of multiple text buffers (grids of text) on top of eachother
   
 ***Note: Requires OpenGL 3.3+ support***
 

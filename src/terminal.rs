@@ -250,7 +250,9 @@ impl Terminal {
 
     /// Clears the screen.
     pub fn clear(&self) {
-        renderer::clear();
+        if !self.headless {
+            renderer::clear();
+        }
     }
 
     /// Draws a single `TextBuffer`. Does not clear at first to enable drawing multiple text buffers.
