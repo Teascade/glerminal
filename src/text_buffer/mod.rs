@@ -12,10 +12,13 @@ pub type Color = [f32; 4];
 /// Represents a raw encoded character.
 pub type RawCharacter = u16;
 
+static mut INDEX_COUNTER: u32 = 0;
+
 /// The `TextBuffer` acts as a "state machine" where you can set foreground color, background color and shakiness for the cursor,
 /// move the cursor around, clear the screen and write with the cursor (using the cursor's styles).
 /// It's often the most efficient way to write things, especially if you have a very structured way of displaying things, but for a more simple-to-use
-/// way of writing, that isn't as structured ie. for a dialogue, you might want to use the Parser.
+/// way of writing, that isn't as structured ie. for a dialogue, you might want to use the Parser.  
+/// As of version 0.2.0, drawing multiple `TextBuffer`s on top of eachother is also possible.
 ///
 /// `Parser` is a struct added as a default feature, that is able to take in a piece of text and then parse it and change the cursor styles easily using the `TextBuffer`.
 /// The `Parser` can handle tags imilar to BBCode tags, and can change fg, bg and shake, meaning the following tags are available to use mid-text:
@@ -77,13 +80,47 @@ pub type RawCharacter = u16;
 /// // Flush to "apply changes"
 /// terminal.flush(&mut text_buffer);
 /// ```
+///
+/// ### Simple example drawing multiple `TextBuffer`s
+/// ```no_run
+/// use glerminal::{TerminalBuilder, TextBuffer};
+///
+/// let terminal = TerminalBuilder::new().build();
+///
+/// let mut background_text_buffer;
+/// match TextBuffer::new(&terminal, (80, 24)) {
+///   Ok(buffer) => background_text_buffer = buffer,
+///   Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
+/// }
+///
+/// let mut foreground_text_buffer;
+/// match TextBuffer::new(&terminal, (80, 24)) {
+///   Ok(buffer) => foreground_text_buffer = buffer,
+///   Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
+/// }
+///
+/// // Write to the background buffer
+/// background_text_buffer.write("I am in the background");
+///
+/// // Write to the foreground buffer
+/// foreground_text_buffer.write("I am in the foreground");
+///
+/// // Flush to "apply changes"
+/// // The two texts will appear on top of eachother because they are written in the same location
+/// terminal.flush(&mut background_text_buffer);
+/// terminal.flush(&mut foreground_text_buffer);
+/// ```
 pub struct TextBuffer {
+    index: u32,
+
     pub(crate) chars: Vec<TermCharacter>,
     pub(crate) height: i32,
     pub(crate) width: i32,
     pub(crate) mesh: Option<TextBufferMesh>,
     pub(crate) background_mesh: Option<BackgroundMesh>,
+
     pub(crate) aspect_ratio: f32,
+
     cursor: TermCursor,
 
     limits: TermLimits,
@@ -125,7 +162,13 @@ impl TextBuffer {
         let true_height = height * terminal.font.line_height as i32;
         let true_width = width * terminal.font.size as i32;
 
+        let index;
+        unsafe {
+            index = INDEX_COUNTER;
+            INDEX_COUNTER += 1;
+        }
         Ok(TextBuffer {
+            index: index,
             chars,
             height,
             width,
@@ -138,11 +181,16 @@ impl TextBuffer {
                 background_color: [0.0; 4],
                 shakiness: 0.0,
             },
-            limits: TermLimits::new(width as u32, height as u32),
+
             aspect_ratio: true_width as f32 / true_height as f32,
 
+            limits: TermLimits::new(width as u32, height as u32),
             dirty: true,
         })
+    }
+
+    pub(crate) fn get_idx(&self) -> u32 {
+        self.index
     }
 
     pub(crate) fn swap_buffers(&mut self, font: &Font) {
@@ -163,7 +211,7 @@ impl TextBuffer {
     }
 
     /// Gets the TermChaacter in the given position
-    /// 
+    ///
     /// Returns None if x/y are out of bounds
     pub fn get_character(&self, x: i32, y: i32) -> Option<TermCharacter> {
         if x < 0 || x >= self.width || y < 0 || y >= self.height {

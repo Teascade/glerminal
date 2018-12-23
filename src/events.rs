@@ -1,4 +1,6 @@
+use display::TextBufferDisplayData;
 use glutin::{MouseButton, VirtualKeyCode};
+use std::collections::HashMap;
 use TextBuffer;
 
 /// Represents all the events that happen in glerminal, such as keyboard events, mouse events, resize, and close events.
@@ -33,11 +35,11 @@ pub struct Events {
 }
 
 impl Events {
-    pub(crate) fn new() -> Events {
+    pub(crate) fn new(text_buffer_aspect_ratio: bool) -> Events {
         Events {
             keyboard: Input::new(),
             mouse: Input::new(),
-            cursor: Cursor::new(),
+            cursor: Cursor::new(text_buffer_aspect_ratio),
         }
     }
 
@@ -56,56 +58,39 @@ impl Events {
 pub struct Cursor {
     location: Option<(f32, f32)>,
     just_moved: bool,
-    overflows: (f32, f32),
-    relative_dimensions: (f32, f32),
+    use_text_buffer_overflows: bool,
+    display_overflows: (f32, f32),
+    display_relative_dimensions: (f32, f32),
+    text_buffer_datas: HashMap<u32, TextBufferDisplayData>,
 }
 
 impl Cursor {
-    pub(crate) fn new() -> Cursor {
+    pub(crate) fn new(use_text_buffer_overflows: bool) -> Cursor {
         Cursor {
             location: None,
             just_moved: false,
-            overflows: (0.0, 0.0),
-            relative_dimensions: (0.0, 0.0),
+            use_text_buffer_overflows: use_text_buffer_overflows,
+            display_overflows: (0.0, 0.0),
+            display_relative_dimensions: (0.0, 0.0),
+            text_buffer_datas: HashMap::new(),
         }
     }
 
-    pub(crate) fn update_overflows(&mut self, dimensions: (f32, f32), aspect_ratio: f32) {
-        let (width, height) = dimensions;
-        let true_width = height * aspect_ratio;
-        let true_height = width / aspect_ratio;
-
-        let mut overflow_width = 0f32;
-        let mut overflow_height = 0f32;
-        let mut relative_width = 1.0;
-        let mut relative_height = 1.0;
-        if true_width < width {
-            overflow_width = (width - true_width) / width;
-            relative_width = width / true_width;
-        } else {
-            overflow_height = (height - true_height) / height;
-            relative_height = height / true_height;
-        }
-
-        self.overflows = (overflow_width / 2.0, overflow_height / 2.0);
-        self.relative_dimensions = (relative_width, relative_height);
+    pub(crate) fn update_display_datas(
+        &mut self,
+        display_overflows: (f32, f32),
+        display_relative_dimensions: (f32, f32),
+        datas: HashMap<u32, TextBufferDisplayData>,
+    ) {
+        self.display_overflows = display_overflows;
+        self.display_relative_dimensions = display_relative_dimensions;
+        self.text_buffer_datas = datas;
     }
 
     pub(crate) fn update_location(&mut self, location: (f32, f32)) {
         self.just_moved = true;
 
-        if location.0 > self.overflows.0
-            && location.0 < 1.0 - self.overflows.0
-            && location.1 > self.overflows.1
-            && location.1 < 1.0 - self.overflows.1
-        {
-            let x = (location.0 - self.overflows.0) * self.relative_dimensions.0;
-            let y = (location.1 - self.overflows.1) * self.relative_dimensions.1;
-
-            self.location = Some((x, y));
-        } else {
-            self.location = None;
-        }
+        self.location = Some((location.0, location.1));
     }
 
     pub(crate) fn cursor_left(&mut self) {
@@ -125,10 +110,30 @@ impl Cursor {
     /// Returns the current position of the cursor (the coordinates on the text buffer).
     pub fn get_location(&self, text_buffer: &TextBuffer) -> Option<(i32, i32)> {
         if let Some(location) = self.location {
-            Some((
-                (location.0 * text_buffer.width as f32).floor() as i32,
-                (location.1 * text_buffer.height as f32).floor() as i32,
-            ))
+            let mut overflows = self.display_overflows;
+            let mut relative_dimensions = self.display_relative_dimensions;
+            if self.use_text_buffer_overflows {
+                if let Some(data) = self.text_buffer_datas.get(&text_buffer.get_idx()) {
+                    overflows = data.overflows;
+                    relative_dimensions = data.relative_dimensions;
+                }
+            }
+
+            if location.0 > overflows.0
+                && location.0 < 1.0 - overflows.0
+                && location.1 > overflows.1
+                && location.1 < 1.0 - overflows.1
+            {
+                let x = (location.0 - overflows.0) * relative_dimensions.0;
+                let y = (location.1 - overflows.1) * relative_dimensions.1;
+
+                Some((
+                    (x * text_buffer.width as f32).floor() as i32,
+                    (y * text_buffer.height as f32).floor() as i32,
+                ))
+            } else {
+                None
+            }
         } else {
             None
         }

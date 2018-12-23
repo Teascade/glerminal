@@ -177,6 +177,7 @@ impl Terminal {
                 window_dimensions,
                 clear_color,
                 visibility,
+                text_buffer_aspect_ratio,
             ));
             program = renderer::create_program(renderer::VERT_SHADER, renderer::FRAG_SHADER);
             background_program =
@@ -247,31 +248,44 @@ impl Terminal {
         text_buffer.swap_buffers(&self.font);
     }
 
-    /// Draws the `TextBuffer`, this should be called every time in the while-loop.
-    pub fn draw(&self, text_buffer: &TextBuffer) {
+    /// Clears the screen.
+    pub fn clear(&self) {
+        renderer::clear();
+    }
+
+    /// Draws a single `TextBuffer`. Does not clear at first to enable drawing multiple text buffers.
+    /// See `clear` for clearing before drawing
+    pub fn draw_single(&self, text_buffer: &TextBuffer) {
         if let (&Some(ref display), &Some(ref mesh), &Some(ref background_mesh)) = (
             &self.display,
             &text_buffer.mesh,
             &text_buffer.background_mesh,
         ) {
-            if self.text_buffer_aspect_ratio
-                && text_buffer.aspect_ratio != display.get_aspect_ratio()
-            {
-                display.set_aspect_ratio(text_buffer.aspect_ratio);
+            let proj_matrix;
+            if self.text_buffer_aspect_ratio {
+                proj_matrix = display.get_display_data(&text_buffer).proj_matrix;
+            } else {
+                proj_matrix = display.proj_matrix.get();
             }
-            renderer::clear();
+
             let duration = SystemTime::now().duration_since(self.since_start).unwrap();
 
             let time = duration.as_secs() as f32 + duration.subsec_nanos() as f32 / 1_000_000_000.0;
 
             renderer::draw(
                 self.get_background_program(),
-                display.proj_matrix.get(),
+                proj_matrix,
                 time,
                 background_mesh,
             );
-            renderer::draw(self.get_program(), display.proj_matrix.get(), time, mesh);
+            renderer::draw(self.get_program(), proj_matrix, time, mesh);
         }
+    }
+
+    /// Draws the `TextBuffer`, this should be called every time in the while-loop.
+    pub fn draw(&self, text_buffer: &TextBuffer) {
+        self.clear();
+        self.draw_single(&text_buffer);
     }
 
     /// Gets the current Events, must be retrieved every time you want new events. (ie. every frame)
@@ -279,7 +293,7 @@ impl Terminal {
         if let Some(ref display) = self.display {
             display.get_current_events()
         } else {
-            Events::new()
+            Events::new(self.text_buffer_aspect_ratio)
         }
     }
 
