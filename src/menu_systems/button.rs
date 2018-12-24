@@ -1,6 +1,7 @@
 use super::InterfaceItem;
-use events::Events;
 use text_buffer::{Color, TextBuffer};
+use Events;
+use MouseButton;
 use VirtualKeyCode;
 
 #[derive(Debug, Clone)]
@@ -23,6 +24,7 @@ pub struct Button {
 
     was_just_pressed: bool,
     button_press_inputs: Vec<VirtualKeyCode>,
+    mouse_button_press_inputs: Vec<MouseButton>,
 }
 
 impl Button {
@@ -42,6 +44,7 @@ impl Button {
 
             was_just_pressed: false,
             button_press_inputs: vec![VirtualKeyCode::Return],
+            mouse_button_press_inputs: Vec::new(),
         }
     }
 
@@ -93,6 +96,12 @@ impl Button {
         self
     }
 
+    /// Set the mouse buttons from which this button triggers
+    pub fn with_mouse_button_press_inputs(mut self, buttons: Vec<MouseButton>) -> Button {
+        self.mouse_button_press_inputs = buttons;
+        self
+    }
+
     /// Sets the max width of the Button
     pub fn set_max_width(&mut self, max_width: u32) {
         self.max_width = max_width;
@@ -126,6 +135,11 @@ impl Button {
     /// Set the buttons from which this button triggers
     pub fn set_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) {
         self.button_press_inputs = buttons;
+    }
+
+    /// Set the mouse buttons from which this button triggers
+    pub fn set_mouse_button_press_inputs(mut self, buttons: Vec<MouseButton>) {
+        self.mouse_button_press_inputs = buttons;
     }
 
     /// Returns whether this button was just pressed.
@@ -198,6 +212,12 @@ impl InterfaceItem for Button {
         self.was_just_pressed = false;
         for curr in &self.button_press_inputs {
             if events.keyboard.was_just_pressed(*curr) {
+                self.was_just_pressed = true;
+                return true;
+            }
+        }
+        for curr in &self.mouse_button_press_inputs {
+            if events.mouse.was_just_pressed(*curr) {
                 self.was_just_pressed = true;
                 return true;
             }

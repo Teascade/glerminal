@@ -2,10 +2,11 @@ use super::{Filter, InterfaceItem};
 
 use std::iter::repeat;
 
-use events::Events;
-use glutin::VirtualKeyCode;
 use text_buffer::Color;
 use text_buffer::TextBuffer;
+use Events;
+use MouseButton;
+use VirtualKeyCode;
 
 /// Represents a text-input field, that can be focused, takes in events (.keyboard, text),
 /// and it's possible to get the input text with get_text
@@ -32,6 +33,7 @@ pub struct TextInput {
     filter: Filter,
 
     button_press_inputs: Vec<VirtualKeyCode>,
+    mouse_button_press_inputs: Vec<MouseButton>,
     was_just_pressed: bool,
 
     focused: bool,
@@ -74,6 +76,7 @@ impl TextInput {
             filter: Filter::empty_filter(),
 
             button_press_inputs: vec![VirtualKeyCode::Return],
+            mouse_button_press_inputs: Vec::new(),
             was_just_pressed: false,
 
             focused: false,
@@ -183,6 +186,12 @@ impl TextInput {
         self
     }
 
+    /// Set the mouse buttons from which this TextInput triggers it's "was_just_pressed"
+    pub fn with_mouse_button_press_inputs(mut self, buttons: Vec<MouseButton>) -> TextInput {
+        self.mouse_button_press_inputs = buttons;
+        self
+    }
+
     /// Determines how often (in seconds) the caret's status should update.
     ///
     /// Set 0.0 for no caret.
@@ -216,6 +225,11 @@ impl TextInput {
     /// Set the buttons from which this TextInput triggers it's "was_just_pressed"
     pub fn set_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) {
         self.button_press_inputs = buttons;
+    }
+
+    /// Set the mouse buttons from which this TextInput triggers it's "was_just_pressed"
+    pub fn set_mouse_button_press_inputs(mut self, buttons: Vec<MouseButton>) {
+        self.mouse_button_press_inputs = buttons;
     }
 
     /// Gets the filter
@@ -349,6 +363,12 @@ impl InterfaceItem for TextInput {
         if self.focused {
             for curr in &self.button_press_inputs {
                 if events.keyboard.was_just_pressed(*curr) {
+                    self.was_just_pressed = true;
+                    break;
+                }
+            }
+            for curr in &self.mouse_button_press_inputs {
+                if events.mouse.was_just_pressed(*curr) {
                     self.was_just_pressed = true;
                     break;
                 }

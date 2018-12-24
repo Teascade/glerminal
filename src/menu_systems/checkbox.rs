@@ -3,6 +3,7 @@ use std::iter::repeat;
 use super::InterfaceItem;
 use events::Events;
 use text_buffer::{Color, TextBuffer};
+use MouseButton;
 use VirtualKeyCode;
 
 /// Represents a group of checkboxes that can be managed like they were radio buttons.
@@ -120,6 +121,7 @@ pub struct Checkbox {
     checked: bool,
     was_just_pressed: bool,
     button_press_inputs: Vec<VirtualKeyCode>,
+    mouse_button_press_inputs: Vec<MouseButton>,
 }
 
 impl Checkbox {
@@ -144,6 +146,7 @@ impl Checkbox {
             checked: false,
             was_just_pressed: false,
             button_press_inputs: vec![VirtualKeyCode::Return],
+            mouse_button_press_inputs: Vec::new(),
         }
     }
 
@@ -213,6 +216,12 @@ impl Checkbox {
         self
     }
 
+    /// Set the mouse buttons from which this checkbox's was_just_pressed triggers
+    pub fn with_mouse_button_press_inputs(mut self, buttons: Vec<MouseButton>) -> Checkbox {
+        self.mouse_button_press_inputs = buttons;
+        self
+    }
+
     /// Sets the text of the Checkbox
     pub fn set_text<T: Into<String>>(&mut self, text: T) {
         self.text = text.into();
@@ -268,6 +277,11 @@ impl Checkbox {
     /// Set the buttons from which this checkbox's was_just_pressed triggers
     pub fn set_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) {
         self.button_press_inputs = buttons;
+    }
+
+    /// Set the mouse buttons from which this checkbox's was_just_pressed triggers
+    pub fn set_mouse_button_press_inputs(mut self, buttons: Vec<MouseButton>) {
+        self.mouse_button_press_inputs = buttons;
     }
 
     /// Returns whether this checkbox was just pressed.
@@ -355,6 +369,14 @@ impl InterfaceItem for Checkbox {
         self.was_just_pressed = false;
         for curr in &self.button_press_inputs {
             if events.keyboard.was_just_pressed(*curr) {
+                self.was_just_pressed = true;
+                self.checked = !self.checked;
+                self.dirty = true;
+                return true;
+            }
+        }
+        for curr in &self.mouse_button_press_inputs {
+            if events.mouse.was_just_pressed(*curr) {
                 self.was_just_pressed = true;
                 self.checked = !self.checked;
                 self.dirty = true;

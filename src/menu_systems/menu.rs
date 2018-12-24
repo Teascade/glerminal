@@ -80,6 +80,16 @@ pub enum MenuPosition {
     Absolute(u32, u32),
 }
 
+/// Represents the way in which focus is selected in the menu
+pub enum FocusSelection {
+    /// With keyboard (previous key, next key)
+    Keyboard(Option<VirtualKeyCode>, Option<VirtualKeyCode>),
+    /// With mouse (point which item should be focused)
+    Mouse(),
+    /// With mouse or keyboard (see mouse and keyboard individually)
+    MouseAndKeyboard(Option<VirtualKeyCode>, Option<VirtualKeyCode>),
+}
+
 /// Represents a Menu
 pub struct Menu {
     x: u32,
@@ -92,8 +102,7 @@ pub struct Menu {
     cloned_interface_items: Vec<Box<InterfaceItem>>,
 
     growth_direction: GrowthDirection,
-    previous_button: Option<VirtualKeyCode>,
-    next_button: Option<VirtualKeyCode>,
+    focus_selection: FocusSelection,
 }
 
 impl Menu {
@@ -103,15 +112,14 @@ impl Menu {
             x: 0,
             y: 0,
             focused: false,
-            is_dirty: false,
+            is_dirty: true,
             select_idx: 0,
             total_width: 0,
             total_height: 0,
             cloned_interface_items: Vec::new(),
 
             growth_direction: GrowthDirection::Down,
-            previous_button: None,
-            next_button: None,
+            focus_selection: FocusSelection::Keyboard(None, None),
         }
     }
 
@@ -135,15 +143,9 @@ impl Menu {
         self
     }
 
-    /// Sets the initial previous button (selects previous item in the menu) for the Menu
-    pub fn with_previous_button<T: Into<Option<VirtualKeyCode>>>(mut self, button: T) -> Menu {
-        self.previous_button = button.into();
-        self
-    }
-
-    /// Sets the initial next button (selects next item in the menu) for the Menu
-    pub fn with_next_button<T: Into<Option<VirtualKeyCode>>>(mut self, button: T) -> Menu {
-        self.next_button = button.into();
+    /// Sets the way the menu is browsed
+    pub fn with_focus_selection(mut self, focus_selection: FocusSelection) -> Menu {
+        self.focus_selection = focus_selection;
         self
     }
 
@@ -164,14 +166,9 @@ impl Menu {
         self.growth_direction = growth_direction;
     }
 
-    /// Sets the previous button (selects previous item in the menu) for the Menu
-    pub fn set_previous_button<T: Into<Option<VirtualKeyCode>>>(mut self, button: T) {
-        self.previous_button = button.into();
-    }
-
-    /// Sets the next button (selects next item in the menu) for the Menu
-    pub fn set_next_button<T: Into<Option<VirtualKeyCode>>>(mut self, button: T) {
-        self.next_button = button.into();
+    /// Sets the way the menu is browsed
+    pub fn set_focus_selection(&mut self, focus_selection: FocusSelection) {
+        self.focus_selection = focus_selection;
     }
 
     /// Get the position of the Menu
@@ -197,7 +194,13 @@ impl Menu {
 
     /// Returns the button that must be pressed in order to select the previous menu item.
     pub fn get_previous_button(&self) -> VirtualKeyCode {
-        if let Some(button) = self.previous_button {
+        let previous_button;
+        match self.focus_selection {
+            FocusSelection::Keyboard(previous, _) => previous_button = previous,
+            FocusSelection::Mouse() => previous_button = None,
+            FocusSelection::MouseAndKeyboard(previous, _) => previous_button = previous,
+        }
+        if let Some(button) = previous_button {
             button
         } else {
             match self.growth_direction {
@@ -211,7 +214,13 @@ impl Menu {
 
     /// Returns the button that must be pressed in order to select the next menu item.
     pub fn get_next_button(&self) -> VirtualKeyCode {
-        if let Some(button) = self.next_button {
+        let next_button;
+        match self.focus_selection {
+            FocusSelection::Keyboard(_, next) => next_button = next,
+            FocusSelection::Mouse() => next_button = None,
+            FocusSelection::MouseAndKeyboard(_, next) => next_button = next,
+        }
+        if let Some(button) = next_button {
             button
         } else {
             match self.growth_direction {
@@ -225,7 +234,13 @@ impl Menu {
 
     /// Update the menu, first handling any events if necessary, checking dirtyness,
     /// saving changes for later drawing and returning whether the menu should be redrawn or not.
-    pub fn update(&mut self, events: &Events, delta: f32, list: &mut MenuList) -> bool {
+    pub fn update(
+        &mut self,
+        events: &Events,
+        delta: f32,
+        text_buffer: &TextBuffer,
+        list: &mut MenuList,
+    ) -> bool {
         if !self.focused {
             return false;
         }
@@ -240,27 +255,87 @@ impl Menu {
 
         // Handle input for the menu (selecting), if focused child didn't consume the last inpout
         if !focused_handled_input {
-            if events.keyboard.was_just_pressed(self.get_previous_button()) {
-                self.select_idx =
-                    (((self.select_idx as i32 + length as i32) - 1) % length as i32) as u32;
-
-                let start_idx = self.select_idx.min(length as u32 - 1).max(0);
-                while {
-                    !list
-                        .items_ref
-                        .get(self.select_idx as usize)
-                        .unwrap()
-                        .can_be_focused()
-                } {
+            let keyboard_focus = match self.focus_selection {
+                FocusSelection::Keyboard(..) => true,
+                FocusSelection::MouseAndKeyboard(..) => true,
+                _ => false,
+            };
+            if keyboard_focus {
+                if events.keyboard.was_just_pressed(self.get_previous_button()) {
                     self.select_idx =
                         (((self.select_idx as i32 + length as i32) - 1) % length as i32) as u32;
-                    if self.select_idx == start_idx {
-                        break;
+
+                    let start_idx = self.select_idx.min(length as u32 - 1).max(0);
+                    while {
+                        !list
+                            .items_ref
+                            .get(self.select_idx as usize)
+                            .unwrap()
+                            .can_be_focused()
+                    } {
+                        self.select_idx =
+                            (((self.select_idx as i32 + length as i32) - 1) % length as i32) as u32;
+                        if self.select_idx == start_idx {
+                            break;
+                        }
                     }
                 }
+                if events.keyboard.was_just_pressed(self.get_next_button()) {
+                    self.select_idx = (((self.select_idx as i32) + 1) % length as i32) as u32;
+                }
             }
-            if events.keyboard.was_just_pressed(self.get_next_button()) {
-                self.select_idx = (((self.select_idx as i32) + 1) % length as i32) as u32;
+
+            // Do any selection with mouse
+            let mouse_focus = match self.focus_selection {
+                FocusSelection::Mouse() => true,
+                FocusSelection::MouseAndKeyboard(..) => true,
+                _ => false,
+            };
+
+            if mouse_focus {
+                let grow_right = match self.growth_direction {
+                    GrowthDirection::Left => false,
+                    _ => true,
+                };
+                let grow_down = match self.growth_direction {
+                    GrowthDirection::Up => false,
+                    _ => true,
+                };
+                if let Some(loc) = events.cursor.get_location(&text_buffer) {
+                    for idx in 0..self.cloned_interface_items.len() {
+                        let item = self.cloned_interface_items.get(idx).unwrap();
+                        let idx = idx as u32;
+                        if !item.can_be_focused() {
+                            continue;
+                        }
+                        let (x, y) = (item.get_pos().0 as i32, item.get_pos().1 as i32);
+                        let width = item.get_total_width() as i32;
+                        let height = item.get_total_height() as i32;
+
+                        let (x0, x1);
+                        if grow_right {
+                            x0 = x;
+                            x1 = x + width - 1;
+                        } else {
+                            x0 = x - width + 1;
+                            x1 = x;
+                        }
+
+                        let (y0, y1);
+                        if grow_down {
+                            y0 = y;
+                            y1 = y + height - 1;
+                        } else {
+                            y0 = y - height + 1;
+                            y1 = y;
+                        }
+
+                        if loc.0 >= x0 && loc.0 <= x1 && loc.1 >= y0 && loc.1 <= y1 {
+                            self.select_idx = idx;
+                            break;
+                        }
+                    }
+                }
             }
         }
 
@@ -374,6 +449,7 @@ impl Menu {
                 }
             }
         }
+
         self.is_dirty
     }
 

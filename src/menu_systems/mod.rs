@@ -9,7 +9,7 @@ mod window;
 pub use self::button::Button;
 pub use self::checkbox::{Checkbox, CheckboxGroup};
 pub use self::dialog::Dialog;
-pub use self::menu::{GrowthDirection, Menu, MenuList, MenuPosition};
+pub use self::menu::{GrowthDirection, Menu, MenuList, MenuPosition, FocusSelection};
 pub use self::text_input::TextInput;
 pub use self::text_label::TextLabel;
 pub use self::window::Window;

@@ -1,10 +1,10 @@
 extern crate glerminal;
 
 use glerminal::menu_systems::{
-    Button, Checkbox, CheckboxGroup, Dialog, Filter, GrowthDirection, Menu, MenuList, MenuPosition,
-    TextInput, TextLabel, Window,
+    Button, Checkbox, CheckboxGroup, Dialog, Filter, FocusSelection, GrowthDirection, Menu,
+    MenuList, MenuPosition, TextInput, TextLabel, Window,
 };
-use glerminal::{TerminalBuilder, TextBuffer};
+use glerminal::{MouseButton, TerminalBuilder, TextBuffer};
 
 fn main() {
     let terminal = TerminalBuilder::new()
@@ -37,16 +37,21 @@ fn main() {
         .with_focused_colors(([0.8, 0.8, 0.8, 1.0], [0.8, 0.2, 0.2, 1.0]))
         .with_caret(0.0);
 
-    let mut checkbox = Checkbox::new("Thing 1: ");
-    let mut checkbox_2 = Checkbox::new("Thing 2: ");
-    let mut checkbox_3 = Checkbox::new("Thing 3: ");
+    let mut checkbox =
+        Checkbox::new("Thing 1: ").with_mouse_button_press_inputs(vec![MouseButton::Left]);
+    let mut checkbox_2 =
+        Checkbox::new("Thing 2: ").with_mouse_button_press_inputs(vec![MouseButton::Left]);
+    let mut checkbox_3 =
+        Checkbox::new("Thing 3: ").with_mouse_button_press_inputs(vec![MouseButton::Left]);
 
-    let mut button = Button::new("Test button!", 15);
+    let mut button =
+        Button::new("Test button!", 15).with_mouse_button_press_inputs(vec![MouseButton::Left]);
 
     let mut menu = Menu::new()
         .with_pos((5, 5))
         .with_focus(true)
-        .with_growth_direction(GrowthDirection::Down);
+        .with_growth_direction(GrowthDirection::Down)
+        .with_focus_selection(FocusSelection::MouseAndKeyboard(None, None));
 
     let mut checkbox_group = CheckboxGroup::new().with_force_one_checked(Some(0));
 
@@ -81,6 +86,7 @@ fn main() {
         let mut dirty = menu.update(
             &events,
             terminal.delta_time(),
+            &text_buffer,
             &mut MenuList::new()
                 .with_item(&mut text_label, None)
                 .with_item(&mut text_input, MenuPosition::RelativeToLast(0, 1))
