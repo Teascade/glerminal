@@ -205,6 +205,11 @@ impl TextBuffer {
         }
     }
 
+    /// Get the dimensions of the text buffer (in characters). Returns (width, height)
+    pub fn get_dimensions(&self) -> (i32, i32) {
+        (self.width, self.height)
+    }
+
     /// Sets the character at the specified position. It is the user's responsibility to check if such a position exists.
     pub fn set_char(&mut self, x: u32, y: u32, character: TermCharacter) {
         self.chars[(y * self.width as u32 + x) as usize] = character;
