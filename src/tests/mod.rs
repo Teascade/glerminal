@@ -1,14 +1,16 @@
 use renderer;
 use terminal::{Terminal, TerminalBuilder};
-use text_buffer::TextBuffer;
+use text_buffer::{Color, TextBuffer};
 
 mod events;
 mod font;
+mod menu_systems;
 mod parser;
 mod terminal;
 mod text_buffer;
 
-use rand;
+use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
 
 #[test]
 fn gl_error() {
@@ -59,11 +61,18 @@ fn run_multiple_times<F: Fn()>(how_many_times: u32, f: F) {
     }
 }
 
-fn random_color() -> [f32; 4] {
+fn random_color() -> Color {
     [
         rand::random::<f32>(),
         rand::random::<f32>(),
         rand::random::<f32>(),
         rand::random::<f32>(),
     ]
+}
+
+fn random_text(len: u32) -> String {
+    thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(len as usize)
+        .collect()
 }

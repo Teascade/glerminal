@@ -1,17 +1,15 @@
 use super::{
     random_color, run_multiple_times, test_setup_text_buffer, test_setup_text_buffer_with_terminal,
 };
-use rand;
-use rand::distributions::{Range, Sample};
+use rand::{thread_rng, Rng};
 
 #[test]
 fn aspect_ratio() {
     run_multiple_times(10, || {
-        let mut range = Range::new(2i32, 100);
-        let mut rnd = rand::thread_rng();
+        let mut rnd = thread_rng();
 
-        let width = range.sample(&mut rnd);
-        let height = range.sample(&mut rnd);
+        let width = rnd.gen_range(2i32, 100);
+        let height = rnd.gen_range(2i32, 100);
 
         let (text_buffer, terminal) = test_setup_text_buffer_with_terminal((width, height));
         let ar_height = height * terminal.font.line_height as i32;
@@ -25,11 +23,10 @@ fn aspect_ratio() {
 #[test]
 fn size() {
     run_multiple_times(10, || {
-        let mut range = Range::new(2i32, 100);
-        let mut rnd = rand::thread_rng();
+        let mut rnd = thread_rng();
 
-        let width = range.sample(&mut rnd);
-        let height = range.sample(&mut rnd);
+        let width = rnd.gen_range(2i32, 100);
+        let height = rnd.gen_range(2i32, 100);
 
         let text_buffer = test_setup_text_buffer((width, height));
         assert_eq!(text_buffer.chars.len(), (width * height) as usize);
@@ -123,18 +120,14 @@ fn put_single_styled_character() {
 #[test]
 fn cursor_move() {
     run_multiple_times(10, || {
-        let mut range = Range::new(3i32, 100);
-        let mut rnd = rand::thread_rng();
+        let mut rnd = thread_rng();
 
-        let width = range.sample(&mut rnd);
-        let height = range.sample(&mut rnd);
-
-        let mut width_range = Range::new(0i32, width - 2);
-        let mut height_range = Range::new(0i32, height - 2);
+        let width = rnd.gen_range(3i32, 100);
+        let height = rnd.gen_range(3i32, 100);
 
         let mut text_buffer = test_setup_text_buffer((width, height));
-        let x = width_range.sample(&mut rnd);
-        let y = height_range.sample(&mut rnd);
+        let x = rnd.gen_range(0i32, width - 2);
+        let y = rnd.gen_range(0i32, height - 2);
         text_buffer.move_cursor(x, y);
         //assert_eq!(text_buffer.get_cursor_position(), (x, y));
         text_buffer.move_cursor(width, height);
