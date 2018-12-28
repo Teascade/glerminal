@@ -1,9 +1,11 @@
-use super::{random_color, run_multiple_times};
+use super::{random_color, random_text, run_multiple_times};
 use menu_systems::{InterfaceItem, InterfaceItemBase, TextItem};
 use MouseButton;
 use VirtualKeyCode;
 
 use rand::{thread_rng, Rng};
+
+mod text_item;
 
 #[test]
 fn with_set_macros() {

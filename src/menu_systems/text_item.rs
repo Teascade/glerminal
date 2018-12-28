@@ -32,7 +32,7 @@ pub struct TextItem {
 
 impl TextItem {
     /// Intiailizes a TextItem with the given text and gets the initial max width from the text width
-    /// If the text might get bigger, use `width_max_width` or `set_max_width`.
+    /// If the text might get bigger, use `with_max_width` or `set_max_width`.
     pub fn new<T: Into<String>>(text: T) -> TextItem {
         let text = text.into();
         TextItem {
@@ -95,6 +95,11 @@ impl TextItem {
     /// Return the current text of the TextItem
     pub fn get_text(&self) -> String {
         self.text.clone()
+    }
+
+    /// Can this `TextItem` be focused and pressed like a button
+    pub fn is_button(&self) -> bool {
+        self.is_button
     }
 }
 
