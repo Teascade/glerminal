@@ -108,6 +108,11 @@ pub struct Checkbox {
     /// Background color for when the checkbox is focused
     pub bg_color_focused: Color,
 
+    /// The keyboard inputs that trigger `was_just_pressed`
+    pub button_press_inputs: Vec<VirtualKeyCode>,
+    /// The mouse inputs that trigger `was_just_pressed`
+    pub mouse_button_press_inputs: Vec<MouseButton>,
+
     base: InterfaceItemBase,
 
     text: String,
@@ -117,8 +122,6 @@ pub struct Checkbox {
 
     checked: bool,
     was_just_pressed: bool,
-    button_press_inputs: Vec<VirtualKeyCode>,
-    mouse_button_press_inputs: Vec<MouseButton>,
 }
 
 impl Checkbox {
@@ -144,13 +147,9 @@ impl Checkbox {
         }
     }
 
-    /// Sets the initial position of the Checkbox
-    pub fn with_pos(mut self, pos: (u32, u32)) -> Checkbox {
-        let (x, y) = pos;
-        self.base.x = x;
-        self.base.y = y;
-        self
-    }
+    with_base!(Checkbox);
+    with_set_pressable!(Checkbox);
+    with_set_colors!(Checkbox);
 
     /// Sets the initial text of the Checkbox
     pub fn with_text<T: Into<String>>(mut self, text: T) -> Checkbox {
@@ -176,43 +175,9 @@ impl Checkbox {
         self
     }
 
-    /// Set whether the checkbox is initially focused or not
-    pub fn with_focused(mut self, focused: bool) -> Checkbox {
-        self.base.focused = focused;
-        self
-    }
-
     /// Set whether the checkbox is initially checked or not
     pub fn with_checked(mut self, checked: bool) -> Checkbox {
         self.checked = checked;
-        self
-    }
-
-    /// Set the initial colors of this Checkbox when it is unfocused
-    pub fn with_unfocused_colors(mut self, colors: (Color, Color)) -> Checkbox {
-        let (fg, bg) = colors;
-        self.fg_color_unfocused = fg;
-        self.bg_color_unfocused = bg;
-        self
-    }
-
-    /// Set the initial colors of this Checkbox when it is focused
-    pub fn with_focused_colors(mut self, colors: (Color, Color)) -> Checkbox {
-        let (fg, bg) = colors;
-        self.fg_color_focused = fg;
-        self.bg_color_focused = bg;
-        self
-    }
-
-    /// Set the buttons from which this checkbox's was_just_pressed triggers
-    pub fn with_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) -> Checkbox {
-        self.button_press_inputs = buttons;
-        self
-    }
-
-    /// Set the mouse buttons from which this checkbox's was_just_pressed triggers
-    pub fn with_mouse_button_press_inputs(mut self, buttons: Vec<MouseButton>) -> Checkbox {
-        self.mouse_button_press_inputs = buttons;
         self
     }
 
@@ -252,35 +217,6 @@ impl Checkbox {
     /// Return the current suffix of the Checkbox
     pub fn get_suffix(&self) -> String {
         self.suffix.clone()
-    }
-
-    /// Set the colors of this Checkbox when it is unfocused
-    pub fn set_unfocused_colors(&mut self, colors: (Color, Color)) {
-        let (fg, bg) = colors;
-        self.fg_color_unfocused = fg;
-        self.bg_color_unfocused = bg;
-    }
-
-    /// Set the colors of this Checkbox when it is focused
-    pub fn set_focused_colors(&mut self, colors: (Color, Color)) {
-        let (fg, bg) = colors;
-        self.fg_color_focused = fg;
-        self.bg_color_focused = bg;
-    }
-
-    /// Set the buttons from which this checkbox's was_just_pressed triggers
-    pub fn set_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) {
-        self.button_press_inputs = buttons;
-    }
-
-    /// Set the mouse buttons from which this checkbox's was_just_pressed triggers
-    pub fn set_mouse_button_press_inputs(mut self, buttons: Vec<MouseButton>) {
-        self.mouse_button_press_inputs = buttons;
-    }
-
-    /// Returns whether this checkbox was just pressed.
-    pub fn was_just_pressed(&self) -> bool {
-        self.was_just_pressed
     }
 
     /// Sets the checked-status for this checkbox.

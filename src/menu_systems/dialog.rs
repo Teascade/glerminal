@@ -56,13 +56,8 @@ impl Dialog {
         }
     }
 
-    /// Sets the initial position of the dialog window.
-    pub fn with_pos(mut self, position: (u32, u32)) -> Dialog {
-        let (x, y) = position;
-        self.base.x = x;
-        self.base.y = y;
-        self
-    }
+    with_base!(Dialog);
+    with_set_colors!(Dialog);
 
     /// Sets the initial width of the dialog window
     pub fn with_width(mut self, width: u32) -> Dialog {
@@ -83,30 +78,10 @@ impl Dialog {
         self
     }
 
-    /// Sets the initial colors (fg, bg) of the dialog window when it is unfocused
-    pub fn with_unfocused_colors(mut self, fg: Color, bg: Color) -> Dialog {
-        self.fg_color_unfocused = fg;
-        self.bg_color_unfocused = bg;
-        self
-    }
-
-    /// Sets the colors (fg, bg) of the dialog window when it is focused
-    pub fn with_focused_colors(mut self, fg: Color, bg: Color) -> Dialog {
-        self.fg_color_focused = fg;
-        self.bg_color_focused = bg;
-        self
-    }
-
     /// Sets the initial text of the dialog window
     pub fn with_text<T: Into<String>>(mut self, text: T) -> Dialog {
         self.text = text.into();
         self.update_rows();
-        self
-    }
-
-    /// Sets whether the dialog window is initially focused or not.
-    pub fn with_focused(mut self, focused: bool) -> Dialog {
-        self.base.focused = focused;
         self
     }
 
@@ -124,18 +99,6 @@ impl Dialog {
     /// Sets the maximum height of the dialog window
     pub fn set_max_height(&mut self, max_height: Option<u32>) {
         self.max_height = max_height;
-    }
-
-    /// Sets colors of the dialog window is unfocused
-    pub fn set_unfocused_colors(&mut self, fg: Color, bg: Color) {
-        self.fg_color_unfocused = fg;
-        self.bg_color_unfocused = bg;
-    }
-
-    /// Sets colors of the dialog window is focused
-    pub fn set_focused_colors(&mut self, fg: Color, bg: Color) {
-        self.fg_color_focused = fg;
-        self.bg_color_focused = bg;
     }
 
     /// Sets the text of the dialog window

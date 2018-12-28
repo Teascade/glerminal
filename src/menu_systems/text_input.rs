@@ -13,13 +13,18 @@ use VirtualKeyCode;
 #[derive(Debug, Clone)]
 pub struct TextInput {
     /// Background-color for when the field is unfocused
-    pub unfocused_bg: Color,
+    pub bg_color_unfocused: Color,
     /// Background-color for when the field is focused
-    pub focused_bg: Color,
+    pub bg_color_focused: Color,
     /// Foreground-color for when the field is unfocused
-    pub unfocused_fg: Color,
+    pub fg_color_unfocused: Color,
     /// Foreground-color for when the field is focused
-    pub focused_fg: Color,
+    pub fg_color_focused: Color,
+
+    /// The keyboard inputs that trigger `was_just_pressed`
+    pub button_press_inputs: Vec<VirtualKeyCode>,
+    /// The mouse inputs that trigger `was_just_pressed`
+    pub mouse_button_press_inputs: Vec<MouseButton>,
 
     base: InterfaceItemBase,
 
@@ -30,13 +35,16 @@ pub struct TextInput {
     text: String,
     prefix: String,
     suffix: String,
-    filter: Filter,
 
-    button_press_inputs: Vec<VirtualKeyCode>,
-    mouse_button_press_inputs: Vec<MouseButton>,
+    /// The filter used to determine which button presses are registered for writing
+    pub filter: Filter,
+
     was_just_pressed: bool,
 
-    caret: f32,
+    /// Determines how often (in seconds) the caret's status should update.
+    ///
+    /// Set 0.0 for no caret.
+    pub caret: f32,
     caret_timer: f32,
     caret_showing: bool,
 }
@@ -56,10 +64,10 @@ impl TextInput {
             actual_max_width = Some(max_w.max(1));
         }
         TextInput {
-            unfocused_bg: [0.0, 0.0, 0.0, 0.0],
-            unfocused_fg: [0.8, 0.8, 0.8, 1.0],
-            focused_bg: [0.8, 0.8, 0.8, 1.0],
-            focused_fg: [0.2, 0.2, 0.2, 1.0],
+            bg_color_unfocused: [0.0, 0.0, 0.0, 0.0],
+            bg_color_focused: [0.8, 0.8, 0.8, 1.0],
+            fg_color_unfocused: [0.8, 0.8, 0.8, 1.0],
+            fg_color_focused: [0.2, 0.2, 0.2, 1.0],
 
             base: InterfaceItemBase::new(true),
             min_width: actual_min_width,
@@ -81,13 +89,9 @@ impl TextInput {
         }
     }
 
-    /// Sets the position of the TextInput
-    pub fn with_pos(mut self, position: (u32, u32)) -> TextInput {
-        let (x, y) = position;
-        self.base.x = x;
-        self.base.y = y;
-        self
-    }
+    with_base!(TextInput);
+    with_set_pressable!(TextInput);
+    with_set_colors!(TextInput);
 
     /// Sets the width of the TextInput.
     pub fn with_width<T: Into<Option<u32>>, U: Into<Option<u32>>>(
@@ -146,50 +150,10 @@ impl TextInput {
         self
     }
 
-    /// Sets the (fg, bg) colors for when the field is unfocused
-    pub fn with_unfocused_colors(mut self, colors: (Color, Color)) -> TextInput {
-        let (fg, bg) = colors;
-        self.unfocused_fg = fg;
-        self.unfocused_bg = bg;
-        self
-    }
-
-    /// Sets the (fg, bg) colors for when the field is focused
-    pub fn with_focused_colors(mut self, colors: (Color, Color)) -> TextInput {
-        let (fg, bg) = colors;
-        self.focused_fg = fg;
-        self.focused_bg = bg;
-        self
-    }
-
     /// Limtis the amount of characters that the TextInput will accept.
     pub fn with_character_limit<T: Into<Option<u32>>>(mut self, char_limit: T) -> TextInput {
         self.character_limit = char_limit.into();
         self
-    }
-
-    /// Sets the filter that will be used when taking inputs to write into the TextInput
-    pub fn set_filter(&mut self, filter: Filter) {
-        self.filter = filter;
-    }
-
-    /// Set the buttons from which this TextInput triggers it's "was_just_pressed"
-    pub fn with_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) -> TextInput {
-        self.button_press_inputs = buttons;
-        self
-    }
-
-    /// Set the mouse buttons from which this TextInput triggers it's "was_just_pressed"
-    pub fn with_mouse_button_press_inputs(mut self, buttons: Vec<MouseButton>) -> TextInput {
-        self.mouse_button_press_inputs = buttons;
-        self
-    }
-
-    /// Determines how often (in seconds) the caret's status should update.
-    ///
-    /// Set 0.0 for no caret.
-    pub fn set_caret(&mut self, delay: f32) {
-        self.caret = delay;
     }
 
     /// Sets the width of the TextInput.
@@ -215,34 +179,9 @@ impl TextInput {
         self.character_limit = char_limit.into();
     }
 
-    /// Set the buttons from which this TextInput triggers it's "was_just_pressed"
-    pub fn set_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) {
-        self.button_press_inputs = buttons;
-    }
-
-    /// Set the mouse buttons from which this TextInput triggers it's "was_just_pressed"
-    pub fn set_mouse_button_press_inputs(mut self, buttons: Vec<MouseButton>) {
-        self.mouse_button_press_inputs = buttons;
-    }
-
-    /// Gets the filter
-    pub fn get_filter(&self) -> &Filter {
-        &self.filter
-    }
-
-    /// Gets a mutable reference of the filter.
-    pub fn get_filter_mut(&mut self) -> &mut Filter {
-        &mut self.filter
-    }
-
     /// Returns the current text in the input
     pub fn get_text(&self) -> String {
         self.text.clone()
-    }
-
-    /// Returns whether this TextInput was just pressed, meaning any of it's button_press_inputs were activated.
-    pub fn was_just_pressed(&self) -> bool {
-        self.was_just_pressed
     }
 }
 
@@ -275,11 +214,11 @@ impl InterfaceItem for TextInput {
         self.base.dirty = false;
 
         if self.base.focused {
-            text_buffer.change_cursor_bg_color(self.focused_bg);
-            text_buffer.change_cursor_fg_color(self.focused_fg);
+            text_buffer.change_cursor_bg_color(self.bg_color_focused);
+            text_buffer.change_cursor_fg_color(self.fg_color_focused);
         } else {
-            text_buffer.change_cursor_bg_color(self.unfocused_bg);
-            text_buffer.change_cursor_fg_color(self.unfocused_fg);
+            text_buffer.change_cursor_bg_color(self.bg_color_unfocused);
+            text_buffer.change_cursor_fg_color(self.fg_color_unfocused);
         }
         text_buffer.move_cursor(self.base.x as i32, self.base.y as i32);
 

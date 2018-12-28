@@ -16,14 +16,18 @@ pub struct TextItem {
     /// Background color for when the button is focused
     pub bg_color_focused: Color,
 
+    /// The keyboard inputs that trigger `was_just_pressed`
+    pub button_press_inputs: Vec<VirtualKeyCode>,
+    /// The mouse inputs that trigger `was_just_pressed`
+    pub mouse_button_press_inputs: Vec<MouseButton>,
+    /// The max width the text maximally cuts at
+    pub max_width: u32,
+
     base: InterfaceItemBase,
-    max_width: u32,
     text: String,
 
     is_button: bool,
     was_just_pressed: bool,
-    button_press_inputs: Vec<VirtualKeyCode>,
-    mouse_button_press_inputs: Vec<MouseButton>,
 }
 
 impl TextItem {
@@ -46,13 +50,9 @@ impl TextItem {
         }
     }
 
-    /// Sets the initial position of the Button
-    pub fn with_pos(mut self, pos: (u32, u32)) -> TextItem {
-        let (x, y) = pos;
-        self.base.x = x;
-        self.base.y = y;
-        self
-    }
+    with_base!(TextItem);
+    with_set_pressable!(TextItem);
+    with_set_colors!(TextItem);
 
     /// Sets the initial max width of the Button
     pub fn with_max_width(mut self, max_width: u32) -> TextItem {
@@ -66,80 +66,11 @@ impl TextItem {
         self
     }
 
-    /// Set whether the button is initially focused or not
-    pub fn with_focused(mut self, focused: bool) -> TextItem {
-        self.base.focused = focused;
-        self
-    }
-
-    /// Set the initial colors of this Button when it is unfocused
-    pub fn with_unfocused_colors(mut self, colors: (Color, Color)) -> TextItem {
-        let (fg, bg) = colors;
-        self.fg_color_unfocused = fg;
-        self.bg_color_unfocused = bg;
-        self
-    }
-
-    /// Set the initial colors of this Button when it is focused
-    pub fn with_focused_colors(mut self, colors: (Color, Color)) -> TextItem {
-        let (fg, bg) = colors;
-        self.fg_color_focused = fg;
-        self.bg_color_focused = bg;
-        self
-    }
-
-    /// Set the buttons from which this button triggers
-    pub fn with_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) -> TextItem {
-        self.button_press_inputs = buttons;
-        self
-    }
-
-    /// Set the mouse buttons from which this button triggers
-    pub fn with_mouse_button_press_inputs(mut self, buttons: Vec<MouseButton>) -> TextItem {
-        self.mouse_button_press_inputs = buttons;
-        self
-    }
-
     /// Set whether this TextItem can be focused and used as a button
     pub fn with_is_button(mut self, is_button: bool) -> TextItem {
         self.is_button = is_button;
         self.base.can_be_focused = is_button;
         self
-    }
-
-    /// Sets the max width of the Button
-    pub fn set_max_width(&mut self, max_width: u32) {
-        self.max_width = max_width;
-    }
-
-    /// Sets the text of the Button
-    pub fn set_text<T: Into<String>>(&mut self, text: T) {
-        self.text = text.into();
-        self.base.dirty = true;
-    }
-
-    /// Set the colors of this Button when it is unfocused
-    pub fn set_unfocused_colors(&mut self, colors: (Color, Color)) {
-        let (fg, bg) = colors;
-        self.fg_color_unfocused = fg;
-        self.bg_color_unfocused = bg;
-    }
-
-    /// Set the colors of this Button when it is focused
-    pub fn set_focused_colors(&mut self, colors: (Color, Color)) {
-        let (fg, bg) = colors;
-        self.fg_color_focused = fg;
-        self.bg_color_focused = bg;
-    }
-
-    /// Set the buttons from which this button triggers
-    pub fn set_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) {
-        self.button_press_inputs = buttons;
-    }
-
-    /// Set the mouse buttons from which this button triggers
-    pub fn set_mouse_button_press_inputs(mut self, buttons: Vec<MouseButton>) {
-        self.mouse_button_press_inputs = buttons;
     }
 
     /// Set whether this TextItem can be focused and used as a button
@@ -148,9 +79,10 @@ impl TextItem {
         self.base.can_be_focused = is_button;
     }
 
-    /// Returns whether this button was just pressed.
-    pub fn was_just_pressed(&self) -> bool {
-        self.was_just_pressed
+    /// Sets the text of the Button
+    pub fn set_text<T: Into<String>>(&mut self, text: T) {
+        self.text = text.into();
+        self.base.dirty = true;
     }
 
     /// Return the current text of the Button

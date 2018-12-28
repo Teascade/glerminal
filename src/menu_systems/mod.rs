@@ -1,3 +1,87 @@
+macro_rules! with_set_colors {
+    ($name:ident) => {
+        /// Set the initial colors when it is unfocused
+        pub fn with_unfocused_colors(mut self, colors: (Color, Color)) -> $name {
+            let (fg, bg) = colors;
+            self.fg_color_unfocused = fg;
+            self.bg_color_unfocused = bg;
+            self
+        }
+
+        /// Set the initial colors when it is focused
+        pub fn with_focused_colors(mut self, colors: (Color, Color)) -> $name {
+            let (fg, bg) = colors;
+            self.fg_color_focused = fg;
+            self.bg_color_focused = bg;
+            self
+        }
+
+        /// Set the colors when it is unfocused
+        pub fn set_unfocused_colors(&mut self, colors: (Color, Color)) {
+            let (fg, bg) = colors;
+            self.fg_color_unfocused = fg;
+            self.bg_color_unfocused = bg;
+        }
+
+        /// Set the colors when it is focused
+        pub fn set_focused_colors(&mut self, colors: (Color, Color)) {
+            let (fg, bg) = colors;
+            self.fg_color_focused = fg;
+            self.bg_color_focused = bg;
+        }
+    };
+}
+
+macro_rules! with_set_pressable {
+    ($name:ident) => {
+        /// Set the buttons which trigger `was_just_pressed`
+        pub fn with_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) -> $name {
+            self.button_press_inputs = buttons;
+            self
+        }
+
+        /// Set the mouse buttons which trigger `was_just_pressed`
+        pub fn with_mouse_button_press_inputs(mut self, buttons: Vec<MouseButton>) -> $name {
+            self.mouse_button_press_inputs = buttons;
+            self
+        }
+
+        /// Returns whether buttons from `mouse_button_press_inputs` or `button_press_inputs` were pressed just now.
+        pub fn was_just_pressed(&self) -> bool {
+            self.was_just_pressed
+        }
+    };
+}
+
+/// If you're creating a struct that has `InterfaceItemBase`, calling `with_base!(Struct)` within
+/// the impl-call can be useful. This will add two useful functions for setting initial values for `InterfaceItemBase`
+/// - `with_pos(mut self, pos: (u32, u32)) -> Struct`
+/// - `with_focused(mut self, focused: bool) -> Struct`
+#[macro_export]
+macro_rules! with_base {
+    ($name:ident) => {
+        /// Sets the initial position
+        pub fn with_pos(mut self, pos: (u32, u32)) -> $name {
+            let (x, y) = pos;
+            self.base.x = x;
+            self.base.y = y;
+            self
+        }
+
+        /// Set whether the checkbox is initially focused or not
+        pub fn with_focused(mut self, focused: bool) -> $name {
+            self.base.focused = focused;
+            self
+        }
+    };
+}
+
+// /// Sets the text of the TextInput.
+// pub fn with_text<T: Into<String>>(mut self, text: T) -> TextInput {
+//     self.text = text.into();
+//     self
+// }
+
 mod checkbox;
 mod dialog;
 mod menu;
