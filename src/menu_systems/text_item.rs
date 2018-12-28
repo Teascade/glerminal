@@ -31,8 +31,10 @@ pub struct TextItem {
 }
 
 impl TextItem {
-    /// Intiailizes a Button with the given text and max width
-    pub fn new<T: Into<String>>(text: T, max_width: u32) -> TextItem {
+    /// Intiailizes a TextItem with the given text and gets the initial max width from the text width
+    /// If the text might get bigger, use `width_max_width` or `set_max_width`.
+    pub fn new<T: Into<String>>(text: T) -> TextItem {
+        let text = text.into();
         TextItem {
             bg_color_unfocused: [0.0, 0.0, 0.0, 0.0],
             fg_color_unfocused: [0.8, 0.8, 0.8, 1.0],
@@ -40,8 +42,8 @@ impl TextItem {
             fg_color_focused: [0.2, 0.2, 0.2, 1.0],
 
             base: InterfaceItemBase::new(false),
-            max_width: max_width,
-            text: text.into(),
+            max_width: text.len() as u32,
+            text: text,
 
             is_button: false,
             was_just_pressed: false,
@@ -54,13 +56,13 @@ impl TextItem {
     with_set_pressable!(TextItem);
     with_set_colors!(TextItem);
 
-    /// Sets the initial max width of the Button
+    /// Sets the initial max width of the TextItem
     pub fn with_max_width(mut self, max_width: u32) -> TextItem {
         self.max_width = max_width;
         self
     }
 
-    /// Sets the initial text of the Button
+    /// Sets the initial text of the TextItem
     pub fn with_text<T: Into<String>>(mut self, text: T) -> TextItem {
         self.text = text.into();
         self
@@ -79,13 +81,18 @@ impl TextItem {
         self.base.can_be_focused = is_button;
     }
 
-    /// Sets the text of the Button
+    /// Sets the text of the TextItem
     pub fn set_text<T: Into<String>>(&mut self, text: T) {
         self.text = text.into();
         self.base.dirty = true;
     }
 
-    /// Return the current text of the Button
+    /// Set the max width of the TextItem. This should ideally not be called, unless necessary.
+    pub fn set_max_width(&mut self, max_width: u32) {
+        self.max_width = max_width;
+    }
+
+    /// Return the current text of the TextItem
     pub fn get_text(&self) -> String {
         self.text.clone()
     }

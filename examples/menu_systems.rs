@@ -22,7 +22,7 @@ fn main() {
         .with_basic_numerals()
         .with_basic_special_symbols();
 
-    let mut text_label = TextItem::new("FPS: -", 40);
+    let mut text_label = TextItem::new("FPS: -").with_max_width(40);
 
     let mut text_input = TextInput::new(None, None)
         .with_prefix("Test your might: ")
@@ -44,7 +44,7 @@ fn main() {
     let mut checkbox_3 =
         Checkbox::new("Thing 3: ").with_mouse_button_press_inputs(vec![MouseButton::Left]);
 
-    let mut button = TextItem::new("Test button!", 15)
+    let mut button = TextItem::new("Test button!")
         .with_is_button(true)
         .with_mouse_button_press_inputs(vec![MouseButton::Left]);
 
