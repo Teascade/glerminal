@@ -1,4 +1,4 @@
-use super::InterfaceItem;
+use super::{InterfaceItem, InterfaceItemBase};
 use text_buffer::{Color, TextBuffer};
 use Events;
 use MouseButton;
@@ -15,12 +15,10 @@ pub struct Button {
     pub fg_color_focused: Color,
     /// Background color for when the button is focused
     pub bg_color_focused: Color,
-    x: u32,
-    y: u32,
+
+    base: InterfaceItemBase,
     max_width: u32,
     text: String,
-    focused: bool,
-    dirty: bool,
 
     was_just_pressed: bool,
     button_press_inputs: Vec<VirtualKeyCode>,
@@ -35,12 +33,10 @@ impl Button {
             fg_color_unfocused: [0.8, 0.8, 0.8, 1.0],
             bg_color_focused: [0.8, 0.8, 0.8, 1.0],
             fg_color_focused: [0.2, 0.2, 0.2, 1.0],
-            x: 0,
-            y: 0,
+
+            base: InterfaceItemBase::new(true),
             max_width: max_width,
             text: text.into(),
-            focused: false,
-            dirty: true,
 
             was_just_pressed: false,
             button_press_inputs: vec![VirtualKeyCode::Return],
@@ -51,8 +47,8 @@ impl Button {
     /// Sets the initial position of the Button
     pub fn with_pos(mut self, pos: (u32, u32)) -> Button {
         let (x, y) = pos;
-        self.x = x;
-        self.y = y;
+        self.base.x = x;
+        self.base.y = y;
         self
     }
 
@@ -70,7 +66,7 @@ impl Button {
 
     /// Set whether the button is initially focused or not
     pub fn with_focused(mut self, focused: bool) -> Button {
-        self.focused = focused;
+        self.base.focused = focused;
         self
     }
 
@@ -110,7 +106,7 @@ impl Button {
     /// Sets the text of the Button
     pub fn set_text<T: Into<String>>(&mut self, text: T) {
         self.text = text.into();
-        self.dirty = true;
+        self.base.dirty = true;
     }
 
     /// Return the current text of the Button
@@ -149,14 +145,12 @@ impl Button {
 }
 
 impl InterfaceItem for Button {
-    fn get_pos(&self) -> (u32, u32) {
-        (self.x, self.y)
+    fn get_base(&self) -> &InterfaceItemBase {
+        &self.base
     }
 
-    fn set_pos(&mut self, pos: (u32, u32)) {
-        let (x, y) = pos;
-        self.x = x;
-        self.y = y;
+    fn get_mut_base(&mut self) -> &mut InterfaceItemBase {
+        &mut self.base
     }
 
     fn get_total_width(&self) -> u32 {
@@ -167,39 +161,16 @@ impl InterfaceItem for Button {
         1
     }
 
-    fn is_focused(&self) -> bool {
-        self.focused
-    }
-
-    fn set_focused(&mut self, focused: bool) {
-        if focused != self.focused {
-            self.dirty = true;
-        }
-        self.focused = focused;
-    }
-
-    fn can_be_focused(&self) -> bool {
-        true
-    }
-
-    fn is_dirty(&self) -> bool {
-        self.dirty
-    }
-
-    fn set_dirty(&mut self, dirty: bool) {
-        self.dirty = dirty;
-    }
-
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
-        self.dirty = false;
-        if self.focused {
+        self.base.dirty = false;
+        if self.base.focused {
             text_buffer.change_cursor_fg_color(self.fg_color_focused);
             text_buffer.change_cursor_bg_color(self.bg_color_focused);
         } else {
             text_buffer.change_cursor_fg_color(self.fg_color_unfocused);
             text_buffer.change_cursor_bg_color(self.bg_color_unfocused);
         }
-        text_buffer.move_cursor(self.x as i32, self.y as i32);
+        text_buffer.move_cursor(self.base.x as i32, self.base.y as i32);
         text_buffer.write(
             self.text
                 .chars()

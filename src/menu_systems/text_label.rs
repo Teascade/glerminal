@@ -1,4 +1,4 @@
-use super::InterfaceItem;
+use super::{InterfaceItem, InterfaceItemBase};
 use events::Events;
 use text_buffer::{Color, TextBuffer};
 
@@ -9,9 +9,7 @@ pub struct TextLabel {
     pub fg_color: Color,
     /// Background-color
     pub bg_color: Color,
-    x: u32,
-    y: u32,
-    dirty: bool,
+    base: InterfaceItemBase,
     max_width: u32,
     text: String,
 }
@@ -22,9 +20,7 @@ impl TextLabel {
     /// Max width determines how wide the text can be maximally before cutting off.
     pub fn new<T: Into<String>>(text: T, max_width: u32) -> TextLabel {
         TextLabel {
-            x: 0,
-            y: 0,
-            dirty: true,
+            base: InterfaceItemBase::new(false),
             max_width: max_width,
             text: text.into(),
             bg_color: [0.0, 0.0, 0.0, 0.0],
@@ -35,8 +31,8 @@ impl TextLabel {
     /// Sets the initial position of the TextLabel
     pub fn with_pos(mut self, pos: (u32, u32)) -> TextLabel {
         let (x, y) = pos;
-        self.x = x;
-        self.y = y;
+        self.base.x = x;
+        self.base.y = y;
         self
     }
 
@@ -68,7 +64,7 @@ impl TextLabel {
     /// Sets the text of the TextLabel
     pub fn set_text<T: Into<String>>(&mut self, text: T) {
         self.text = text.into();
-        self.dirty = true;
+        self.base.dirty = true;
     }
 
     /// Return the current text of the TextLabel
@@ -85,14 +81,12 @@ impl TextLabel {
 }
 
 impl InterfaceItem for TextLabel {
-    fn get_pos(&self) -> (u32, u32) {
-        (self.x, self.y)
+    fn get_base(&self) -> &InterfaceItemBase {
+        &self.base
     }
 
-    fn set_pos(&mut self, pos: (u32, u32)) {
-        let (x, y) = pos;
-        self.x = x;
-        self.y = y;
+    fn get_mut_base(&mut self) -> &mut InterfaceItemBase {
+        &mut self.base
     }
 
     fn get_total_width(&self) -> u32 {
@@ -103,29 +97,11 @@ impl InterfaceItem for TextLabel {
         1
     }
 
-    fn is_focused(&self) -> bool {
-        false
-    }
-
-    fn set_focused(&mut self, _: bool) {}
-
-    fn can_be_focused(&self) -> bool {
-        false
-    }
-
-    fn is_dirty(&self) -> bool {
-        self.dirty
-    }
-
-    fn set_dirty(&mut self, dirty: bool) {
-        self.dirty = dirty;
-    }
-
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
-        self.dirty = false;
+        self.base.dirty = true;
         text_buffer.change_cursor_bg_color(self.bg_color);
         text_buffer.change_cursor_fg_color(self.fg_color);
-        text_buffer.move_cursor(self.x as i32, self.y as i32);
+        text_buffer.move_cursor(self.base.x as i32, self.base.y as i32);
         text_buffer.write(
             self.text
                 .chars()

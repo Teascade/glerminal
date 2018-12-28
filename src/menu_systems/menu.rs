@@ -271,7 +271,8 @@ impl Menu {
                             .items_ref
                             .get(self.select_idx as usize)
                             .unwrap()
-                            .can_be_focused()
+                            .get_base()
+                            .can_be_focused
                     } {
                         self.select_idx =
                             (((self.select_idx as i32 + length as i32) - 1) % length as i32) as u32;
@@ -304,11 +305,13 @@ impl Menu {
                 if let Some(loc) = events.cursor.get_location(&text_buffer) {
                     for idx in 0..self.cloned_interface_items.len() {
                         let item = self.cloned_interface_items.get(idx).unwrap();
+                        let base = item.get_base();
                         let idx = idx as u32;
-                        if !item.can_be_focused() {
+
+                        if !base.can_be_focused {
                             continue;
                         }
-                        let (x, y) = (item.get_pos().0 as i32, item.get_pos().1 as i32);
+                        let (x, y) = (base.get_pos().0 as i32, base.get_pos().1 as i32);
                         let width = item.get_total_width() as i32;
                         let height = item.get_total_height() as i32;
 
@@ -346,7 +349,8 @@ impl Menu {
                 .items_ref
                 .get(self.select_idx as usize)
                 .unwrap()
-                .can_be_focused()
+                .get_base()
+                .can_be_focused
         } {
             self.select_idx = (((self.select_idx as i32) + 1) % length as i32) as u32;
             if self.select_idx == start_idx {
@@ -357,7 +361,7 @@ impl Menu {
         // Update children and focus the focused child.
         let mut idx = 0;
         for item in &mut list.items_ref {
-            item.set_focused(self.select_idx == idx);
+            item.get_mut_base().set_focused(self.select_idx == idx);
             item.update(delta);
             idx += 1;
         }
@@ -385,7 +389,8 @@ impl Menu {
                             last_off,
                             last_pos,
                         );
-                        item.set_pos((last_pos.0 as u32, last_pos.1 as u32));
+                        item.get_mut_base()
+                            .set_pos((last_pos.0 as u32, last_pos.1 as u32));
 
                         last_off = (0, item.get_total_height() as i32);
                         off.1 += last_off.1;
@@ -405,7 +410,8 @@ impl Menu {
                             last_off,
                             last_pos,
                         );
-                        item.set_pos((last_pos.0 as u32, last_pos.1 as u32));
+                        item.get_mut_base()
+                            .set_pos((last_pos.0 as u32, last_pos.1 as u32));
 
                         off.1 += last_off.1;
                     }
@@ -422,7 +428,8 @@ impl Menu {
                             last_off,
                             last_pos,
                         );
-                        item.set_pos((last_pos.0 as u32, last_pos.1 as u32));
+                        item.get_mut_base()
+                            .set_pos((last_pos.0 as u32, last_pos.1 as u32));
 
                         last_off = (item.get_total_width() as i32, 0);
                         off.0 += last_off.0;
@@ -442,7 +449,8 @@ impl Menu {
                             last_off,
                             last_pos,
                         );
-                        item.set_pos((last_pos.0 as u32, last_pos.1 as u32));
+                        item.get_mut_base()
+                            .set_pos((last_pos.0 as u32, last_pos.1 as u32));
 
                         off.0 += last_off.0;
                     }
@@ -464,8 +472,9 @@ impl Menu {
     fn children_are_dirty(&self, children: &mut Vec<Box<&mut InterfaceItem>>) -> bool {
         let mut children_are_dirty = false; // No lewding the dragon loli
         for item in children {
-            children_are_dirty = children_are_dirty || item.is_dirty();
-            item.set_dirty(false);
+            let mut base = item.get_mut_base();
+            children_are_dirty = children_are_dirty || base.dirty;
+            base.dirty = false;
         }
         children_are_dirty
     }

@@ -1,6 +1,7 @@
 use glutin::VirtualKeyCode;
 
-use super::InterfaceItem;
+use super::{InterfaceItem, InterfaceItemBase};
+
 use events::Events;
 use text_buffer::{Color, TextBuffer};
 
@@ -17,15 +18,12 @@ pub struct Dialog {
     pub fg_color_focused: Color,
     /// Background-color when the dialog is focused
     pub bg_color_focused: Color,
-    x: u32,
-    y: u32,
+
+    base: InterfaceItemBase,
     width: u32,
 
     min_height: Option<u32>,
     max_height: Option<u32>,
-
-    dirty: bool,
-    focused: bool,
 
     text: String,
     rows: Vec<String>,
@@ -45,14 +43,11 @@ impl Dialog {
             bg_color_unfocused: [0.0; 4],
             fg_color_focused: [0.2, 0.2, 0.2, 1.0],
             bg_color_focused: [0.8, 0.8, 0.8, 1.0],
-            x: 0,
-            y: 0,
+
+            base: InterfaceItemBase::new(true),
             width: width,
             min_height: min_height.into(),
             max_height: max_height.into(),
-
-            dirty: true,
-            focused: false,
 
             text: String::new(),
             rows: Vec::new(),
@@ -64,8 +59,8 @@ impl Dialog {
     /// Sets the initial position of the dialog window.
     pub fn with_pos(mut self, position: (u32, u32)) -> Dialog {
         let (x, y) = position;
-        self.x = x;
-        self.y = y;
+        self.base.x = x;
+        self.base.y = y;
         self
     }
 
@@ -111,15 +106,8 @@ impl Dialog {
 
     /// Sets whether the dialog window is initially focused or not.
     pub fn with_focused(mut self, focused: bool) -> Dialog {
-        self.focused = focused;
+        self.base.focused = focused;
         self
-    }
-
-    /// Sets the position of the dialog window
-    pub fn set_pos(&mut self, position: (u32, u32)) {
-        let (x, y) = position;
-        self.x = x;
-        self.y = y;
     }
 
     /// Sets the width of the dialog window
@@ -156,11 +144,6 @@ impl Dialog {
         self.update_rows();
     }
 
-    /// Sets whether the dialog window is focused or not.
-    pub fn set_focused(&mut self, focused: bool) {
-        self.focused = focused;
-    }
-
     fn update_rows(&mut self) {
         self.rows = Vec::new();
         let mut curr_row = String::new();
@@ -182,14 +165,12 @@ impl Dialog {
 }
 
 impl InterfaceItem for Dialog {
-    fn get_pos(&self) -> (u32, u32) {
-        (self.x, self.y)
+    fn get_base(&self) -> &InterfaceItemBase {
+        &self.base
     }
 
-    fn set_pos(&mut self, pos: (u32, u32)) {
-        let (x, y) = pos;
-        self.x = x;
-        self.y = y;
+    fn get_mut_base(&mut self) -> &mut InterfaceItemBase {
+        &mut self.base
     }
 
     fn get_total_width(&self) -> u32 {
@@ -206,32 +187,9 @@ impl InterfaceItem for Dialog {
         }
     }
 
-    fn is_focused(&self) -> bool {
-        self.focused
-    }
-
-    fn set_focused(&mut self, focused: bool) {
-        if focused != self.focused {
-            self.dirty = true;
-        }
-        self.focused = focused;
-    }
-
-    fn can_be_focused(&self) -> bool {
-        true
-    }
-
-    fn is_dirty(&self) -> bool {
-        self.dirty
-    }
-
-    fn set_dirty(&mut self, dirty: bool) {
-        self.dirty = dirty;
-    }
-
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
-        self.dirty = false;
-        if self.focused {
+        self.base.dirty = false;
+        if self.base.focused {
             text_buffer.change_cursor_bg_color(self.bg_color_focused);
             text_buffer.change_cursor_fg_color(self.fg_color_focused);
         } else {
@@ -241,13 +199,14 @@ impl InterfaceItem for Dialog {
         for idx in 0..self.get_total_height() {
             let text: String;
             if let Some(row) = self.rows.get((self.scroll_idx + idx) as usize) {
-                text = row.to_owned() + &*repeat(' ')
-                    .take(self.width as usize - row.len())
-                    .collect::<String>();
+                text = row.to_owned()
+                    + &*repeat(' ')
+                        .take(self.width as usize - row.len())
+                        .collect::<String>();
             } else {
                 text = repeat(' ').take(self.width as usize).collect();
             }
-            text_buffer.move_cursor(self.x as i32, self.y as i32 + idx as i32);
+            text_buffer.move_cursor(self.base.x as i32, self.base.y as i32 + idx as i32);
             text_buffer.write(text);
         }
     }
@@ -256,13 +215,13 @@ impl InterfaceItem for Dialog {
         if events.keyboard.was_just_pressed(VirtualKeyCode::Down) {
             if self.scroll_idx + 1 < self.rows.len() as u32 {
                 self.scroll_idx += 1;
-                self.dirty = true;
+                self.base.dirty = true;
                 return true;
             }
         } else if events.keyboard.was_just_pressed(VirtualKeyCode::Up) {
             if self.scroll_idx > 0 {
                 self.scroll_idx -= 1;
-                self.dirty = true;
+                self.base.dirty = true;
                 return true;
             }
         }

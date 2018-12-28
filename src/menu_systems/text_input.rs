@@ -1,4 +1,4 @@
-use super::{Filter, InterfaceItem};
+use super::{Filter, InterfaceItem, InterfaceItemBase};
 
 use std::iter::repeat;
 
@@ -21,8 +21,8 @@ pub struct TextInput {
     /// Foreground-color for when the field is focused
     pub focused_fg: Color,
 
-    x: u32,
-    y: u32,
+    base: InterfaceItemBase,
+
     min_width: Option<u32>,
     max_width: Option<u32>,
     character_limit: Option<u32>,
@@ -35,9 +35,6 @@ pub struct TextInput {
     button_press_inputs: Vec<VirtualKeyCode>,
     mouse_button_press_inputs: Vec<MouseButton>,
     was_just_pressed: bool,
-
-    focused: bool,
-    dirty: bool,
 
     caret: f32,
     caret_timer: f32,
@@ -64,8 +61,7 @@ impl TextInput {
             focused_bg: [0.8, 0.8, 0.8, 1.0],
             focused_fg: [0.2, 0.2, 0.2, 1.0],
 
-            x: 0,
-            y: 0,
+            base: InterfaceItemBase::new(true),
             min_width: actual_min_width,
             max_width: actual_max_width,
 
@@ -79,9 +75,6 @@ impl TextInput {
             mouse_button_press_inputs: Vec::new(),
             was_just_pressed: false,
 
-            focused: false,
-            dirty: true,
-
             caret: 0.5,
             caret_timer: 0.0,
             caret_showing: false,
@@ -91,8 +84,8 @@ impl TextInput {
     /// Sets the position of the TextInput
     pub fn with_pos(mut self, position: (u32, u32)) -> TextInput {
         let (x, y) = position;
-        self.x = x;
-        self.y = y;
+        self.base.x = x;
+        self.base.y = y;
         self
     }
 
@@ -135,7 +128,7 @@ impl TextInput {
 
     /// Sets whether the TextInput is focused.
     pub fn with_focus(mut self, focused: bool) -> TextInput {
-        self.focused = focused;
+        self.base.focused = focused;
         self
     }
 
@@ -254,14 +247,12 @@ impl TextInput {
 }
 
 impl InterfaceItem for TextInput {
-    fn get_pos(&self) -> (u32, u32) {
-        (self.x, self.y)
+    fn get_base(&self) -> &InterfaceItemBase {
+        &self.base
     }
 
-    fn set_pos(&mut self, pos: (u32, u32)) {
-        let (x, y) = pos;
-        self.x = x;
-        self.y = y;
+    fn get_mut_base(&mut self) -> &mut InterfaceItemBase {
+        &mut self.base
     }
 
     fn get_total_width(&self) -> u32 {
@@ -280,43 +271,20 @@ impl InterfaceItem for TextInput {
         1
     }
 
-    fn is_focused(&self) -> bool {
-        self.focused
-    }
-
-    fn set_focused(&mut self, focused: bool) {
-        if focused != self.focused {
-            self.dirty = true;
-        }
-        self.focused = focused;
-    }
-
-    fn can_be_focused(&self) -> bool {
-        true
-    }
-
-    fn is_dirty(&self) -> bool {
-        self.dirty
-    }
-
-    fn set_dirty(&mut self, dirty: bool) {
-        self.dirty = dirty;
-    }
-
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
-        self.dirty = false;
+        self.base.dirty = false;
 
-        if self.focused {
+        if self.base.focused {
             text_buffer.change_cursor_bg_color(self.focused_bg);
             text_buffer.change_cursor_fg_color(self.focused_fg);
         } else {
             text_buffer.change_cursor_bg_color(self.unfocused_bg);
             text_buffer.change_cursor_fg_color(self.unfocused_fg);
         }
-        text_buffer.move_cursor(self.x as i32, self.y as i32);
+        text_buffer.move_cursor(self.base.x as i32, self.base.y as i32);
 
         let text_w_offset: u32;
-        if self.focused && self.caret != 0.0 {
+        if self.base.focused && self.caret != 0.0 {
             text_w_offset = 1
         } else {
             text_w_offset = 0
@@ -360,7 +328,7 @@ impl InterfaceItem for TextInput {
         self.was_just_pressed = false;
 
         let mut handled = false;
-        if self.focused {
+        if self.base.focused {
             for curr in &self.button_press_inputs {
                 if events.keyboard.was_just_pressed(*curr) {
                     self.was_just_pressed = true;
@@ -375,7 +343,7 @@ impl InterfaceItem for TextInput {
             }
             if events.keyboard.was_just_pressed(VirtualKeyCode::Back) {
                 self.text.pop();
-                self.dirty = true;
+                self.base.dirty = true;
                 handled = true;
             }
             for keycode in events.keyboard.get_just_pressed_list() {
@@ -392,7 +360,7 @@ impl InterfaceItem for TextInput {
                             text.push(*character);
                         }
                         self.text.push_str(&*text);
-                        self.dirty = true;
+                        self.base.dirty = true;
                         handled = true;
                     }
                 }
@@ -402,7 +370,7 @@ impl InterfaceItem for TextInput {
     }
 
     fn update(&mut self, delta: f32) {
-        if !self.focused || self.caret == 0.0 {
+        if !self.base.focused || self.caret == 0.0 {
             self.caret_timer = 0.0;
             self.caret_showing = false;
         } else {
@@ -410,7 +378,7 @@ impl InterfaceItem for TextInput {
             if self.caret_timer >= self.caret {
                 self.caret_timer -= self.caret;
                 self.caret_showing = !self.caret_showing;
-                self.dirty = true;
+                self.base.dirty = true;
             }
         }
     }

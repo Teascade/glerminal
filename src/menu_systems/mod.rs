@@ -9,7 +9,7 @@ mod window;
 pub use self::button::Button;
 pub use self::checkbox::{Checkbox, CheckboxGroup};
 pub use self::dialog::Dialog;
-pub use self::menu::{GrowthDirection, Menu, MenuList, MenuPosition, FocusSelection};
+pub use self::menu::{FocusSelection, GrowthDirection, Menu, MenuList, MenuPosition};
 pub use self::text_input::TextInput;
 pub use self::text_label::TextLabel;
 pub use self::window::Window;
@@ -22,10 +22,10 @@ use text_buffer::TextBuffer;
 
 /// Represents a single menu item: an item that is somewhere, can handle events and can be drawn.
 pub trait InterfaceItem: InterfaceItemClone {
-    /// Get the position of this InterfaceItem
-    fn get_pos(&self) -> (u32, u32);
-    /// Set the (absolute) position of this InterfaceItem
-    fn set_pos(&mut self, pos: (u32, u32));
+    /// Get the `InterfaceItemBase`
+    fn get_base(&self) -> &InterfaceItemBase;
+    /// Get the `InterfaceItemBase` as mutable
+    fn get_mut_base(&mut self) -> &mut InterfaceItemBase;
     /// Get the width this InterfaceItem can take up
     ///
     /// This should ideally never change
@@ -34,16 +34,6 @@ pub trait InterfaceItem: InterfaceItemClone {
     ///
     /// This should ideally never change
     fn get_total_height(&self) -> u32;
-    /// Is the InterfaceItem currently focused
-    fn is_focused(&self) -> bool;
-    /// Un/Focus the InterfaceItem
-    fn set_focused(&mut self, focused: bool);
-    /// Returns whether this InterfaceItem can be (or should be) focused at all.
-    fn can_be_focused(&self) -> bool;
-    /// Should the InterfaceItem be redrawn (has changes happened, that mean it should be redrawn)
-    fn is_dirty(&self) -> bool;
-    /// Set the dirtiness, this should only be called if something else does the drawing.
-    fn set_dirty(&mut self, dirty: bool);
     /// Draw the InterfaceItem
     fn draw(&mut self, text_buffer: &mut TextBuffer);
     /// Handle events for this InterfaceItem.
@@ -72,6 +62,59 @@ pub trait InterfaceItemClone {
 impl<T: 'static + InterfaceItem + Clone> InterfaceItemClone for T {
     fn clone_box(&self) -> Box<InterfaceItem> {
         Box::new(self.clone())
+    }
+}
+
+/// The base for all `interaceItem`s. Contains metadata that is handled similarily in each `InterfaceItem`
+#[derive(Debug, Clone)]
+pub struct InterfaceItemBase {
+    /// Whether this `InterfaceItem` can be (or should be) focused or not
+    pub can_be_focused: bool,
+    /// Whether this `InterfaceItem` is dirty so it needs redrawing
+    /// This should be called every time something changes
+    pub dirty: bool,
+    x: u32,
+    y: u32,
+    focused: bool,
+}
+
+impl InterfaceItemBase {
+    /// Create a new InterfaceItemBase
+    ///
+    /// (use this if you're making a new InterfaceItem)
+    pub fn new(can_be_focused: bool) -> InterfaceItemBase {
+        InterfaceItemBase {
+            can_be_focused: can_be_focused,
+            dirty: false,
+            x: 0,
+            y: 0,
+            focused: false,
+        }
+    }
+
+    /// Get the position of the `InterfaceItem`
+    pub fn get_pos(&self) -> (u32, u32) {
+        (self.x, self.y)
+    }
+
+    /// Set the absolute position of the `InterfaceItem`
+    pub fn set_pos(&mut self, pos: (u32, u32)) {
+        let (x, y) = pos;
+        self.x = x;
+        self.y = y;
+    }
+
+    /// Whether the `InterfaceItem` is focused or not (and should it receive inputs or not)
+    pub fn is_focused(&self) -> bool {
+        self.focused
+    }
+
+    /// Un/Focus the `InterfaceItem`
+    pub fn set_focused(&mut self, focused: bool) {
+        if focused != self.focused {
+            self.dirty = true;
+        }
+        self.focused = focused;
     }
 }
 

@@ -1,6 +1,6 @@
 use std::iter::repeat;
 
-use super::InterfaceItem;
+use super::{InterfaceItem, InterfaceItemBase};
 use events::Events;
 use text_buffer::{Color, TextBuffer};
 use MouseButton;
@@ -107,16 +107,13 @@ pub struct Checkbox {
     pub fg_color_focused: Color,
     /// Background color for when the checkbox is focused
     pub bg_color_focused: Color,
-    x: u32,
-    y: u32,
+
+    base: InterfaceItemBase,
 
     text: String,
     prefix: String,
     suffix: String,
     checked_text: String,
-
-    focused: bool,
-    dirty: bool,
 
     checked: bool,
     was_just_pressed: bool,
@@ -132,16 +129,13 @@ impl Checkbox {
             fg_color_unfocused: [0.8, 0.8, 0.8, 1.0],
             bg_color_focused: [0.8, 0.8, 0.8, 1.0],
             fg_color_focused: [0.2, 0.2, 0.2, 1.0],
-            x: 0,
-            y: 0,
+
+            base: InterfaceItemBase::new(true),
 
             text: text.into(),
             prefix: "[".to_owned(),
             suffix: "]".to_owned(),
             checked_text: "X".to_owned(),
-
-            focused: false,
-            dirty: true,
 
             checked: false,
             was_just_pressed: false,
@@ -153,8 +147,8 @@ impl Checkbox {
     /// Sets the initial position of the Checkbox
     pub fn with_pos(mut self, pos: (u32, u32)) -> Checkbox {
         let (x, y) = pos;
-        self.x = x;
-        self.y = y;
+        self.base.x = x;
+        self.base.y = y;
         self
     }
 
@@ -184,7 +178,7 @@ impl Checkbox {
 
     /// Set whether the checkbox is initially focused or not
     pub fn with_focused(mut self, focused: bool) -> Checkbox {
-        self.focused = focused;
+        self.base.focused = focused;
         self
     }
 
@@ -225,19 +219,19 @@ impl Checkbox {
     /// Sets the text of the Checkbox
     pub fn set_text<T: Into<String>>(&mut self, text: T) {
         self.text = text.into();
-        self.dirty = true;
+        self.base.dirty = true;
     }
 
     /// Sets the prefix of the Checkbox
     pub fn set_prefix<T: Into<String>>(&mut self, prefix: T) {
         self.prefix = prefix.into();
-        self.dirty = true;
+        self.base.dirty = true;
     }
 
     /// Sets the suffix of the Checkbox
     pub fn set_suffix<T: Into<String>>(&mut self, suffix: T) {
         self.suffix = suffix.into();
-        self.dirty = true;
+        self.base.dirty = true;
     }
 
     /// Sets the checked-text (text shown in between prefix and suffix) of the Checkbox
@@ -292,7 +286,7 @@ impl Checkbox {
     /// Sets the checked-status for this checkbox.
     pub fn set_checked(&mut self, checked: bool) {
         if self.checked != checked {
-            self.dirty = true;
+            self.base.dirty = true;
         }
         self.checked = checked;
     }
@@ -304,14 +298,12 @@ impl Checkbox {
 }
 
 impl InterfaceItem for Checkbox {
-    fn get_pos(&self) -> (u32, u32) {
-        (self.x, self.y)
+    fn get_base(&self) -> &InterfaceItemBase {
+        &self.base
     }
 
-    fn set_pos(&mut self, pos: (u32, u32)) {
-        let (x, y) = pos;
-        self.x = x;
-        self.y = y;
+    fn get_mut_base(&mut self) -> &mut InterfaceItemBase {
+        &mut self.base
     }
 
     fn get_total_width(&self) -> u32 {
@@ -322,39 +314,16 @@ impl InterfaceItem for Checkbox {
         1
     }
 
-    fn is_focused(&self) -> bool {
-        self.focused
-    }
-
-    fn set_focused(&mut self, focused: bool) {
-        if focused != self.focused {
-            self.dirty = true;
-        }
-        self.focused = focused;
-    }
-
-    fn can_be_focused(&self) -> bool {
-        true
-    }
-
-    fn is_dirty(&self) -> bool {
-        self.dirty
-    }
-
-    fn set_dirty(&mut self, dirty: bool) {
-        self.dirty = dirty;
-    }
-
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
-        self.dirty = false;
-        if self.focused {
+        self.base.dirty = false;
+        if self.base.focused {
             text_buffer.change_cursor_fg_color(self.fg_color_focused);
             text_buffer.change_cursor_bg_color(self.bg_color_focused);
         } else {
             text_buffer.change_cursor_fg_color(self.fg_color_unfocused);
             text_buffer.change_cursor_bg_color(self.bg_color_unfocused);
         }
-        text_buffer.move_cursor(self.x as i32, self.y as i32);
+        text_buffer.move_cursor(self.base.x as i32, self.base.y as i32);
         let checked_text;
         if self.checked {
             checked_text = (&self.checked_text).to_owned();
@@ -371,7 +340,7 @@ impl InterfaceItem for Checkbox {
             if events.keyboard.was_just_pressed(*curr) {
                 self.was_just_pressed = true;
                 self.checked = !self.checked;
-                self.dirty = true;
+                self.base.dirty = true;
                 return true;
             }
         }
@@ -379,7 +348,7 @@ impl InterfaceItem for Checkbox {
             if events.mouse.was_just_pressed(*curr) {
                 self.was_just_pressed = true;
                 self.checked = !self.checked;
-                self.dirty = true;
+                self.base.dirty = true;
                 return true;
             }
         }
