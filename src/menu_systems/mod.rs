@@ -1,17 +1,15 @@
-mod button;
 mod checkbox;
 mod dialog;
 mod menu;
 mod text_input;
-mod text_label;
+mod text_item;
 mod window;
 
-pub use self::button::Button;
 pub use self::checkbox::{Checkbox, CheckboxGroup};
 pub use self::dialog::Dialog;
 pub use self::menu::{FocusSelection, GrowthDirection, Menu, MenuList, MenuPosition};
 pub use self::text_input::TextInput;
-pub use self::text_label::TextLabel;
+pub use self::text_item::TextItem;
 pub use self::window::Window;
 
 use std::collections::HashMap;

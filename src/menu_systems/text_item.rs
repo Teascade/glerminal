@@ -5,8 +5,8 @@ use MouseButton;
 use VirtualKeyCode;
 
 #[derive(Debug, Clone)]
-/// Represents a button as an InterfaceItem
-pub struct Button {
+/// Represents a simple text item that by default can not be selected, but optionally can be selected and pressed.
+pub struct TextItem {
     /// Foreground color for when the button is not focused
     pub fg_color_unfocused: Color,
     /// Background color for when the button is not focused
@@ -20,24 +20,26 @@ pub struct Button {
     max_width: u32,
     text: String,
 
+    is_button: bool,
     was_just_pressed: bool,
     button_press_inputs: Vec<VirtualKeyCode>,
     mouse_button_press_inputs: Vec<MouseButton>,
 }
 
-impl Button {
+impl TextItem {
     /// Intiailizes a Button with the given text and max width
-    pub fn new<T: Into<String>>(text: T, max_width: u32) -> Button {
-        Button {
+    pub fn new<T: Into<String>>(text: T, max_width: u32) -> TextItem {
+        TextItem {
             bg_color_unfocused: [0.0, 0.0, 0.0, 0.0],
             fg_color_unfocused: [0.8, 0.8, 0.8, 1.0],
             bg_color_focused: [0.8, 0.8, 0.8, 1.0],
             fg_color_focused: [0.2, 0.2, 0.2, 1.0],
 
-            base: InterfaceItemBase::new(true),
+            base: InterfaceItemBase::new(false),
             max_width: max_width,
             text: text.into(),
 
+            is_button: false,
             was_just_pressed: false,
             button_press_inputs: vec![VirtualKeyCode::Return],
             mouse_button_press_inputs: Vec::new(),
@@ -45,7 +47,7 @@ impl Button {
     }
 
     /// Sets the initial position of the Button
-    pub fn with_pos(mut self, pos: (u32, u32)) -> Button {
+    pub fn with_pos(mut self, pos: (u32, u32)) -> TextItem {
         let (x, y) = pos;
         self.base.x = x;
         self.base.y = y;
@@ -53,25 +55,25 @@ impl Button {
     }
 
     /// Sets the initial max width of the Button
-    pub fn with_max_width(mut self, max_width: u32) -> Button {
+    pub fn with_max_width(mut self, max_width: u32) -> TextItem {
         self.max_width = max_width;
         self
     }
 
     /// Sets the initial text of the Button
-    pub fn with_text<T: Into<String>>(mut self, text: T) -> Button {
+    pub fn with_text<T: Into<String>>(mut self, text: T) -> TextItem {
         self.text = text.into();
         self
     }
 
     /// Set whether the button is initially focused or not
-    pub fn with_focused(mut self, focused: bool) -> Button {
+    pub fn with_focused(mut self, focused: bool) -> TextItem {
         self.base.focused = focused;
         self
     }
 
     /// Set the initial colors of this Button when it is unfocused
-    pub fn with_unfocused_colors(mut self, colors: (Color, Color)) -> Button {
+    pub fn with_unfocused_colors(mut self, colors: (Color, Color)) -> TextItem {
         let (fg, bg) = colors;
         self.fg_color_unfocused = fg;
         self.bg_color_unfocused = bg;
@@ -79,7 +81,7 @@ impl Button {
     }
 
     /// Set the initial colors of this Button when it is focused
-    pub fn with_focused_colors(mut self, colors: (Color, Color)) -> Button {
+    pub fn with_focused_colors(mut self, colors: (Color, Color)) -> TextItem {
         let (fg, bg) = colors;
         self.fg_color_focused = fg;
         self.bg_color_focused = bg;
@@ -87,14 +89,21 @@ impl Button {
     }
 
     /// Set the buttons from which this button triggers
-    pub fn with_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) -> Button {
+    pub fn with_button_press_inputs(mut self, buttons: Vec<VirtualKeyCode>) -> TextItem {
         self.button_press_inputs = buttons;
         self
     }
 
     /// Set the mouse buttons from which this button triggers
-    pub fn with_mouse_button_press_inputs(mut self, buttons: Vec<MouseButton>) -> Button {
+    pub fn with_mouse_button_press_inputs(mut self, buttons: Vec<MouseButton>) -> TextItem {
         self.mouse_button_press_inputs = buttons;
+        self
+    }
+
+    /// Set whether this TextItem can be focused and used as a button
+    pub fn with_is_button(mut self, is_button: bool) -> TextItem {
+        self.is_button = is_button;
+        self.base.can_be_focused = is_button;
         self
     }
 
@@ -107,11 +116,6 @@ impl Button {
     pub fn set_text<T: Into<String>>(&mut self, text: T) {
         self.text = text.into();
         self.base.dirty = true;
-    }
-
-    /// Return the current text of the Button
-    pub fn get_text(&self) -> String {
-        self.text.clone()
     }
 
     /// Set the colors of this Button when it is unfocused
@@ -138,13 +142,24 @@ impl Button {
         self.mouse_button_press_inputs = buttons;
     }
 
+    /// Set whether this TextItem can be focused and used as a button
+    pub fn set_is_button(&mut self, is_button: bool) {
+        self.is_button = is_button;
+        self.base.can_be_focused = is_button;
+    }
+
     /// Returns whether this button was just pressed.
     pub fn was_just_pressed(&self) -> bool {
         self.was_just_pressed
     }
+
+    /// Return the current text of the Button
+    pub fn get_text(&self) -> String {
+        self.text.clone()
+    }
 }
 
-impl InterfaceItem for Button {
+impl InterfaceItem for TextItem {
     fn get_base(&self) -> &InterfaceItemBase {
         &self.base
     }
