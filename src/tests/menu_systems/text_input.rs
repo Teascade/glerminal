@@ -6,53 +6,72 @@ use VirtualKeyCode::{Back, Key1, Return, A};
 use rand::{thread_rng, Rng};
 
 #[test]
+fn set_get_test() {
+    let text = random_text(10);
+    let mut item = TextInput::new(None, None).with_text(text.clone());
+
+    assert_eq!(item.get_text(), text);
+
+    let text = random_text(10);
+    item.set_text(text.clone());
+
+    assert_eq!(item.get_text(), text);
+}
+
+#[test]
+fn back_removing() {
+    let mut rand = thread_rng();
+    let mut events = Events::new(false);
+    let text = random_text(10);
+    let removed = rand.gen_range(1, 9);
+    let mut item = TextInput::new(None, None)
+        .with_text(text.clone())
+        .with_focused(true);
+
+    let expected: String = text.chars().take(10 - removed).collect();
+
+    events.keyboard.update_button_press(Back, true);
+    for _ in 0..removed {
+        item.handle_events(&events);
+    }
+    assert_eq!(item.get_text(), expected);
+}
+
+#[test]
 fn input_handling_and_filters() {
-    let test_a_and_one =
-        |item: &mut TextInput, events: &mut Events, first: String, second: String| {
-            item.set_text("");
-
-            events.keyboard.update_button_press(A, true);
-            item.handle_events(&events);
-            events.clear_just_lists();
-            assert_eq!(item.get_text(), first);
-            events.keyboard.update_button_press(A, false);
-
-            // Test Backspace removing also.
-            events.keyboard.update_button_press(Back, true);
-            item.handle_events(&events);
-            events.keyboard.update_button_press(Back, false);
-
-            events.keyboard.update_button_press(Key1, true);
-            item.handle_events(&events);
-            events.clear_just_lists();
-            assert_eq!(item.get_text(), second);
-            events.keyboard.update_button_press(Key1, false);
-        };
-
     run_multiple_times(50, || {
+        let mut rand = thread_rng();
         let mut events = Events::new(false);
         let mut item = TextInput::new(None, None).with_focused(true);
+        let test_a = rand.gen();
+        let test_key1 = rand.gen();
 
         events.keyboard.update_button_press(Return, true);
         item.handle_events(&events);
         events.clear_just_lists();
         assert_eq!(item.was_just_pressed(), true);
 
-        test_a_and_one(&mut item, &mut events, String::new(), String::new());
+        let mut filter = Filter::empty_filter();
+        let mut expected = String::new();
+        if test_a {
+            filter = filter.with_basic_latin_characters();
+            expected += &"a";
+        }
+        if test_key1 {
+            filter = filter.with_basic_numerals();
+            expected += &"1"
+        }
+        item.filter = filter;
 
-        item.filter = Filter::empty_filter().with_basic_latin_characters();
+        events.keyboard.update_button_press(A, true);
+        item.handle_events(&events);
+        events.clear_just_lists();
+        events.keyboard.update_button_press(A, false);
 
-        test_a_and_one(&mut item, &mut events, "a".to_owned(), String::new());
+        events.keyboard.update_button_press(Key1, true);
+        item.handle_events(&events);
 
-        item.filter = Filter::empty_filter().with_basic_numerals();
-
-        test_a_and_one(&mut item, &mut events, String::new(), "1".to_owned());
-
-        item.filter = Filter::empty_filter()
-            .with_basic_latin_characters()
-            .with_basic_numerals();
-
-        test_a_and_one(&mut item, &mut events, "a".to_owned(), "1".to_owned());
+        assert_eq!(expected, item.get_text());
     });
 }
 

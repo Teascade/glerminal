@@ -1,5 +1,7 @@
 use super::{random_text, run_multiple_times, test_setup_text_buffer};
 use menu_systems::{InterfaceItem, TextItem};
+use Events;
+use VirtualKeyCode::{Return, A};
 
 use rand::{thread_rng, Rng};
 use std::iter::repeat;
@@ -72,5 +74,31 @@ fn name() {
                 c
             );
         }
+    });
+}
+
+#[test]
+fn button_like() {
+    run_multiple_times(50, || {
+        let mut rand = thread_rng();
+        let is_button = rand.gen();
+        let button_changed = rand.gen();
+        let mut events = Events::new(false);
+
+        let mut item = TextItem::new("").with_is_button(is_button);
+
+        if button_changed {
+            item.button_press_inputs = vec![A];
+        }
+
+        events.keyboard.update_button_press(Return, true);
+        item.handle_events(&events);
+        events.keyboard.update_button_press(Return, false);
+        events.keyboard.clear_just_lists();
+        assert_eq!(item.was_just_pressed(), !button_changed);
+
+        events.keyboard.update_button_press(A, true);
+        item.handle_events(&events);
+        assert_eq!(item.was_just_pressed(), button_changed);
     });
 }
