@@ -92,6 +92,18 @@ impl Dialog {
         self
     }
 
+    /// Set the initial buttons that scroll the dialog up.
+    pub fn with_up_buttons(mut self, buttons: Vec<VirtualKeyCode>) -> Dialog {
+        self.up_buttons = buttons;
+        self
+    }
+
+    /// Set the initial buttons that scroll the dialog down.
+    pub fn with_down_buttons(mut self, buttons: Vec<VirtualKeyCode>) -> Dialog {
+        self.down_buttons = buttons;
+        self
+    }
+
     /// Sets the width of the dialog window
     pub fn set_width(&mut self, width: u32) {
         self.width = width;

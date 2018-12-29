@@ -4,7 +4,7 @@ use glerminal::menu_systems::{
     Checkbox, CheckboxGroup, Dialog, Filter, FocusSelection, GrowthDirection, Menu, MenuList,
     MenuPosition, TextInput, TextItem, Window,
 };
-use glerminal::{MouseButton, TerminalBuilder, TextBuffer};
+use glerminal::{MouseButton, TerminalBuilder, TextBuffer, VirtualKeyCode};
 
 fn main() {
     let terminal = TerminalBuilder::new()
@@ -58,7 +58,7 @@ fn main() {
 
     let mut dialog = Dialog::new(30, 3, 3).with_text(
         "Hello! This is a test text with some stuff, this is supposed to test the dialog window. Testwordlongerthan30charactersfortest",
-    );
+    ).with_up_buttons(vec!(VirtualKeyCode::O)).with_down_buttons(vec!(VirtualKeyCode::L));
 
     let test_window = Window::new(70, 20)
         .with_pos((1, 1))
