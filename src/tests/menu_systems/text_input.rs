@@ -55,11 +55,11 @@ fn input_handling_and_filters() {
         let mut expected = String::new();
         if test_a {
             filter = filter.with_basic_latin_characters();
-            expected += &"a";
+            expected += "a";
         }
         if test_key1 {
             filter = filter.with_basic_numerals();
-            expected += &"1"
+            expected += "1";
         }
         item.filter = filter;
 

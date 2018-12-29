@@ -18,6 +18,10 @@ pub struct Dialog {
     pub fg_color_focused: Color,
     /// Background-color when the dialog is focused
     pub bg_color_focused: Color,
+    /// The buttons that make the dialog scroll up when focused
+    pub up_buttons: Vec<VirtualKeyCode>,
+    /// The buttons that make the dialog scroll down when focused
+    pub down_buttons: Vec<VirtualKeyCode>,
 
     base: InterfaceItemBase,
     width: u32,
@@ -43,9 +47,12 @@ impl Dialog {
             bg_color_unfocused: [0.0; 4],
             fg_color_focused: [0.2, 0.2, 0.2, 1.0],
             bg_color_focused: [0.8, 0.8, 0.8, 1.0],
+            up_buttons: vec![VirtualKeyCode::Up],
+            down_buttons: vec![VirtualKeyCode::Down],
 
             base: InterfaceItemBase::new(true),
             width: width,
+
             min_height: min_height.into(),
             max_height: max_height.into(),
 
@@ -105,6 +112,28 @@ impl Dialog {
     pub fn set_text<T: Into<String>>(&mut self, text: T) {
         self.text = text.into();
         self.update_rows();
+    }
+
+    /// Attempt to scroll the dialog up. Returns true if successful, false if not.
+    pub fn scroll_up(&mut self) -> bool {
+        if self.scroll_idx > 0 {
+            self.scroll_idx -= 1;
+            self.base.dirty = true;
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Attempt to scroll the dialog down. Returns true if successful, false if not.
+    pub fn scroll_down(&mut self) -> bool {
+        if self.scroll_idx + 1 < self.rows.len() as u32 {
+            self.scroll_idx += 1;
+            self.base.dirty = true;
+            true
+        } else {
+            false
+        }
     }
 
     fn update_rows(&mut self) {
@@ -175,20 +204,15 @@ impl InterfaceItem for Dialog {
     }
 
     fn handle_events(&mut self, events: &Events) -> bool {
-        if events.keyboard.was_just_pressed(VirtualKeyCode::Down) {
-            if self.scroll_idx + 1 < self.rows.len() as u32 {
-                self.scroll_idx += 1;
-                self.base.dirty = true;
-                return true;
-            }
-        } else if events.keyboard.was_just_pressed(VirtualKeyCode::Up) {
-            if self.scroll_idx > 0 {
-                self.scroll_idx -= 1;
-                self.base.dirty = true;
-                return true;
+        let mut handled = false;
+        for button in events.keyboard.get_just_pressed_list() {
+            if self.down_buttons.contains(&button) {
+                handled = handled || self.scroll_down();
+            } else if self.up_buttons.contains(&button) {
+                handled = handled || self.scroll_up();
             }
         }
-        false
+        handled
     }
 
     fn update(&mut self, _: f32) {}

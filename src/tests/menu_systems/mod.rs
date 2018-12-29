@@ -5,6 +5,7 @@ use VirtualKeyCode;
 
 use rand::{thread_rng, Rng};
 
+mod dialog;
 mod text_input;
 mod text_item;
 
