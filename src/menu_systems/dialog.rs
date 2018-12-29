@@ -148,6 +148,18 @@ impl Dialog {
         }
     }
 
+    /// Get the current scroll idx of this dialog
+    pub fn get_scroll(&self) -> u32 {
+        self.scroll_idx
+    }
+
+    /// Sets the current scroll idx of this dialog, assuming `scroll` is within boundaries.
+    pub fn set_scroll(&mut self, scroll: u32) {
+        if scroll < self.rows.len() as u32 {
+            self.scroll_idx = scroll;
+        }
+    }
+
     fn update_rows(&mut self) {
         self.rows = Vec::new();
         let mut curr_row = String::new();
