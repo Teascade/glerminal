@@ -57,7 +57,7 @@ fn main() {
     let mut checkbox_group = CheckboxGroup::new().with_force_one_checked(Some(0));
 
     let mut dialog = Dialog::new(30, 3, 3).with_text(
-        "Hello! This is a test text with some stuff, this is supposed to test the dialog window.",
+        "Hello! This is a test text with some stuff, this is supposed to test the dialog window. Testwordlongerthan30charactersfortest",
     );
 
     let test_window = Window::new(70, 20)

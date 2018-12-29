@@ -139,14 +139,26 @@ impl Dialog {
     fn update_rows(&mut self) {
         self.rows = Vec::new();
         let mut curr_row = String::new();
+        let width = self.width;
 
-        let mut parts = self.text.split(' ');
+        let mut parts = self.text.split(' ').flat_map(|word| {
+            let mut word = word.to_owned();
+            let mut words = Vec::new();
+            while word.len() as u32 > width {
+                let part = word.split_off(width as usize);
+                words.push(word);
+                word = part;
+            }
+            words.push(word);
+            words
+        });
+
         while let Some(word) = parts.next() {
-            if (curr_row.len() + word.len() + 1) as u32 <= self.width {
+            if (curr_row.len() + word.len() + 1) as u32 <= width {
                 if curr_row.len() != 0 {
                     curr_row += " ";
                 }
-                curr_row += word;
+                curr_row += &word;
             } else {
                 self.rows.push(curr_row);
                 curr_row = word.to_owned();
