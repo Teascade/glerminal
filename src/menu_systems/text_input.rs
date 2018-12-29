@@ -130,12 +130,6 @@ impl TextInput {
         self
     }
 
-    /// Sets whether the TextInput is focused.
-    pub fn with_focus(mut self, focused: bool) -> TextInput {
-        self.base.focused = focused;
-        self
-    }
-
     /// Sets the filter for the TextInput.
     pub fn with_filter(mut self, filter: Filter) -> TextInput {
         self.filter = filter;
@@ -179,9 +173,19 @@ impl TextInput {
         self.character_limit = char_limit.into();
     }
 
+    /// Set the current text
+    pub fn set_text<T: Into<String>>(&mut self, text: T) {
+        self.text = text.into();
+    }
+
     /// Returns the current text in the input
     pub fn get_text(&self) -> String {
         self.text.clone()
+    }
+
+    #[cfg(test)]
+    pub fn caret_showing(&self) -> bool {
+        self.caret_showing
     }
 }
 
@@ -213,7 +217,7 @@ impl InterfaceItem for TextInput {
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
         self.base.dirty = false;
 
-        if self.base.focused {
+        if self.base.is_focused() {
             text_buffer.change_cursor_bg_color(self.bg_color_focused);
             text_buffer.change_cursor_fg_color(self.fg_color_focused);
         } else {
@@ -223,7 +227,7 @@ impl InterfaceItem for TextInput {
         text_buffer.move_cursor(self.base.x as i32, self.base.y as i32);
 
         let text_w_offset: u32;
-        if self.base.focused && self.caret != 0.0 {
+        if self.base.is_focused() && self.caret != 0.0 {
             text_w_offset = 1
         } else {
             text_w_offset = 0
@@ -267,7 +271,7 @@ impl InterfaceItem for TextInput {
         self.was_just_pressed = false;
 
         let mut handled = false;
-        if self.base.focused {
+        if self.base.is_focused() {
             for curr in &self.button_press_inputs {
                 if events.keyboard.was_just_pressed(*curr) {
                     self.was_just_pressed = true;
@@ -309,7 +313,7 @@ impl InterfaceItem for TextInput {
     }
 
     fn update(&mut self, delta: f32) {
-        if !self.base.focused || self.caret == 0.0 {
+        if !self.base.is_focused() || self.caret == 0.0 {
             self.caret_timer = 0.0;
             self.caret_showing = false;
         } else {

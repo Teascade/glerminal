@@ -1,4 +1,4 @@
-use super::{random_text, run_multiple_times};
+use super::{random_text, run_multiple_times, test_setup_text_buffer};
 use menu_systems::{InterfaceItem, TextItem};
 
 use rand::{thread_rng, Rng};
@@ -56,5 +56,21 @@ fn set_functions() {
 
         // Check that height doesn't change just to be sure
         assert_eq!(item.get_total_height(), 1);
+    });
+}
+
+#[test]
+fn name() {
+    run_multiple_times(50, || {
+        let mut text_buffer = test_setup_text_buffer((15, 1));
+        let text = random_text(15);
+        let mut item = TextItem::new(text.clone());
+        item.draw(&mut text_buffer);
+        for (idx, c) in text.chars().enumerate() {
+            assert_eq!(
+                text_buffer.get_character(idx as i32, 0).unwrap().get_char(),
+                c
+            );
+        }
     });
 }

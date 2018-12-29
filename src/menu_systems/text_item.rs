@@ -122,7 +122,7 @@ impl InterfaceItem for TextItem {
 
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
         self.base.dirty = false;
-        if self.base.focused {
+        if self.base.is_focused() {
             text_buffer.change_cursor_fg_color(self.fg_color_focused);
             text_buffer.change_cursor_bg_color(self.bg_color_focused);
         } else {

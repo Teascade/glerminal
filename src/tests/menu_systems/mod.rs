@@ -1,10 +1,11 @@
-use super::{random_color, random_text, run_multiple_times};
+use super::{random_color, random_text, run_multiple_times, test_setup_text_buffer};
 use menu_systems::{InterfaceItem, InterfaceItemBase, TextItem};
 use MouseButton;
 use VirtualKeyCode;
 
 use rand::{thread_rng, Rng};
 
+mod text_input;
 mod text_item;
 
 #[test]

@@ -70,7 +70,7 @@ macro_rules! with_base {
 
         /// Set whether the checkbox is initially focused or not
         pub fn with_focused(mut self, focused: bool) -> $name {
-            self.base.focused = focused;
+            self.base.set_focused(focused);
             self
         }
     };

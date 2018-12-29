@@ -110,6 +110,7 @@ fn main() {
             text_buffer.clear();
 
             test_window.draw(&mut text_buffer);
+            menu.draw(&mut text_buffer);
 
             text_buffer.change_cursor_fg_color([0.8, 0.8, 0.8, 1.0]);
             text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
@@ -123,7 +124,6 @@ fn main() {
             text_buffer.write(format!("Button presses: {}", button_presses));
             text_buffer.move_cursor(40, 17);
             text_buffer.write(format!("Checked: {:?}", checkbox_group.get_selection_idx()));
-            menu.draw(&mut text_buffer);
 
             terminal.flush(&mut text_buffer);
         }
