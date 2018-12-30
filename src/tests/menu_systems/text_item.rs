@@ -62,7 +62,7 @@ fn set_functions() {
 }
 
 #[test]
-fn name() {
+fn draw() {
     run_multiple_times(50, || {
         let mut text_buffer = test_setup_text_buffer((15, 1));
         let text = random_text(15);
