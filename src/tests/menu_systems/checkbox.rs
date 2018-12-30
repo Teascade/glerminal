@@ -1,10 +1,44 @@
 use super::{random_text, run_multiple_times, test_setup_text_buffer};
-use menu_systems::{Checkbox, InterfaceItem};
+use menu_systems::{Checkbox, CheckboxGroup, InterfaceItem};
 use Events;
 use VirtualKeyCode::{Return, A};
 
 use rand::{thread_rng, Rng};
 use std::iter::repeat;
+
+#[test]
+fn group() {
+    run_multiple_times(50, || {
+        let mut rand = thread_rng();
+        let force_one_checked: bool = rand.gen();
+
+        let mut group = if force_one_checked {
+            CheckboxGroup::new().with_force_one_checked(Some(0))
+        } else {
+            CheckboxGroup::new()
+        };
+
+        let mut cb1 = Checkbox::new("");
+        let mut cb2 = Checkbox::new("");
+        let mut cb3 = Checkbox::new("");
+
+        cb1.set_checked(true);
+        group.update(&mut [&mut cb1, &mut cb2, &mut cb3]);
+        assert_eq!(group.get_selection_idx().unwrap(), 0);
+
+        cb2.set_checked(true);
+        group.update(&mut [&mut cb1, &mut cb2, &mut cb3]);
+        assert_eq!(group.get_selection_idx().unwrap(), 1);
+
+        cb3.set_checked(true);
+        group.update(&mut [&mut cb1, &mut cb2, &mut cb3]);
+        assert_eq!(group.get_selection_idx().unwrap(), 2);
+
+        cb3.set_checked(false);
+        group.update(&mut [&mut cb1, &mut cb2, &mut cb3]);
+        assert_eq!(group.get_selection_idx().is_some(), force_one_checked);
+    })
+}
 
 #[test]
 fn checked() {
