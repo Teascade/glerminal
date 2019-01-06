@@ -19,18 +19,26 @@ fn main() {
 
     update_texts(&parser, &mut text_buffer, false, false);
 
+    text_buffer.move_cursor(0, 3);
+    text_buffer.write("cursor pos: None");
+
+
     terminal.flush(&mut text_buffer);
+
+    let mut last_position = None;
 
     while terminal.refresh() {
         terminal.draw(&text_buffer);
 
         let events = terminal.get_current_events();
 
+        let loc = events.cursor.get_location(&text_buffer);
+
         if events.keyboard.was_just_pressed(VirtualKeyCode::Space)
             || events.keyboard.was_just_released(VirtualKeyCode::Space)
             || events.mouse.was_just_pressed(MouseButton::Left)
             || events.mouse.was_just_released(MouseButton::Left)
-            || events.cursor.cursor_just_moved()
+            || (events.cursor.cursor_just_moved() && loc != last_position)
         {
             text_buffer.clear();
 
@@ -40,7 +48,6 @@ fn main() {
             update_texts(&parser, &mut text_buffer, space, lmb);
 
             // Show cursor position
-            let loc = events.cursor.get_location(&text_buffer);
             let text = format!("cursor pos: {:?}", loc);
             text_buffer.move_cursor(0, 3);
             text_buffer.write(text);
@@ -54,6 +61,7 @@ fn main() {
                     text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
                 }
             }
+            last_position = loc;
 
             terminal.flush(&mut text_buffer);
         }
