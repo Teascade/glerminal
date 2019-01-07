@@ -7,6 +7,7 @@ use rand::{thread_rng, Rng};
 
 mod checkbox;
 mod dialog;
+mod menu;
 mod text_input;
 mod text_item;
 

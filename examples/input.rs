@@ -22,7 +22,6 @@ fn main() {
     text_buffer.move_cursor(0, 3);
     text_buffer.write("cursor pos: None");
 
-
     terminal.flush(&mut text_buffer);
 
     let mut last_position = None;

@@ -59,6 +59,7 @@ impl<'a> MenuList<'a> {
 }
 
 /// Determines the direction where the Menu will expand/grow from it's position
+#[derive(Clone, Copy)]
 pub enum GrowthDirection {
     /// Expand it lownwards
     Down,
@@ -190,6 +191,11 @@ impl Menu {
     /// If the menu is not focused, selection will point to a non-existing item (-1)
     pub fn is_focused(&self) -> bool {
         self.focused
+    }
+
+    /// Return the current item that is selected.
+    pub fn get_select_idx(&self) -> u32 {
+        self.select_idx
     }
 
     /// Returns the button that must be pressed in order to select the previous menu item.
