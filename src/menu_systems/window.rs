@@ -1,6 +1,21 @@
 use text_buffer::{Color, TextBuffer};
 
-/// Represents a window that clears everything in it's way and is able to limit the cursor within it's bounds.
+/// Represents a window that clears everything in it's way and is able to limit the cursor within it's bounds with `set_limits`.
+///
+/// Windows API and usage is still subject to change in future updates.
+///
+/// For example a 2x2 window creates a 2x2 area and surrounds it with borders.
+/// ```
+/// use glerminal::menu_systems::Window;
+///
+/// Window::new(2, 2);
+///
+/// // Creates a window that looks like (box-drawing characters used in places of borders)
+/// // ████
+/// // █  █
+/// // █  █
+/// // ████
+/// ```
 pub struct Window {
     x: u32,
     y: u32,
