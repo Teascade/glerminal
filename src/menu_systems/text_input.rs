@@ -8,8 +8,22 @@ use Events;
 use MouseButton;
 use VirtualKeyCode;
 
-/// Represents a text-input field, that can be focused, takes in events (.keyboard, text),
+/// Represents a text-input field, that can be focused, takes in events (keyboard events as text),
 /// and it's possible to get the input text with get_text
+///
+/// TextInput.filter is used to determine which symbols are registered and then written.
+/// Example of a filter that will take in latin alphabetic letters and numerals:
+/// ```
+/// use glerminal::menu_systems::{Filter, TextInput};
+/// use glerminal::VirtualKeyCode::Equals
+///
+/// let filter = Filter::empty_filter()
+///     .with_basic_latin_characters() // Add basic latin letters
+///     .with_basic_numerals()         // Add basic numerals
+///     .with_pair(Equals, '=');       // Add custom pair
+///
+/// TextInput::new(None, None).with_filter(filter);
+/// ```
 #[derive(Debug, Clone)]
 pub struct TextInput {
     /// Background-color for when the field is unfocused
@@ -50,7 +64,7 @@ pub struct TextInput {
 }
 
 impl TextInput {
-    /// Initializes a new TextInput with the given position and width
+    /// Initializes a new TextInput with the given min and max width
     pub fn new<T: Into<Option<u32>>, U: Into<Option<u32>>>(
         min_width: T,
         max_width: U,

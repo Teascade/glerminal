@@ -5,7 +5,16 @@ use MouseButton;
 use VirtualKeyCode;
 
 #[derive(Debug, Clone)]
-/// Represents a simple text item that by default can not be selected, but optionally can be selected and pressed.
+/// Represents a simple text item that by default can not be selected,
+/// but optionally can be selected and pressed like a button.
+///
+/// Example:
+/// ```
+/// use glerminal::menu_systems::TextItem;
+///
+/// TextItem::new("Just a text label");
+/// TextItem::new("A button that can be pressed").with_is_button(true);
+/// ```
 pub struct TextItem {
     /// Foreground color for when the button is not focused
     pub fg_color_unfocused: Color,
