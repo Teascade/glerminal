@@ -99,6 +99,9 @@ impl CheckboxGroup {
 }
 
 /// Represents a Checkbox that can be checked or unchecked, and it's checked-status can be get with `is_checked`.
+/// 
+/// See [CheckboxGroup](struct.CheckboxGroup.html) to limit how checkboxes can be checked together.
+/// 
 /// For example:
 /// ```
 /// use glerminal::menu_systems::Checkbox;

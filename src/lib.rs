@@ -6,6 +6,9 @@
 //! - [**terminal**](#terminal)
 //! - [**text_buffer**](#text_buffer)
 //!
+//!
+//! Also see [**Features**](#features) list to see what other features exist.
+//!
 //! Starting with a simple [example](#example) might be wise though;
 //!
 //! After that you should browse through the rest of this guide and read about [`terminal`](terminal) and [`text_buffer`](text_buffer) documentations respectively
@@ -55,6 +58,14 @@
 //! With this struct you can simply pass a string that the parser will parse, and the `TextBuffer` will then change colors or shakiness of your text accordingly.
 //!
 //! Examples can be found at [`TextBuffer`](struct.TextBuffer.html) struct.
+//!
+//! # Features
+//! There are two features for Glerminal that can be enabled (or disabled) to enable or disable wanted features.
+//!
+//! | Feature name             | What it enables                                             |
+//! |--------------------------|-------------------------------------------------------------|
+//! | parser _(on by default)_ | enables the [Praser](struct.Parser.html) struct.            |
+//! | menu_systems             | enables the [menu_systems](menu_systems/index.html) module. |
 #![warn(missing_docs)]
 
 #[cfg(test)]

@@ -7,6 +7,8 @@ use regex::Regex;
 
 /// Represents a parser, that is able to read given texts and use [`TextBuffer`](struct.TextBuffer.html) accordingly, to write text and styles matching to the text.
 ///
+///**Note:** This struct requires _parser_ feature to be enabled.
+///
 /// See [TextBuffer](struct.TextBuffer.html) for examples and more detailed documentation.
 pub struct Parser {
     colors: HashMap<String, Color>,

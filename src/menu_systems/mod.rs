@@ -1,3 +1,64 @@
+//! Menu systems is a module that allows easy creation and usage of [`Menu`](struct.Menu.html)s.
+//! Examples of what a menu can be, is ncurses.
+//!
+//! Simply lists of [`InterfaceItem`](trait.InterfaceItem.html)s, that the user can browse through, press buttons,
+//! input text, do whatever you want with GUI items generally. You can even make your own `InterfaceItem`s if you want
+//!
+//! Current pre-implemented items to use in Menus are
+//! - [TextItem](struct.TextItem.html), functions as a text label and a button.
+//! - [TextInput](struct.TextInput.html), can accept text input that can be get with `get_text`.
+//! - [Dialog](struct.Dialog.html), can be used to display large volumes of text compactly.
+//! - [Checkbox](struct.Checkbox.html), can be checked (and unchecked), like a check- or radiobox (if using [CheckboxGroup](struct.CheckboxGroup.html)).
+//!
+//! **Note:** This module requires _menu_systems_ feature to be enabled.
+//!
+//! Example usage of menu-systems:
+//! (Same example can be found in [`Menu`](struct.Menu.html))
+//! ```no_run
+//! use glerminal::menu_systems::{Filter, Menu, MenuList, MenuPosition, TextInput, TextItem};
+//! use glerminal::{TerminalBuilder, TextBuffer};
+//!
+//! // Initialize terminal and text buffer
+//! let terminal = TerminalBuilder::new().build();
+//! let mut text_buffer;
+//! match TextBuffer::new(&terminal, (80, 24)) {
+//!     Ok(buffer) => text_buffer = buffer,
+//!     Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
+//! }
+//!
+//! // Create three example InterfaceItems to use
+//! let mut label = TextItem::new("Text label");
+//! let mut button = TextItem::new("Press me!").with_is_button(true);
+//! let mut input = TextInput::new(None, 10)
+//!     .with_filter(Filter::empty_filter().with_basic_latin_characters())
+//!     .with_prefix("Name: [")
+//!     .with_suffix("]");
+//!
+//! // Create the actual menu
+//! let mut menu = Menu::new().with_focus(true);
+//!
+//! while terminal.refresh() {
+//!
+//!     // Update the menu. Update returns weather it should be redrawn.
+//!     if menu.update(
+//!         &terminal.get_current_events(),
+//!         terminal.delta_time(),
+//!         &text_buffer,
+//!         &mut MenuList::new()
+//!             .with_item(&mut label, None)
+//!             .with_item(&mut button, MenuPosition::RelativeToLast(0, 1))
+//!             // Use MenuPosition to make a gap between label and button
+//!             .with_item(&mut input, None),
+//!     ) {
+//!         text_buffer.clear();              // Clear the screen
+//!         menu.draw(&mut text_buffer);      // Draw the menu
+//!         terminal.flush(&mut text_buffer); // Apply changes; flush
+//!     }
+//!
+//!     terminal.draw(&text_buffer);
+//! }
+//! ```
+
 macro_rules! with_set_colors {
     ($name:ident) => {
         /// Set the initial colors when it is unfocused
