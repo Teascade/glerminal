@@ -15,7 +15,7 @@ use VirtualKeyCode;
 /// Example of a filter that will take in latin alphabetic letters and numerals:
 /// ```
 /// use glerminal::menu_systems::{Filter, TextInput};
-/// use glerminal::VirtualKeyCode::Equals
+/// use glerminal::VirtualKeyCode::Equals;
 ///
 /// let filter = Filter::empty_filter()
 ///     .with_basic_latin_characters() // Add basic latin letters
