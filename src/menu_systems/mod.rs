@@ -326,8 +326,8 @@ impl InterfaceItemBase {
 }
 
 /// Represents a HashMap from VirtualKeyCode to character. Used to filter out which characters get registered by the textinput.
-/// Use `Filter::empty_filter()` to create a new filter and for example `.with_basic_latin_characters` to add basic latin characters to the filter.
 ///
+/// Use `Filter::empty_filter()` to create a new filter and for example `.with_basic_latin_characters` to add basic latin characters to the filter.  
 /// Use `.with_pair` or `insert` to create your own filters.
 #[derive(Clone, Debug)]
 pub struct Filter {
