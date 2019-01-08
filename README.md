@@ -18,6 +18,7 @@ Currently supported features include:
 - Drawing of multiple text buffers (grids of text) on top of eachother
 - A menu system that allows for easy creation and usage of menus for selecting and pressing stuff! (See docs for more)
   - Requires the `menu_systems` optional feature to be enabled
+- Write any characters up to 16-bits that your font supports
   
 ***Note: Requires OpenGL 3.3+ support***
 

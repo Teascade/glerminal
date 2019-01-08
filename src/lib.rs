@@ -7,7 +7,7 @@
 //! - [**text_buffer**](#text_buffer)
 //!
 //!
-//! Also see [**Features**](#features) list to see what other features exist.
+//! Also see [**Features**](#features) list to see what other exciting features exist.
 //!
 //! Starting with a simple [example](#example) might be wise though;
 //!

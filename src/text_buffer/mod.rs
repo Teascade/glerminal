@@ -18,7 +18,9 @@ static mut INDEX_COUNTER: u32 = 0;
 /// move the cursor around, clear the screen and write with the cursor (using the cursor's styles).
 /// It's often the most efficient way to write things, especially if you have a very structured way of displaying things, but for a more simple-to-use
 /// way of writing, that isn't as structured ie. for a dialogue, you might want to use the Parser.  
+///
 /// As of version 0.2.0, drawing multiple `TextBuffer`s on top of eachother is also possible.
+/// As of this version writing 16-bit characters is also possible.
 ///
 /// `Parser` is a struct added as a default feature, that is able to take in a piece of text and then parse it and change the cursor styles easily using the `TextBuffer`.
 /// The `Parser` can handle tags imilar to BBCode tags, and can change fg, bg and shake, meaning the following tags are available to use mid-text:
