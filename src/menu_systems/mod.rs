@@ -164,6 +164,70 @@ use glutin::VirtualKeyCode;
 use text_buffer::TextBuffer;
 
 /// Represents a single menu item: an item that is somewhere, can handle events and can be drawn.
+///
+/// Current pre-implemented items to use in Menus are
+/// - [TextItem](struct.TextItem.html), functions as a text label and a button.
+/// - [TextInput](struct.TextInput.html), can accept text input that can be get with `get_text`.
+/// - [Dialog](struct.Dialog.html), can be used to display large volumes of text compactly.
+/// - [Checkbox](struct.Checkbox.html), can be checked (and unchecked), like a check- or radiobox (if using [CheckboxGroup](struct.CheckboxGroup.html)).
+///
+/// You can make your own InterfaceItems that you can create, draw, and use for Menus by implementing InterfaceItem.
+/// To implement InterfaceItem, you need to derive Clone too though.
+///
+/// A simple example of how to make an InterfaceItem that you can use for Menus
+/// ```
+/// use glerminal::menu_systems::{InterfaceItem, InterfaceItemBase};
+/// use glerminal::{Events, TextBuffer};
+///
+/// #[derive(Clone)]
+/// struct TextLabel {
+///     base: InterfaceItemBase,
+///     text: String,
+/// }
+///
+/// impl TextLabel {
+///     pub fn new(text: String) -> TextLabel {
+///         TextLabel {
+///             base: InterfaceItemBase::new(false),
+///             text: text,
+///         }
+///     }
+/// }
+///
+/// impl InterfaceItem for TextLabel {
+///     fn get_base(&self) -> &InterfaceItemBase {
+///         &self.base
+///     }
+///
+///     fn get_mut_base(&mut self) -> &mut InterfaceItemBase {
+///         &mut self.base
+///     }
+///
+///     fn get_total_width(&self) -> u32 {
+///         self.text.len() as u32
+///     }
+///
+///     fn get_total_height(&self) -> u32 {
+///         1
+///     }
+///
+///     fn draw(&mut self, text_buffer: &mut TextBuffer) {
+///         self.base.dirty = false;
+///         let pos = self.base.get_pos();
+///
+///         text_buffer.change_cursor_fg_color([0.2, 0.2, 0.2, 1.0]);
+///         text_buffer.change_cursor_bg_color([0.0; 4]);
+///         text_buffer.move_cursor(pos.0 as i32, pos.1 as i32);
+///         text_buffer.write(self.text.clone());
+///     }
+///
+///     fn handle_events(&mut self, _: &Events) -> bool {
+///         false
+///     }
+///
+///     fn update(&mut self, _: f32) {}
+/// }
+/// ```
 pub trait InterfaceItem: InterfaceItemClone {
     /// Get the `InterfaceItemBase`
     fn get_base(&self) -> &InterfaceItemBase;
