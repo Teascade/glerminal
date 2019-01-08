@@ -61,7 +61,7 @@ impl<'a> MenuList<'a> {
 /// Determines the direction where the Menu will expand/grow from it's position
 #[derive(Clone, Copy)]
 pub enum GrowthDirection {
-    /// Expand it lownwards
+    /// Expand it downwards
     Down,
     /// Expand it upwards
     Up,

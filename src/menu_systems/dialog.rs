@@ -8,6 +8,22 @@ use text_buffer::{Color, TextBuffer};
 use std::iter::repeat;
 
 /// Represents a dialog-window, meaning a window of text that can be scrolled up and down.
+///
+/// For example
+/// ```
+/// use glerminal::menu_systems::Dialog;
+///
+/// Dialog::new(12, None, 3)
+///     .with_text("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis faucibus.");
+///
+/// // Looks like:
+///
+/// // Lorem ipsum
+/// // dolor sit
+/// // amet,
+///
+/// // And can be scrolled down to reveal more text.
+/// ```
 #[derive(Debug, Clone)]
 pub struct Dialog {
     /// Background-color when the dialog is unfocused

@@ -8,8 +8,10 @@ use VirtualKeyCode;
 
 /// Represents a group of checkboxes that can be managed like they were radio buttons.
 ///
-/// This allows you to make a CheckboxGroup of ie. 3 checkboxes and only one of them will be selected at a time.
-/// Updating this CheckboxGroup with the given Checkboxes will ensure that only one of the Checkboxes will remain checked.
+/// This allows you to make a CheckboxGroup of ie. 3 checkboxes and only one of them will be selected at a time,
+/// unless force one selected is toggled on, in which case the index given with it will be selected at first, and the group will disallow having none selected.
+///
+/// Updating this CheckboxGroup with the given Checkboxes will ensure that the functionality explained above will be enforced.
 pub struct CheckboxGroup {
     selected_idx: Option<u32>,
     force_one_checked: Option<u32>,
@@ -96,7 +98,21 @@ impl CheckboxGroup {
     }
 }
 
-/// Represents a Checkbox that can be checked or unchecked, and it's checkedness can be get.
+/// Represents a Checkbox that can be checked or unchecked, and it's checked-status can be get with `is_checked`.
+/// For example:
+/// ```
+/// use glerminal::menu_systems::Checkbox;
+///
+/// Checkbox::new("Generate world: ")
+///     .with_prefix("<")
+///     .with_suffix(">")
+///     .with_checked_text("O");
+///
+/// // Creates a checbox that looks unchecked:
+/// // Generate world: < >
+/// // And checked:
+/// // Generate world: <O>
+/// ```
 #[derive(Debug, Clone)]
 pub struct Checkbox {
     /// Foreground color for when the checkbox is not focused
