@@ -55,6 +55,7 @@ impl Display {
         clear_color: (f32, f32, f32, f32),
         visibility: bool,
         text_buffer_aspect_ratio: bool,
+        vsync: bool,
     ) -> Display {
         let (width, height) = dimensions;
         let aspect_ratio = width as f32 / height as f32;
@@ -65,7 +66,7 @@ impl Display {
             .with_dimensions(width, height)
             .with_visibility(visibility);
         let context = ContextBuilder::new()
-            .with_vsync(true)
+            .with_vsync(vsync)
             .with_gl(GlRequest::Latest);
         let window = match GlWindow::new(window, context, &events_loop) {
             Ok(window) => window,

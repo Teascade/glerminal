@@ -398,8 +398,7 @@ impl Filter {
     ///
     /// Includes `'`, `\`, `:`, `.`, `;`, `,`, `=`, `-`, `*`, `_`, `/`, `[`, `]`
     ///
-    /// Unfortunately VirtualKeyCode doesn't seem to support other special characters,
-    /// using scancodes instead of VirtualKeyCodes is a planned feature though.
+    /// Unfortunately VirtualKeyCode doesn't seem to support other special characters currently.
     pub fn with_basic_special_symbols(mut self) -> Filter {
         self.map.insert(VirtualKeyCode::Apostrophe, '\'');
         self.map.insert(VirtualKeyCode::Backslash, '\\');

@@ -24,6 +24,7 @@ pub struct TerminalBuilder {
     visibility: bool,
     headless: bool,
     text_buffer_aspect_ratio: bool,
+    vsync: bool,
 }
 
 #[allow(dead_code)]
@@ -38,6 +39,7 @@ impl TerminalBuilder {
             visibility: true,
             headless: false,
             text_buffer_aspect_ratio: true,
+            vsync: true,
         }
     }
 
@@ -89,6 +91,12 @@ impl TerminalBuilder {
         self
     }
 
+    /// Enable/Disable vsync. Enabled by default.
+    pub fn with_vsync(mut self, vsync: bool) -> TerminalBuilder {
+        self.vsync = vsync;
+        self
+    }
+
     /// Builds the actual terminal and opens the window
     pub fn build(self) -> Terminal {
         Terminal::new(
@@ -99,6 +107,7 @@ impl TerminalBuilder {
             self.visibility,
             self.headless,
             self.text_buffer_aspect_ratio,
+            self.vsync,
         )
     }
 }
@@ -161,6 +170,7 @@ impl Terminal {
         visibility: bool,
         headless: bool,
         text_buffer_aspect_ratio: bool,
+        vsync: bool,
     ) -> Terminal {
         let display;
         let program;
@@ -178,6 +188,7 @@ impl Terminal {
                 clear_color,
                 visibility,
                 text_buffer_aspect_ratio,
+                vsync,
             ));
             program = renderer::create_program(renderer::VERT_SHADER, renderer::FRAG_SHADER);
             background_program =
