@@ -1,5 +1,5 @@
 # GLerminal, an OpenGL terminal
-[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=0.1.8)](https://travis-ci.org/Teascade/glerminal)
+[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=0.2.0)](https://travis-ci.org/Teascade/glerminal)
 [![Docs](https://docs.rs/glerminal/badge.svg)](https://docs.rs/glerminal)
 [![Crates.io](https://img.shields.io/crates/v/glerminal.svg)](https://crates.io/crates/glerminal)
 
@@ -16,6 +16,8 @@ Currently supported features include:
 - A text-parser that will make it easy to write whatever you want and make it look cool!
   - Parseable text example: `"Hello, [fg=red]this is red[/fg] and [shake=1.0]this is shaking[/shake]."`
 - Drawing of multiple text buffers (grids of text) on top of eachother
+- A menu system that allows for easy creation and usage of menus for selecting and pressing stuff! (See docs for more)
+  - Requires the `menu_systems` optional feature to be enabled
   
 ***Note: Requires OpenGL 3.3+ support***
 
@@ -31,7 +33,7 @@ Extensive documentation can be found at: [docs.rs][docs].
 Just add the following line to your `Cargo.toml`:
 ```toml
 [dependencies]
-glerminal = "0.1"
+glerminal = "0.2"
 ```
 
 And simply add the following line to your `main.rs`:
