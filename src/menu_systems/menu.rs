@@ -93,6 +93,9 @@ pub enum FocusSelection {
 
 /// Represents a Menu that can contain [`InterfaceItem`](trait.InterfaceItem.html)s in a list,
 /// which through with inputs the user can focus an item and interact with it.
+/// 
+/// By default selection through Menus is done with a keyboard. It is possible to make selection with a mouse possible by changing [`FocusSelection`](enum.FocusSelection.html)
+/// with [`with_focus_selection`](#method.with_focus_selection) or [`set_focus_selection`](#method.set_focus_selection)
 ///
 /// Example menu usage:
 /// ```no_run

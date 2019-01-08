@@ -2,7 +2,8 @@
 //! Examples of what a menu can be, is ncurses.
 //!
 //! Simply lists of [`InterfaceItem`](trait.InterfaceItem.html)s, that the user can browse through, press buttons,
-//! input text, do whatever you want with GUI items generally. You can even make your own `InterfaceItem`s if you want
+//! input text, do whatever you want with GUI items generally. You can even make your own `InterfaceItem`s if you want.  
+//! Selection in [`Menu`](struct.Menu.html)s works with keyboard and mouse, changeable with [`FocusSelection`](enum.FocusSelection.html).
 //!
 //! Current pre-implemented items to use in Menus are
 //! - [TextItem](struct.TextItem.html), functions as a text label and a button.
