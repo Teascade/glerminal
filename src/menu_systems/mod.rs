@@ -123,9 +123,7 @@ macro_rules! with_base {
     ($name:ident) => {
         /// Sets the initial position
         pub fn with_pos(mut self, pos: (u32, u32)) -> $name {
-            let (x, y) = pos;
-            self.base.x = x;
-            self.base.y = y;
+            self.base.set_pos(pos);
             self
         }
 
@@ -177,7 +175,7 @@ use text_buffer::TextBuffer;
 /// A simple example of how to make an InterfaceItem that you can use for Menus
 /// ```
 /// use glerminal::menu_systems::{InterfaceItem, InterfaceItemBase};
-/// use glerminal::{Events, TextBuffer};
+/// use glerminal::{with_base, Events, TextBuffer};
 ///
 /// #[derive(Clone)]
 /// struct TextLabel {
@@ -192,6 +190,8 @@ use text_buffer::TextBuffer;
 ///             text: text,
 ///         }
 ///     }
+///
+///     with_base!(TextLabel);
 /// }
 ///
 /// impl InterfaceItem for TextLabel {
