@@ -216,7 +216,7 @@ impl Terminal {
         timer.update();
         drop(timer);
 
-        if let Some(ref display) = self.display {
+        let running = if let Some(ref display) = self.display {
             let events = self.get_current_events();
             if events.keyboard.was_just_pressed(VirtualKeyCode::F3) {
                 self.set_debug(!self.debug.get());
@@ -224,7 +224,12 @@ impl Terminal {
             display.refresh() && self.running.get()
         } else {
             self.running.get()
+        };
+
+        if running && !self.headless {
+            renderer::clear();
         }
+        running
     }
 
     /// Refreshes the screen and returns whether the while-loop should continue (is the program running)
@@ -234,11 +239,16 @@ impl Terminal {
         timer.update();
         drop(timer);
 
-        if let Some(ref display) = self.display {
+        let running = if let Some(ref display) = self.display {
             display.refresh() && self.running.get()
         } else {
             self.running.get()
+        };
+
+        if running && !self.headless {
+            renderer::clear();
         }
+        running
     }
 
     /// Flushes `TextBuffer`, taking it's character-grid and making it show for the next draw.
@@ -248,17 +258,8 @@ impl Terminal {
         text_buffer.swap_buffers(&self.font);
     }
 
-    /// Clears the screen.
-    pub fn clear(&self) {
-        if !self.headless {
-            renderer::clear();
-        }
-    }
-
-    /// Draws a single `TextBuffer`. Does not clear at first to enable drawing multiple text buffers.
-    /// Only use `clear` + `draw_single` or `draw`, not both.
-    /// See `clear` for clearing before drawing.
-    pub fn draw_single(&self, text_buffer: &TextBuffer) {
+    /// Draws a `TextBuffer`. This should be called every frame for each text buffer.
+    pub fn draw(&self, text_buffer: &TextBuffer) {
         if let (&Some(ref display), &Some(ref mesh), &Some(ref background_mesh)) = (
             &self.display,
             &text_buffer.mesh,
@@ -283,12 +284,6 @@ impl Terminal {
             );
             renderer::draw(self.get_program(), proj_matrix, time, mesh);
         }
-    }
-
-    /// Clears and draws a `TextBuffer`, used if only using one `TextBuffer`. This should be called every frame.
-    pub fn draw(&self, text_buffer: &TextBuffer) {
-        self.clear();
-        self.draw_single(&text_buffer);
     }
 
     /// Gets the current Events, must be retrieved every time you want new events. (ie. every frame)

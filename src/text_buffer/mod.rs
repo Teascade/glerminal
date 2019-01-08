@@ -106,9 +106,13 @@ static mut INDEX_COUNTER: u32 = 0;
 /// foreground_text_buffer.write("I am in the foreground");
 ///
 /// // Flush to "apply changes"
-/// // The two texts will appear on top of eachother because they are written in the same location
 /// terminal.flush(&mut background_text_buffer);
 /// terminal.flush(&mut foreground_text_buffer);
+///
+/// // Draw the text buffers
+/// // The two texts will appear on top of eachother because they are written in the same location
+/// terminal.draw(&background_text_buffer);
+/// terminal.draw(&foreground_text_buffer);
 /// ```
 pub struct TextBuffer {
     index: u32,

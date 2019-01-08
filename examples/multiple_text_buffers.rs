@@ -20,9 +20,7 @@ fn main() {
         Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
     }
 
-
     while terminal.refresh() {
-
         text_buffer_bg.clear();
         text_buffer_bg.move_cursor(0, 0);
         text_buffer_bg.write("On Background!");
@@ -39,8 +37,7 @@ fn main() {
 
         terminal.flush(&mut text_buffer_overlay);
 
-        terminal.clear();
-        terminal.draw_single(&text_buffer_bg);
-        terminal.draw_single(&text_buffer_overlay);
+        terminal.draw(&text_buffer_bg);
+        terminal.draw(&text_buffer_overlay);
     }
 }
