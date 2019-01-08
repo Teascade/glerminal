@@ -4,10 +4,12 @@ use text_buffer::{Color, TextBuffer};
 
 mod events;
 mod font;
-mod menu_systems;
 mod parser;
 mod terminal;
 mod text_buffer;
+
+#[cfg(feature = "menu_systems")]
+mod menu_systems;
 
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};

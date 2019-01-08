@@ -11,5 +11,5 @@ notifications:
   email: never
 
 script:
-  - RUST_BACKTRACE=1 cargo test -- --test-threads=1
-  - RUST_BACKTRACE=1 cargo test --release -- --test-threads=1
+  - RUST_BACKTRACE=1 cargo test --all-features -- --test-threads=1
+  - RUST_BACKTRACE=1 cargo test --all-features --release -- --test-threads=1
