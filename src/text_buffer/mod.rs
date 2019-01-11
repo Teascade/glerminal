@@ -6,15 +6,13 @@ use renderer::backgroundmesh::BackgroundMesh;
 use renderer::textbuffermesh::TextBufferMesh;
 use terminal::Terminal;
 
-use std::sync::atomic::{AtomicUsize, Ordering};
-
 /// Represents a color with values from 0.0 to 1.0 (red, green, blue, alpha)
 pub type Color = [f32; 4];
 
 /// Represents a raw encoded character.
 pub type RawCharacter = u16;
 
-static INDEX_COUNTER: AtomicUsize = AtomicUsize::new(0);
+static mut INDEX_COUNTER: u32 = 0;
 
 /// The `TextBuffer` acts as a "state machine" where you can set foreground color, background color and shakiness for the cursor,
 /// move the cursor around, clear the screen and write with the cursor (using the cursor's styles).
@@ -170,7 +168,11 @@ impl TextBuffer {
         let true_height = height * terminal.font.line_height as i32;
         let true_width = width * terminal.font.size as i32;
 
-        let index = INDEX_COUNTER.fetch_add(1, Ordering::Relaxed) as u32;
+        let index;
+        unsafe {
+            index = INDEX_COUNTER;
+            INDEX_COUNTER += 1;
+        }
         Ok(TextBuffer {
             index: index,
             chars,
