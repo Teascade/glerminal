@@ -14,7 +14,7 @@ fn aspect_ratio() {
         let (text_buffer, terminal) = test_setup_text_buffer_with_terminal((width, height));
         let ar_height = height * terminal.font.line_height as i32;
         let ar_width = width * terminal.font.size as i32;
-        let ar = ar_width as f32 / ar_height as f32;
+        let ar = ar_width as f64 / ar_height as f64;
 
         assert_eq!(text_buffer.aspect_ratio, ar);
     });

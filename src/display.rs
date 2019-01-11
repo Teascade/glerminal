@@ -10,25 +10,26 @@ use crate::TextBuffer;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 
+use glutin::dpi::LogicalSize;
 #[cfg(test)]
 use glutin::VirtualKeyCode;
 
 #[derive(Clone)]
 pub struct TextBufferDisplayData {
     pub proj_matrix: Matrix4,
-    pub aspect_ratio: f32,
-    pub overflows: (f32, f32),
-    pub relative_dimensions: (f32, f32),
+    pub aspect_ratio: f64,
+    pub overflows: (f64, f64),
+    pub relative_dimensions: (f64, f64),
 }
 
 impl TextBufferDisplayData {
-    pub fn new(width: u32, height: u32, text_buffer: &TextBuffer) -> TextBufferDisplayData {
+    pub fn new(width: f64, height: f64, text_buffer: &TextBuffer) -> TextBufferDisplayData {
         let (overflows, relative_dimensions) =
             Display::calc_overflows_dimensions(width, height, text_buffer.aspect_ratio);
         TextBufferDisplayData {
             proj_matrix: renderer::create_proj_matrix(
                 (width as f32, height as f32),
-                text_buffer.aspect_ratio,
+                text_buffer.aspect_ratio as f32,
             ),
             aspect_ratio: text_buffer.aspect_ratio,
             overflows: overflows,
@@ -40,12 +41,12 @@ impl TextBufferDisplayData {
 pub struct Display {
     pub proj_matrix: Cell<Matrix4>,
     display_datas: RefCell<HashMap<u32, TextBufferDisplayData>>,
-    aspect_ratio: Cell<f32>,
+    aspect_ratio: Cell<f64>,
     window: GlWindow,
     events: RefCell<Events>,
     events_loop: RefCell<EventsLoop>,
-    width: Cell<u32>,
-    height: Cell<u32>,
+    width: Cell<f64>,
+    height: Cell<f64>,
 }
 
 impl Display {
@@ -58,12 +59,15 @@ impl Display {
         vsync: bool,
     ) -> Display {
         let (width, height) = dimensions;
-        let aspect_ratio = width as f32 / height as f32;
+        let width = width as f64;
+        let height = height as f64;
+
+        let aspect_ratio = width / height;
         let title = title.into();
         let events_loop = EventsLoop::new();
         let window = WindowBuilder::new()
             .with_title(title)
-            .with_dimensions(width, height)
+            .with_dimensions(LogicalSize::new(width, height))
             .with_visibility(visibility);
         let context = ContextBuilder::new()
             .with_vsync(vsync)
@@ -89,7 +93,8 @@ impl Display {
             panic!("GL version too low: OpenGL {}", gl_version);
         }
 
-        let proj_matrix = renderer::create_proj_matrix((width as f32, height as f32), aspect_ratio);
+        let proj_matrix =
+            renderer::create_proj_matrix((width as f32, height as f32), aspect_ratio as f32);
 
         let mut events = Events::new(text_buffer_aspect_ratio);
         let (display_overflows, display_relative_dimensions) =
@@ -107,15 +112,15 @@ impl Display {
             aspect_ratio: Cell::new(aspect_ratio),
             proj_matrix: Cell::new(proj_matrix),
             display_datas: RefCell::new(HashMap::new()),
-            width: Cell::new(width),
-            height: Cell::new(height),
+            width: Cell::new(width as f64),
+            height: Cell::new(height as f64),
         }
     }
 
     pub fn refresh(&self) -> bool {
         let mut running = true;
 
-        let mut dimensions: Option<(u32, u32)> = None;
+        let mut dimensions: Option<(f64, f64)> = None;
 
         let events = self.events.borrow_mut().clear_just_lists();
         drop(events);
@@ -126,11 +131,14 @@ impl Display {
             .borrow_mut()
             .poll_events(|event| match event {
                 Event::WindowEvent { event, .. } => match event {
-                    WindowEvent::Closed => {
+                    WindowEvent::Destroyed => {
                         running = false;
                     }
-                    WindowEvent::Resized(width, height) => {
-                        dimensions = Some((width, height));
+                    WindowEvent::CloseRequested => {
+                        running = false;
+                    }
+                    WindowEvent::Resized(size) => {
+                        dimensions = Some((size.width, size.height));
                     }
                     WindowEvent::KeyboardInput { input, .. } => {
                         if let (state, Some(keycode)) = (input.state, input.virtual_keycode) {
@@ -147,8 +155,8 @@ impl Display {
                         .update_button_press(button, state == ElementState::Pressed),
                     WindowEvent::CursorMoved { position, .. } => {
                         self.events.borrow_mut().cursor.update_location((
-                            position.0 as f32 / self.width.get() as f32,
-                            position.1 as f32 / self.height.get() as f32,
+                            position.x / self.width.get(),
+                            position.y / self.height.get(),
                         ));
                     }
                     WindowEvent::CursorLeft { device_id: _ } => {
@@ -204,13 +212,13 @@ impl Display {
     fn update_view(&self) {
         self.proj_matrix.set(renderer::create_proj_matrix(
             (self.width.get() as f32, self.height.get() as f32),
-            self.aspect_ratio.get(),
+            self.aspect_ratio.get() as f32,
         ));
 
         for data in self.display_datas.borrow_mut().values_mut() {
             data.proj_matrix = renderer::create_proj_matrix(
                 (self.width.get() as f32, self.height.get() as f32),
-                data.aspect_ratio,
+                data.aspect_ratio as f32,
             );
 
             let (overflows, relative_dimensions) = Display::calc_overflows_dimensions(
@@ -224,7 +232,7 @@ impl Display {
 
         self.update_event_display_datas(self.display_datas.borrow().clone());
 
-        renderer::update_viewport((self.width.get(), self.height.get()));
+        renderer::update_viewport((self.width.get() as u32, self.height.get() as u32));
     }
 
     fn update_event_display_datas(&self, datas: HashMap<u32, TextBufferDisplayData>) {
@@ -242,18 +250,15 @@ impl Display {
     }
 
     fn calc_overflows_dimensions(
-        width: u32,
-        height: u32,
-        aspect_ratio: f32,
-    ) -> ((f32, f32), (f32, f32)) {
-        let width = width as f32;
-        let height = height as f32;
-
+        width: f64,
+        height: f64,
+        aspect_ratio: f64,
+    ) -> ((f64, f64), (f64, f64)) {
         let true_width = height * aspect_ratio;
         let true_height = width / aspect_ratio;
 
-        let mut overflow_width = 0f32;
-        let mut overflow_height = 0f32;
+        let mut overflow_width = 0f64;
+        let mut overflow_height = 0f64;
         let mut relative_width = 1.0;
         let mut relative_height = 1.0;
         if true_width < width {
