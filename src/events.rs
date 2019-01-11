@@ -56,11 +56,11 @@ impl Events {
 /// See Events-documentation for usage information.
 #[derive(Clone)]
 pub struct Cursor {
-    location: Option<(f64, f64)>,
+    location: Option<(f32, f32)>,
     just_moved: bool,
     use_text_buffer_overflows: bool,
-    display_overflows: (f64, f64),
-    display_relative_dimensions: (f64, f64),
+    display_overflows: (f32, f32),
+    display_relative_dimensions: (f32, f32),
     text_buffer_datas: HashMap<u32, TextBufferDisplayData>,
 }
 
@@ -78,8 +78,8 @@ impl Cursor {
 
     pub(crate) fn update_display_datas(
         &mut self,
-        display_overflows: (f64, f64),
-        display_relative_dimensions: (f64, f64),
+        display_overflows: (f32, f32),
+        display_relative_dimensions: (f32, f32),
         datas: HashMap<u32, TextBufferDisplayData>,
     ) {
         self.display_overflows = display_overflows;
@@ -87,7 +87,7 @@ impl Cursor {
         self.text_buffer_datas = datas;
     }
 
-    pub(crate) fn update_location(&mut self, location: (f64, f64)) {
+    pub(crate) fn update_location(&mut self, location: (f32, f32)) {
         self.just_moved = true;
 
         self.location = Some((location.0, location.1));
@@ -128,8 +128,8 @@ impl Cursor {
                 let y = (location.1 - overflows.1) * relative_dimensions.1;
 
                 Some((
-                    (x * text_buffer.width as f64).floor() as i32,
-                    (y * text_buffer.height as f64).floor() as i32,
+                    (x * text_buffer.width as f32).floor() as i32,
+                    (y * text_buffer.height as f32).floor() as i32,
                 ))
             } else {
                 None

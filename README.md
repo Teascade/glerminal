@@ -39,7 +39,7 @@ glerminal = "0.2"
 
 And then using this crate is quite simple:
 ```rust
-extern crate glerminal; // Not required if using 2018 edition of Rust
+extern crate glerminal; // Not required if running 2018 edition
 
 use glerminal::terminal::TerminalBuilder;
 use glerminal::text_buffer::TextBuffer;

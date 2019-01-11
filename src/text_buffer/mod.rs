@@ -127,7 +127,7 @@ pub struct TextBuffer {
     pub(crate) mesh: Option<TextBufferMesh>,
     pub(crate) background_mesh: Option<BackgroundMesh>,
 
-    pub(crate) aspect_ratio: f64,
+    pub(crate) aspect_ratio: f32,
 
     cursor: TermCursor,
 
@@ -186,7 +186,7 @@ impl TextBuffer {
                 shakiness: 0.0,
             },
 
-            aspect_ratio: true_width as f64 / true_height as f64,
+            aspect_ratio: true_width as f32 / true_height as f32,
 
             limits: TermLimits::new(width as u32, height as u32),
             dirty: true,
