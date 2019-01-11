@@ -1,13 +1,13 @@
 use super::InterfaceItem;
-use events::Events;
+use crate::events::Events;
+use crate::text_buffer::TextBuffer;
 use glutin::VirtualKeyCode;
-use text_buffer::TextBuffer;
 
 /// Represents a list of InterfaceItems that is passed to the Menu when updating
 ///
 /// MenuList is used to draw and handle updates in the Menu and will also determines the order of the InferfaceItems in the menu.
 pub struct MenuList<'a> {
-    items_ref: Vec<Box<&'a mut InterfaceItem>>,
+    items_ref: Vec<Box<&'a mut dyn InterfaceItem>>,
     positions: Vec<MenuPosition>,
 }
 
@@ -49,7 +49,7 @@ impl<'a> MenuList<'a> {
         }
     }
 
-    pub(crate) fn get_cloned_list(&self) -> Vec<Box<InterfaceItem>> {
+    pub(crate) fn get_cloned_list(&self) -> Vec<Box<dyn InterfaceItem>> {
         let mut list = Vec::new();
         for item in &self.items_ref {
             list.push(item.clone_box());
@@ -93,7 +93,7 @@ pub enum FocusSelection {
 
 /// Represents a Menu that can contain [`InterfaceItem`](trait.InterfaceItem.html)s in a list,
 /// which through with inputs the user can focus an item and interact with it.
-/// 
+///
 /// By default selection through Menus is done with a keyboard. It is possible to make selection with a mouse possible by changing [`FocusSelection`](enum.FocusSelection.html)
 /// with [`with_focus_selection`](#method.with_focus_selection) or [`set_focus_selection`](#method.set_focus_selection)
 ///
@@ -150,7 +150,7 @@ pub struct Menu {
     select_idx: u32,
     total_width: u32,
     total_height: u32,
-    cloned_interface_items: Vec<Box<InterfaceItem>>,
+    cloned_interface_items: Vec<Box<dyn InterfaceItem>>,
 
     growth_direction: GrowthDirection,
     focus_selection: FocusSelection,
@@ -525,7 +525,7 @@ impl Menu {
     }
 
     /// Check if any of the given children are dirty; meaning they should be redrawn
-    fn children_are_dirty(&self, children: &mut Vec<Box<&mut InterfaceItem>>) -> bool {
+    fn children_are_dirty(&self, children: &mut Vec<Box<&mut dyn InterfaceItem>>) -> bool {
         let lengths_equal = self.cloned_interface_items.len() == children.len();
         let mut children_are_dirty = !lengths_equal; // No lewding the dragon loli
         for item in children {

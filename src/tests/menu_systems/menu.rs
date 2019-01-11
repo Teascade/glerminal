@@ -1,7 +1,6 @@
 use super::{random_text, run_multiple_times, test_setup_text_buffer};
-use menu_systems::{FocusSelection, GrowthDirection, Menu, MenuList, TextItem};
-use Events;
-use VirtualKeyCode;
+use crate::menu_systems::{FocusSelection, GrowthDirection, Menu, MenuList, TextItem};
+use crate::{Events, VirtualKeyCode};
 
 use rand::{thread_rng, Rng};
 

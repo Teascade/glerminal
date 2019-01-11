@@ -1,7 +1,7 @@
 use super::{random_text, run_multiple_times, test_setup_text_buffer};
-use menu_systems::{InterfaceItem, TextItem};
-use Events;
-use VirtualKeyCode::{Return, A};
+use crate::menu_systems::{InterfaceItem, TextItem};
+use crate::Events;
+use crate::VirtualKeyCode::{Return, A};
 
 use rand::{thread_rng, Rng};
 use std::iter::repeat;

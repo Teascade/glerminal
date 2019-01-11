@@ -1,5 +1,3 @@
-extern crate glerminal;
-
 use glerminal::menu_systems::{
     Checkbox, CheckboxGroup, Dialog, Filter, FocusSelection, GrowthDirection, Menu, MenuList,
     MenuPosition, TextInput, TextItem, Window,

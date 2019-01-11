@@ -37,14 +37,9 @@ Just add the following line to your `Cargo.toml`:
 glerminal = "0.2"
 ```
 
-And simply add the following line to your `main.rs`:
-```rust
-extern crate glerminal;
-```
-
 And then using this crate is quite simple:
 ```rust
-extern crate glerminal;
+extern crate glerminal; // Not required if running 2018 edition
 
 use glerminal::terminal::TerminalBuilder;
 use glerminal::text_buffer::TextBuffer;

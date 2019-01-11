@@ -1,10 +1,9 @@
 use std::iter::repeat;
 
 use super::{InterfaceItem, InterfaceItemBase};
-use events::Events;
-use text_buffer::{Color, TextBuffer};
-use MouseButton;
-use VirtualKeyCode;
+use crate::events::Events;
+use crate::text_buffer::{Color, TextBuffer};
+use crate::{MouseButton, VirtualKeyCode};
 
 /// Represents a group of checkboxes that can be managed like they were radio buttons.
 ///
@@ -99,9 +98,9 @@ impl CheckboxGroup {
 }
 
 /// Represents a Checkbox that can be checked or unchecked, and it's checked-status can be get with `is_checked`.
-/// 
+///
 /// See [CheckboxGroup](struct.CheckboxGroup.html) to limit how checkboxes can be checked together.
-/// 
+///
 /// For example:
 /// ```
 /// use glerminal::menu_systems::Checkbox;

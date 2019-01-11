@@ -2,8 +2,8 @@ use glutin::VirtualKeyCode;
 
 use super::{InterfaceItem, InterfaceItemBase};
 
-use events::Events;
-use text_buffer::{Color, TextBuffer};
+use crate::events::Events;
+use crate::text_buffer::{Color, TextBuffer};
 
 use std::iter::repeat;
 

@@ -1,8 +1,8 @@
 use std::cell::Cell;
 
 use super::{Program, Renderable, Texture, Vao, Vbo};
-use font::Font;
-use text_buffer::TextBuffer;
+use crate::font::Font;
+use crate::text_buffer::TextBuffer;
 
 pub(crate) struct TextBufferMesh {
     vao: Vao,

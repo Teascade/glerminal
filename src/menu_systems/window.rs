@@ -1,4 +1,4 @@
-use text_buffer::{Color, TextBuffer};
+use crate::text_buffer::{Color, TextBuffer};
 
 /// Represents a window that clears everything in it's way and is able to limit the cursor within it's bounds with `set_limits`.
 ///

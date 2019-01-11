@@ -1,10 +1,10 @@
 #[cfg(feature = "parser")]
 pub mod parser;
 
-use font::Font;
-use renderer::backgroundmesh::BackgroundMesh;
-use renderer::textbuffermesh::TextBufferMesh;
-use terminal::Terminal;
+use crate::font::Font;
+use crate::renderer::backgroundmesh::BackgroundMesh;
+use crate::renderer::textbuffermesh::TextBufferMesh;
+use crate::terminal::Terminal;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 

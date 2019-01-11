@@ -9,6 +9,7 @@ keywords = ["opengl", "terminal", "renderer", "console", "text"]
 categories = ["rendering::engine"]
 repository = "https://github.com/Teascade/glerminal"
 documentation = "https://docs.rs/glerminal"
+edition = "2018"
 
 [badges]
 travis-ci = { repository = "Teascade/glerminal", branch = "0.2.0" }

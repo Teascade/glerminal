@@ -1,8 +1,7 @@
 use super::{random_text, run_multiple_times, test_setup_text_buffer};
-use menu_systems::{Dialog, InterfaceItem};
-use Events;
-use VirtualKeyCode;
-use VirtualKeyCode::{Down, Up, L, O};
+use crate::menu_systems::{Dialog, InterfaceItem};
+use crate::VirtualKeyCode::{Down, Up, L, O};
+use crate::{Events, VirtualKeyCode};
 
 use rand::{thread_rng, Rng};
 

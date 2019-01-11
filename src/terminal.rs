@@ -3,12 +3,12 @@ use glutin::VirtualKeyCode;
 use std::cell::{Cell, RefCell};
 use std::time::SystemTime;
 
-use display::Display;
-use events::Events;
-use font::Font;
-use renderer;
-use renderer::Program;
-use text_buffer::TextBuffer;
+use crate::display::Display;
+use crate::events::Events;
+use crate::font::Font;
+use crate::renderer;
+use crate::renderer::Program;
+use crate::text_buffer::TextBuffer;
 
 static IOSEVKA_SFL: &'static str = include_str!("../fonts/iosevka.sfl");
 static IOSEVKA_PNG: &'static [u8] = include_bytes!("../fonts/iosevka.png");

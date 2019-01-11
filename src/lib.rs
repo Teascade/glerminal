@@ -15,8 +15,6 @@
 //!
 //! # Example
 //! ```no_run
-//! extern crate glerminal;
-//!
 //! use glerminal::{TerminalBuilder, TextBuffer};
 //!
 //! fn main() {
@@ -69,18 +67,6 @@
 #![warn(missing_docs)]
 
 #[cfg(test)]
-extern crate rand;
-
-extern crate gl;
-extern crate glutin;
-extern crate libc;
-extern crate png;
-extern crate sfl_parser;
-
-#[cfg(feature = "parser")]
-extern crate regex;
-
-#[cfg(test)]
 mod tests;
 
 mod display;
@@ -90,13 +76,13 @@ mod renderer;
 mod terminal;
 mod text_buffer;
 
-pub use events::{Cursor, Events, Input};
-pub use font::{CharacterData, Font};
-pub use terminal::{Terminal, TerminalBuilder};
-pub use text_buffer::{TermLimits, TextBuffer};
+pub use crate::events::{Cursor, Events, Input};
+pub use crate::font::{CharacterData, Font};
+pub use crate::terminal::{Terminal, TerminalBuilder};
+pub use crate::text_buffer::{TermLimits, TextBuffer};
 
 #[cfg(feature = "parser")]
-pub use text_buffer::parser::Parser;
+pub use crate::text_buffer::parser::Parser;
 
 #[cfg(feature = "menu_systems")]
 pub mod menu_systems;

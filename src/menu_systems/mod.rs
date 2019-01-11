@@ -158,9 +158,9 @@ pub use self::window::Window;
 
 use std::collections::HashMap;
 
-use events::Events;
+use crate::events::Events;
+use crate::text_buffer::TextBuffer;
 use glutin::VirtualKeyCode;
-use text_buffer::TextBuffer;
 
 /// Represents a single menu item: an item that is somewhere, can handle events and can be drawn.
 ///
@@ -264,11 +264,11 @@ pub trait InterfaceItem: InterfaceItemClone {
 /// ```
 pub trait InterfaceItemClone {
     /// Make a box of the cloned InterfaceItem
-    fn clone_box(&self) -> Box<InterfaceItem>;
+    fn clone_box(&self) -> Box<dyn InterfaceItem>;
 }
 
 impl<T: 'static + InterfaceItem + Clone> InterfaceItemClone for T {
-    fn clone_box(&self) -> Box<InterfaceItem> {
+    fn clone_box(&self) -> Box<dyn InterfaceItem> {
         Box::new(self.clone())
     }
 }

@@ -4,11 +4,11 @@ use glutin::{
     WindowEvent,
 };
 
-use events::Events;
-use renderer::{self, Matrix4};
+use crate::events::Events;
+use crate::renderer::{self, Matrix4};
+use crate::TextBuffer;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
-use TextBuffer;
 
 #[cfg(test)]
 use glutin::VirtualKeyCode;

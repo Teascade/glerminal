@@ -1,7 +1,6 @@
 use super::{random_color, random_text, run_multiple_times, test_setup_text_buffer};
-use menu_systems::{InterfaceItem, InterfaceItemBase, TextItem};
-use MouseButton;
-use VirtualKeyCode;
+use crate::menu_systems::{InterfaceItem, InterfaceItemBase, TextItem};
+use crate::{MouseButton, VirtualKeyCode};
 
 use rand::{thread_rng, Rng};
 

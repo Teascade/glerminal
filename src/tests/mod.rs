@@ -1,6 +1,6 @@
-use renderer;
-use terminal::{Terminal, TerminalBuilder};
-use text_buffer::{Color, TextBuffer};
+use crate::renderer;
+use crate::terminal::{Terminal, TerminalBuilder};
+use crate::text_buffer::{Color, TextBuffer};
 
 mod events;
 mod font;

@@ -1,5 +1,3 @@
-extern crate glerminal;
-
 use glerminal::{MouseButton, Parser, TerminalBuilder, TextBuffer, VirtualKeyCode};
 
 fn main() {

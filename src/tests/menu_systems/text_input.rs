@@ -1,7 +1,7 @@
 use super::{random_text, run_multiple_times, test_setup_text_buffer};
-use menu_systems::{Filter, InterfaceItem, TextInput};
-use Events;
-use VirtualKeyCode::{Back, Key1, Return, A};
+use crate::menu_systems::{Filter, InterfaceItem, TextInput};
+use crate::Events;
+use crate::VirtualKeyCode::{Back, Key1, Return, A};
 
 use rand::{thread_rng, Rng};
 
