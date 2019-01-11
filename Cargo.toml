@@ -32,6 +32,10 @@ regex = { version = "0.2", optional = true }
 [dev-dependencies]
 rand = "0.6"
 
+[package.metadata.docs.rs]
+features = [ "menu_systems", "parser" ]
+all-features = true
+
 [[example]]
 name = "input"
 
