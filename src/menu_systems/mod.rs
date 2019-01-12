@@ -156,8 +156,6 @@ pub use self::text_input::TextInput;
 pub use self::text_item::TextItem;
 pub use self::window::Window;
 
-use std::collections::HashMap;
-
 use crate::events::Events;
 use crate::text_buffer::TextBuffer;
 use glutin::VirtualKeyCode;
@@ -326,54 +324,29 @@ impl InterfaceItemBase {
     }
 }
 
-/// Represents a HashMap from VirtualKeyCode to character. Used to filter out which characters get registered by the textinput.
+/// Represents a list of characters that is used to filter which character are registered in a [`TextInput`](struct.TextInput.html).
 ///
 /// Use `Filter::empty_filter()` to create a new filter and for example `.with_basic_latin_characters` to add basic latin characters to the filter.  
-/// Use `.with_pair` or `insert` to create your own filters.
+/// Use `.with_char` or `add` to create your own filters.
 #[derive(Clone, Debug)]
 pub struct Filter {
-    map: HashMap<VirtualKeyCode, char>,
+    chars: Vec<char>,
 }
 
 impl Filter {
-    /// Create an empty filter, where other filters can be added, such as basic_latin_keycode_filter
+    /// Create an empty filter, where other filters can be added, such as basic_latin_keycode_filter, or specific characters, with `with_char` or `add`
     pub fn empty_filter() -> Filter {
-        Filter {
-            map: HashMap::new(),
-        }
+        Filter { chars: Vec::new() }
     }
 
     /// Creates a Filter with basic latin characters
     ///
-    /// Includes characters a-z and spacebar.
+    /// Includes characters A-z and spacebar.
     pub fn with_basic_latin_characters(mut self) -> Filter {
-        self.map.insert(VirtualKeyCode::A, 'a');
-        self.map.insert(VirtualKeyCode::B, 'b');
-        self.map.insert(VirtualKeyCode::C, 'c');
-        self.map.insert(VirtualKeyCode::D, 'd');
-        self.map.insert(VirtualKeyCode::E, 'e');
-        self.map.insert(VirtualKeyCode::F, 'f');
-        self.map.insert(VirtualKeyCode::G, 'g');
-        self.map.insert(VirtualKeyCode::H, 'h');
-        self.map.insert(VirtualKeyCode::I, 'i');
-        self.map.insert(VirtualKeyCode::J, 'j');
-        self.map.insert(VirtualKeyCode::K, 'k');
-        self.map.insert(VirtualKeyCode::L, 'l');
-        self.map.insert(VirtualKeyCode::M, 'm');
-        self.map.insert(VirtualKeyCode::N, 'n');
-        self.map.insert(VirtualKeyCode::O, 'o');
-        self.map.insert(VirtualKeyCode::P, 'p');
-        self.map.insert(VirtualKeyCode::Q, 'q');
-        self.map.insert(VirtualKeyCode::R, 'r');
-        self.map.insert(VirtualKeyCode::S, 's');
-        self.map.insert(VirtualKeyCode::T, 't');
-        self.map.insert(VirtualKeyCode::U, 'u');
-        self.map.insert(VirtualKeyCode::V, 'v');
-        self.map.insert(VirtualKeyCode::W, 'w');
-        self.map.insert(VirtualKeyCode::X, 'x');
-        self.map.insert(VirtualKeyCode::Y, 'y');
-        self.map.insert(VirtualKeyCode::Z, 'z');
-        self.map.insert(VirtualKeyCode::Space, ' ');
+        let chars = "abcdefghijklmnopqrstuvwxyz";
+        self.add_all(&chars.to_uppercase());
+        self.add_all(chars);
+        self.add(' ');
         self
     }
 
@@ -381,60 +354,52 @@ impl Filter {
     ///
     /// Includes numerals from 0-9
     pub fn with_basic_numerals(mut self) -> Filter {
-        self.map.insert(VirtualKeyCode::Key0, '0');
-        self.map.insert(VirtualKeyCode::Key1, '1');
-        self.map.insert(VirtualKeyCode::Key2, '2');
-        self.map.insert(VirtualKeyCode::Key3, '3');
-        self.map.insert(VirtualKeyCode::Key4, '4');
-        self.map.insert(VirtualKeyCode::Key5, '5');
-        self.map.insert(VirtualKeyCode::Key6, '6');
-        self.map.insert(VirtualKeyCode::Key7, '7');
-        self.map.insert(VirtualKeyCode::Key8, '8');
-        self.map.insert(VirtualKeyCode::Key9, '9');
-
+        self.add_all("0123456789");
         self
     }
 
     /// Creates a Filter with basic special symbols
     ///
     /// Includes `'`, `\`, `:`, `.`, `;`, `,`, `=`, `-`, `*`, `_`, `/`, `[`, `]`
-    ///
-    /// Unfortunately VirtualKeyCode doesn't seem to support other special characters currently.
     pub fn with_basic_special_symbols(mut self) -> Filter {
-        self.map.insert(VirtualKeyCode::Apostrophe, '\'');
-        self.map.insert(VirtualKeyCode::Backslash, '\\');
-        self.map.insert(VirtualKeyCode::Colon, ':');
-        self.map.insert(VirtualKeyCode::Period, '.');
-        self.map.insert(VirtualKeyCode::Semicolon, ';');
-        self.map.insert(VirtualKeyCode::Comma, ',');
-        self.map.insert(VirtualKeyCode::Equals, '=');
-        self.map.insert(VirtualKeyCode::Subtract, '-');
-        self.map.insert(VirtualKeyCode::Multiply, '*');
-        self.map.insert(VirtualKeyCode::Underline, '_');
-        self.map.insert(VirtualKeyCode::Slash, '/');
-        self.map.insert(VirtualKeyCode::LBracket, '[');
-        self.map.insert(VirtualKeyCode::RBracket, ']');
-
+        self.add_all("\'\\:.;,=-*_/[]");
         self
     }
 
-    /// Add a specific VirtualKeyCode: char pair to this filter and return the current filter.
-    ///
-    /// This would mean that when you press the keycode, the character specified will be typed.
-    pub fn with_pair(mut self, keycode: VirtualKeyCode, character: char) -> Filter {
-        self.map.insert(keycode, character);
+    /// Add a specific character to be accepted in this filter, and return the filter.
+    pub fn with_char(mut self, character: char) -> Filter {
+        self.add(character);
         self
     }
 
-    /// Insert a specific VirtualKeyCode: char pair to this filter.
+    /// Add a specific characters to be accepted in this filter, and return the filter.
+    /// The function will go through each character in the string, and add them seperately.
+    pub fn with_chars(mut self, characters: &str) -> Filter {
+        self.add_all(characters);
+        self
+    }
+
+    /// Insert a specific character to be accepted in this filter.
     ///
     /// Works similarly to with_pair
-    pub fn insert(&mut self, keycode: VirtualKeyCode, character: char) {
-        self.map.insert(keycode, character);
+    pub fn add(&mut self, character: char) {
+        if !self.has(&character) {
+            self.chars.push(character);
+        }
     }
 
-    /// Get the character from the specified VirtualKeyCode, None if it doesn't exist.
-    pub fn get(&self, keycode: VirtualKeyCode) -> Option<&char> {
-        self.map.get(&keycode)
+    /// Insert a string of characters to be accepted in this filter.
+    /// The function will go through each character in the string, and add them seperately.
+    ///
+    /// Works similarly to with_pair
+    pub fn add_all(&mut self, characters: &str) {
+        for character in characters.chars() {
+            self.add(character);
+        }
+    }
+
+    /// Whether the character specified exists in this filter or not.
+    pub fn has(&self, character: &char) -> bool {
+        self.chars.contains(character)
     }
 }

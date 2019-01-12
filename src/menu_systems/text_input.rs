@@ -296,29 +296,21 @@ impl InterfaceItem for TextInput {
                     break;
                 }
             }
-            if events.keyboard.was_just_pressed(VirtualKeyCode::Back) {
-                self.text.pop();
+            for character in events.chars.get_chars() {
+                if character == '\u{8}' {
+                    // Backspace
+                    self.text.pop();
+                }
+
+                if (self.character_limit.is_none()
+                    || self.character_limit.unwrap() > self.text.len() as u32)
+                    && self.filter.has(&character)
+                {
+                    self.text.push(character);
+                }
+
                 self.base.dirty = true;
                 handled = true;
-            }
-            for keycode in events.keyboard.get_just_pressed_list() {
-                if self.character_limit.is_none()
-                    || self.character_limit.unwrap() > self.text.len() as u32
-                {
-                    if let Some(character) = self.filter.get(keycode) {
-                        let mut text = String::new();
-                        if events.keyboard.is_pressed(VirtualKeyCode::LShift)
-                            || events.keyboard.is_pressed(VirtualKeyCode::RShift)
-                        {
-                            text.push_str(&*character.to_uppercase().to_string());
-                        } else {
-                            text.push(*character);
-                        }
-                        self.text.push_str(&*text);
-                        self.base.dirty = true;
-                        handled = true;
-                    }
-                }
             }
         }
         handled
