@@ -1,4 +1,4 @@
-use font::Font;
+use crate::font::Font;
 
 static IOSEVKA_SFL: &'static str = include_str!("../../fonts/iosevka.sfl");
 static IOSEVKA_PNG: &'static [u8] = include_bytes!("../../fonts/iosevka.png");

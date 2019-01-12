@@ -2,11 +2,9 @@ use super::{Filter, InterfaceItem, InterfaceItemBase};
 
 use std::iter::repeat;
 
-use text_buffer::Color;
-use text_buffer::TextBuffer;
-use Events;
-use MouseButton;
-use VirtualKeyCode;
+use crate::text_buffer::Color;
+use crate::text_buffer::TextBuffer;
+use crate::{Events, MouseButton, VirtualKeyCode};
 
 /// Represents a text-input field, that can be focused, takes in events (keyboard events as text),
 /// and it's possible to get the input text with get_text
@@ -307,7 +305,7 @@ impl InterfaceItem for TextInput {
                 if self.character_limit.is_none()
                     || self.character_limit.unwrap() > self.text.len() as u32
                 {
-                    if let Some(mut character) = self.filter.get(&keycode) {
+                    if let Some(character) = self.filter.get(&keycode) {
                         let mut text = String::new();
                         if events.keyboard.is_pressed(VirtualKeyCode::LShift)
                             || events.keyboard.is_pressed(VirtualKeyCode::RShift)

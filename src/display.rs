@@ -4,11 +4,11 @@ use glutin::{
     WindowEvent,
 };
 
-use events::Events;
-use renderer::{self, Matrix4};
+use crate::events::Events;
+use crate::renderer::{self, Matrix4};
+use crate::TextBuffer;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
-use TextBuffer;
 
 #[cfg(test)]
 use glutin::VirtualKeyCode;
@@ -85,7 +85,7 @@ impl Display {
         };
 
         let gl_version = renderer::get_version();
-        if !renderer::is_gl_version_compatible(gl_version.clone()) {
+        if !renderer::is_gl_version_compatible(&gl_version) {
             panic!("GL version too low: OpenGL {}", gl_version);
         }
 
@@ -117,15 +117,13 @@ impl Display {
 
         let mut dimensions: Option<(u32, u32)> = None;
 
-        let events = self.events.borrow_mut().clear_just_lists();
-        drop(events);
+        self.events.borrow_mut().clear_just_lists();
 
         self.window.swap_buffers().ok();
 
-        self.events_loop
-            .borrow_mut()
-            .poll_events(|event| match event {
-                Event::WindowEvent { event, .. } => match event {
+        self.events_loop.borrow_mut().poll_events(|event| {
+            if let Event::WindowEvent { event, .. } = event {
+                match event {
                     WindowEvent::Closed => {
                         running = false;
                     }
@@ -151,13 +149,11 @@ impl Display {
                             position.1 as f32 / self.height.get() as f32,
                         ));
                     }
-                    WindowEvent::CursorLeft { device_id: _ } => {
-                        self.events.borrow_mut().cursor.cursor_left()
-                    }
+                    WindowEvent::CursorLeft { .. } => self.events.borrow_mut().cursor.cursor_left(),
                     _ => (),
-                },
-                _ => (),
-            });
+                }
+            }
+        });
 
         if let Some((width, height)) = dimensions {
             self.width.set(width);

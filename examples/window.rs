@@ -1,5 +1,3 @@
-extern crate glerminal;
-
 use glerminal::{TerminalBuilder, TextBuffer};
 
 fn main() {

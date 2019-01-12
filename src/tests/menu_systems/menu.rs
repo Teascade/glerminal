@@ -1,7 +1,6 @@
 use super::{random_text, run_multiple_times, test_setup_text_buffer};
-use menu_systems::{FocusSelection, GrowthDirection, Menu, MenuList, TextItem};
-use Events;
-use VirtualKeyCode;
+use crate::menu_systems::{FocusSelection, GrowthDirection, Menu, MenuList, TextItem};
+use crate::{Events, VirtualKeyCode};
 
 use rand::{thread_rng, Rng};
 
@@ -31,25 +30,27 @@ fn input_selecting() {
         menu.set_focused(true);
 
         let change_next = rng.gen();
-        let next_key = match change_next {
-            true => VirtualKeyCode::A,
-            false => match direction {
+        let next_key = if change_next {
+            VirtualKeyCode::A
+        } else {
+            match direction {
                 GrowthDirection::Down => VirtualKeyCode::Down,
                 GrowthDirection::Up => VirtualKeyCode::Up,
                 GrowthDirection::Left => VirtualKeyCode::Left,
                 GrowthDirection::Right => VirtualKeyCode::Right,
-            },
+            }
         };
 
         let change_prev = rng.gen();
-        let prev_key = match change_prev {
-            true => VirtualKeyCode::O,
-            false => match direction {
+        let prev_key = if change_prev {
+            VirtualKeyCode::O
+        } else {
+            match direction {
                 GrowthDirection::Down => VirtualKeyCode::Up,
                 GrowthDirection::Up => VirtualKeyCode::Down,
                 GrowthDirection::Left => VirtualKeyCode::Right,
                 GrowthDirection::Right => VirtualKeyCode::Left,
-            },
+            }
         };
 
         let next_opt = if change_next { Some(next_key) } else { None };

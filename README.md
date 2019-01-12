@@ -1,5 +1,5 @@
 # GLerminal, an OpenGL terminal
-[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=0.2.0)](https://travis-ci.org/Teascade/glerminal)
+[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=0.2.1)](https://travis-ci.org/Teascade/glerminal)
 [![Docs](https://docs.rs/glerminal/badge.svg)](https://docs.rs/glerminal)
 [![Crates.io](https://img.shields.io/crates/v/glerminal.svg)](https://crates.io/crates/glerminal)
 
@@ -37,14 +37,9 @@ Just add the following line to your `Cargo.toml`:
 glerminal = "0.2"
 ```
 
-And simply add the following line to your `main.rs`:
-```rust
-extern crate glerminal;
-```
-
 And then using this crate is quite simple:
 ```rust
-extern crate glerminal;
+extern crate glerminal; // Not required if running 2018 edition
 
 use glerminal::terminal::TerminalBuilder;
 use glerminal::text_buffer::TextBuffer;

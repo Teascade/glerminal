@@ -1,5 +1,6 @@
 use super::{
-    random_color, run_multiple_times, test_setup_text_buffer, test_setup_text_buffer_with_terminal,
+    random_char, random_color, random_text, run_multiple_times, test_setup_text_buffer,
+    test_setup_text_buffer_with_terminal,
 };
 use rand::{thread_rng, Rng};
 
@@ -57,10 +58,7 @@ fn put_single_character() {
     run_multiple_times(10, || {
         let mut character = ' ';
         while character == ' ' {
-            character = match String::from_utf16(&[rand::random::<u16>()]) {
-                Ok(mut string) => string.remove(0),
-                Err(_) => ' ',
-            }
+            character = random_char();
         }
         let mut text_buffer = test_setup_text_buffer((2, 2));
         text_buffer.put_char(character);
@@ -73,17 +71,7 @@ fn put_single_character() {
 #[test]
 fn write_three_characters() {
     run_multiple_times(10, || {
-        let mut text = String::new();
-        while text.len() == 0 {
-            text = match String::from_utf16(&[
-                rand::random::<u16>(),
-                rand::random::<u16>(),
-                rand::random::<u16>(),
-            ]) {
-                Ok(text) => text,
-                Err(_) => String::new(),
-            }
-        }
+        let mut text = random_text(3);
 
         let mut text_buffer = test_setup_text_buffer((2, 2));
         text_buffer.write(text.clone());
@@ -131,8 +119,7 @@ fn cursor_move() {
         text_buffer.move_cursor(x, y);
         //assert_eq!(text_buffer.get_cursor_position(), (x, y));
         text_buffer.move_cursor(width, height);
-        //assert_eq!(text_buffer.get_cursor_position(), (x, y))
-;
+        //assert_eq!(text_buffer.get_cursor_position(), (x, y));
     });
 }
 

@@ -1,10 +1,9 @@
 use std::iter::repeat;
 
 use super::{InterfaceItem, InterfaceItemBase};
-use events::Events;
-use text_buffer::{Color, TextBuffer};
-use MouseButton;
-use VirtualKeyCode;
+use crate::events::Events;
+use crate::text_buffer::{Color, TextBuffer};
+use crate::{MouseButton, VirtualKeyCode};
 
 /// Represents a group of checkboxes that can be managed like they were radio buttons.
 ///
@@ -58,10 +57,8 @@ impl CheckboxGroup {
                         }
                         self.selected_idx = Some(idx as u32);
                         selection_changed = true;
-                    } else {
-                        if let Some(checkbox) = checkboxes.get_mut(idx) {
-                            checkbox.set_checked(false);
-                        }
+                    } else if let Some(checkbox) = checkboxes.get_mut(idx) {
+                        checkbox.set_checked(false);
                     }
                 }
             } else if curr_is_checked {
@@ -77,7 +74,7 @@ impl CheckboxGroup {
                     }
                 } else {
                     if checkboxes.len() > forced_idx as usize {
-                        let checkbox = checkboxes.get_mut(forced_idx as usize).unwrap();
+                        let checkbox = &mut checkboxes[forced_idx as usize];
                         checkbox.set_checked(true);
                         self.selected_idx = Some(forced_idx);
                     } else if let Some(checkbox) = checkboxes.get_mut(0) {
@@ -99,9 +96,9 @@ impl CheckboxGroup {
 }
 
 /// Represents a Checkbox that can be checked or unchecked, and it's checked-status can be get with `is_checked`.
-/// 
+///
 /// See [CheckboxGroup](struct.CheckboxGroup.html) to limit how checkboxes can be checked together.
-/// 
+///
 /// For example:
 /// ```
 /// use glerminal::menu_systems::Checkbox;
@@ -279,12 +276,11 @@ impl InterfaceItem for Checkbox {
             text_buffer.change_cursor_bg_color(self.bg_color_unfocused);
         }
         text_buffer.move_cursor(self.base.x as i32, self.base.y as i32);
-        let checked_text;
-        if self.checked {
-            checked_text = (&self.checked_text).to_owned();
+        let checked_text = if self.checked {
+            (&self.checked_text).to_owned()
         } else {
-            checked_text = repeat(" ").take(self.checked_text.len()).collect();
-        }
+            repeat(" ").take(self.checked_text.len()).collect()
+        };
         let text = (&self.text).to_owned() + &self.prefix + &checked_text + &self.suffix;
         text_buffer.write(text);
     }

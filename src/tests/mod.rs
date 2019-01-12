@@ -1,6 +1,6 @@
-use renderer;
-use terminal::{Terminal, TerminalBuilder};
-use text_buffer::{Color, TextBuffer};
+use crate::renderer;
+use crate::terminal::{Terminal, TerminalBuilder};
+use crate::text_buffer::{Color, TextBuffer};
 
 mod events;
 mod font;
@@ -17,13 +17,13 @@ use rand::{thread_rng, Rng};
 #[test]
 fn gl_error() {
     let terminal = test_setup_open_terminal();
-    let mut buffer = match TextBuffer::new(&terminal, (2, 2)) {
+    let buffer = match TextBuffer::new(&terminal, (2, 2)) {
         Ok(buffer) => buffer,
         Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
     };
 
     while terminal.refresh() {
-        terminal.draw(&mut buffer);
+        terminal.draw(&buffer);
         terminal.close();
     }
 
@@ -70,6 +70,10 @@ fn random_color() -> Color {
         rand::random::<f32>(),
         rand::random::<f32>(),
     ]
+}
+
+fn random_char() -> char {
+    thread_rng().sample_iter(&Alphanumeric).next().unwrap()
 }
 
 fn random_text(len: u32) -> String {

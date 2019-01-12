@@ -1,7 +1,7 @@
-use display::TextBufferDisplayData;
+use crate::display::TextBufferDisplayData;
+use crate::TextBuffer;
 use glutin::{MouseButton, VirtualKeyCode};
 use std::collections::HashMap;
-use TextBuffer;
 
 /// Represents all the events that happen in glerminal, such as keyboard events, mouse events, resize, and close events.
 ///

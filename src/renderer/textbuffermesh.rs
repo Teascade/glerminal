@@ -1,8 +1,8 @@
 use std::cell::Cell;
 
 use super::{Program, Renderable, Texture, Vao, Vbo};
-use font::Font;
-use text_buffer::TextBuffer;
+use crate::font::Font;
+use crate::text_buffer::TextBuffer;
 
 pub(crate) struct TextBufferMesh {
     vao: Vao,
@@ -37,10 +37,10 @@ impl TextBufferMesh {
         let vertex_buffer_tex = vec![0.0; (width * height * 12) as usize];
         let vertex_buffer_shakiness = vec![0.0; (width * height * 6) as usize];
 
-        let vbo_pos = super::create_vbo(vertex_buffer_pos);
-        let vbo_col = super::create_vbo(vertex_buffer_col);
-        let vbo_tex = super::create_vbo(vertex_buffer_tex);
-        let vbo_shakiness = super::create_vbo(vertex_buffer_shakiness);
+        let vbo_pos = super::create_vbo(&vertex_buffer_pos);
+        let vbo_col = super::create_vbo(&vertex_buffer_col);
+        let vbo_tex = super::create_vbo(&vertex_buffer_tex);
+        let vbo_shakiness = super::create_vbo(&vertex_buffer_shakiness);
         let vao = super::create_vao(program, vbo_pos, vbo_col, vbo_shakiness, Some(vbo_tex));
 
         let tex = super::create_texture(&font.image_buffer, font.width, font.height);
@@ -148,9 +148,9 @@ impl TextBufferMesh {
 
         self.count.set((vertex_buffer_pos.len() * 6) as i32);
 
-        super::upload_buffer(self.vbo_pos, vertex_buffer_pos);
-        super::upload_buffer(self.vbo_col, vertex_buffer_col);
-        super::upload_buffer(self.vbo_tex, vertex_buffer_tex);
-        super::upload_buffer(self.vbo_shakiness, vertex_buffer_shakiness);
+        super::upload_buffer(self.vbo_pos, &vertex_buffer_pos);
+        super::upload_buffer(self.vbo_col, &vertex_buffer_col);
+        super::upload_buffer(self.vbo_tex, &vertex_buffer_tex);
+        super::upload_buffer(self.vbo_shakiness, &vertex_buffer_shakiness);
     }
 }

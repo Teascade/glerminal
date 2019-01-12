@@ -68,7 +68,7 @@ impl Parser {
         for capture in regex.captures_iter(&text) {
             text_buffer.write(parts.next().unwrap());
             if let Some(target) = capture.get(3) {
-                if let Some(_) = capture.get(1) {
+                if capture.get(1).is_some() {
                     if target.as_str() == "shake" {
                         text_buffer.change_cursor_shakiness(default_shakiness);
                     } else if target.as_str() == "fg" {
@@ -81,16 +81,14 @@ impl Parser {
                     if target.as_str() == "shake" {
                         let value = match value.as_str().parse::<f32>() {
                             Ok(val) => val,
-                            Err(_) => panic!("Failed to parse shake-number"),
+                            Err(e) => panic!("Failed to parse shake-number: {}", e),
                         };
                         text_buffer.change_cursor_shakiness(value);
-                    } else {
-                        if let Some(color) = self.colors.get(value.as_str()) {
-                            if target.as_str() == "fg" {
-                                text_buffer.change_cursor_fg_color(*color);
-                            } else {
-                                text_buffer.change_cursor_bg_color(*color);
-                            }
+                    } else if let Some(color) = self.colors.get(value.as_str()) {
+                        if target.as_str() == "fg" {
+                            text_buffer.change_cursor_fg_color(*color);
+                        } else {
+                            text_buffer.change_cursor_bg_color(*color);
                         }
                     }
                 }

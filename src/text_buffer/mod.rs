@@ -1,10 +1,12 @@
 #[cfg(feature = "parser")]
 pub mod parser;
 
-use font::Font;
-use renderer::backgroundmesh::BackgroundMesh;
-use renderer::textbuffermesh::TextBufferMesh;
-use terminal::Terminal;
+use crate::font::Font;
+use crate::renderer::backgroundmesh::BackgroundMesh;
+use crate::renderer::textbuffermesh::TextBufferMesh;
+use crate::terminal::Terminal;
+
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Represents a color with values from 0.0 to 1.0 (red, green, blue, alpha)
 pub type Color = [f32; 4];
@@ -12,7 +14,7 @@ pub type Color = [f32; 4];
 /// Represents a raw encoded character.
 pub type RawCharacter = u16;
 
-static mut INDEX_COUNTER: u32 = 0;
+static INDEX_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 /// The `TextBuffer` acts as a "state machine" where you can set foreground color, background color and shakiness for the cursor,
 /// move the cursor around, clear the screen and write with the cursor (using the cursor's styles).
@@ -148,31 +150,26 @@ impl TextBuffer {
             TermCharacter::new(' ' as u16, [0.0; 4], [0.0; 4], 0.0);
             (width * height) as usize
         ];
-        let mesh;
-        let background_mesh;
-        if terminal.headless {
-            mesh = None;
-            background_mesh = None;
+        let (mesh, background_mesh) = if terminal.headless {
+            (None, None)
         } else {
-            mesh = Some(TextBufferMesh::new(
-                terminal.get_program(),
-                dimensions,
-                &terminal.font,
-            ));
-            background_mesh = Some(BackgroundMesh::new(
-                terminal.get_background_program(),
-                dimensions,
-            ));
-        }
+            (
+                Some(TextBufferMesh::new(
+                    terminal.get_program(),
+                    dimensions,
+                    &terminal.font,
+                )),
+                Some(BackgroundMesh::new(
+                    terminal.get_background_program(),
+                    dimensions,
+                )),
+            )
+        };
 
         let true_height = height * terminal.font.line_height as i32;
         let true_width = width * terminal.font.size as i32;
 
-        let index;
-        unsafe {
-            index = INDEX_COUNTER;
-            INDEX_COUNTER += 1;
-        }
+        let index = INDEX_COUNTER.fetch_add(1, Ordering::Relaxed) as u32;
         Ok(TextBuffer {
             index: index,
             chars,

@@ -1,5 +1,5 @@
 use super::test_setup_open_terminal;
-use events::Events;
+use crate::events::Events;
 use glutin::VirtualKeyCode;
 
 #[test]

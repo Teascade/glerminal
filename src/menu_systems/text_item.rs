@@ -1,8 +1,6 @@
 use super::{InterfaceItem, InterfaceItemBase};
-use text_buffer::{Color, TextBuffer};
-use Events;
-use MouseButton;
-use VirtualKeyCode;
+use crate::text_buffer::{Color, TextBuffer};
+use crate::{Events, MouseButton, VirtualKeyCode};
 
 #[derive(Debug, Clone)]
 /// Represents a simple text item that by default can not be selected,

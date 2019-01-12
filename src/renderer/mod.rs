@@ -81,7 +81,7 @@ pub(crate) fn get_version() -> String {
     }
 }
 
-pub(crate) fn is_gl_version_compatible(text: String) -> bool {
+pub(crate) fn is_gl_version_compatible(text: &str) -> bool {
     let mut parts = text.split('.');
     let error = &*format!("Invalid version value from GL driver: '{}'", text);
     let major: i32 = parts.next().expect(error).parse().expect(error);
@@ -202,7 +202,7 @@ pub(crate) fn create_texture(pixels: &[u8], width: u32, height: u32) -> Texture 
     }
 }
 
-pub(crate) fn upload_buffer(vbo: Vbo, vertex_buffer: Vec<f32>) {
+pub(crate) fn upload_buffer(vbo: Vbo, vertex_buffer: &[f32]) {
     let data_length = (vertex_buffer.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
     let data_pointer = vertex_buffer.as_ptr() as *const c_void;
 
@@ -212,12 +212,12 @@ pub(crate) fn upload_buffer(vbo: Vbo, vertex_buffer: Vec<f32>) {
     }
 }
 
-pub(crate) fn create_vbo(vertex_buffer: Vec<f32>) -> Vbo {
+pub(crate) fn create_vbo(vertex_buffer: &[f32]) -> Vbo {
     unsafe {
         let mut vbo = 0;
         gl::GenBuffers(1, &mut vbo);
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        let vertex_data: &[f32] = vertex_buffer.as_slice();
+        let vertex_data: &[f32] = vertex_buffer;
 
         let data_length = (vertex_data.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
         let data_pointer = vertex_data.as_ptr() as *const c_void;
@@ -281,12 +281,11 @@ pub(crate) fn create_program(vert_shader: &str, frag_shader: &str) -> Program {
         gl::LinkProgram(program);
 
         let texcoord_loc = get_attrib_location(program, "texcoord");
-        let texcoord;
-        if texcoord_loc == -1 {
-            texcoord = None;
+        let texcoord = if texcoord_loc == -1 {
+            None
         } else {
-            texcoord = Some(texcoord_loc as u32);
-        }
+            Some(texcoord_loc as u32)
+        };
 
         Program {
             shader_program: program,
@@ -305,10 +304,11 @@ pub(crate) fn create_program(vert_shader: &str, frag_shader: &str) -> Program {
 fn create_shader(shader_text: &str, shader_type: u32) -> u32 {
     unsafe {
         let shader = gl::CreateShader(shader_type);
+        let cstring_text = CString::new(shader_text).unwrap();
         gl::ShaderSource(
             shader,
             1,
-            [CString::new(shader_text).unwrap().as_ptr() as *const i8].as_ptr(),
+            [cstring_text.as_ptr() as *const i8].as_ptr(),
             ptr::null(),
         );
         gl::CompileShader(shader);
@@ -327,7 +327,8 @@ fn create_shader(shader_text: &str, shader_type: u32) -> u32 {
             );
 
             /* Transform the log from a pointer to a str */
-            let log = from_utf8(CStr::from_ptr(mem::transmute(&log)).to_bytes()).unwrap();
+            let log = from_utf8(CStr::from_ptr(&log as *const [u8; 1024] as *const i8).to_bytes())
+                .unwrap();
 
             panic!(format!("Error while compiling shader:\n{}", log))
         } else {
@@ -337,15 +338,11 @@ fn create_shader(shader_text: &str, shader_type: u32) -> u32 {
 }
 
 unsafe fn get_attrib_location(shader_ptr: u32, attribute: &str) -> i32 {
-    gl::GetAttribLocation(
-        shader_ptr,
-        CString::new(attribute).unwrap().as_ptr() as *const i8,
-    ) as i32
+    let cstring_attribute = CString::new(attribute).unwrap();
+    gl::GetAttribLocation(shader_ptr, cstring_attribute.as_ptr() as *const i8) as i32
 }
 
 unsafe fn get_uniform_location(shader_ptr: u32, uniform: &str) -> i32 {
-    gl::GetUniformLocation(
-        shader_ptr,
-        CString::new(uniform).unwrap().as_ptr() as *const i8,
-    ) as i32
+    let cstring_uniform = CString::new(uniform).unwrap();
+    gl::GetUniformLocation(shader_ptr, cstring_uniform.as_ptr() as *const i8) as i32
 }
