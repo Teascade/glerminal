@@ -11,9 +11,7 @@ mod text_buffer;
 #[cfg(feature = "menu_systems")]
 mod menu_systems;
 
-#[cfg(feature = "menu_systems")]
 use rand::distributions::Alphanumeric;
-#[cfg(feature = "menu_systems")]
 use rand::{thread_rng, Rng};
 
 #[test]
@@ -74,7 +72,10 @@ fn random_color() -> Color {
     ]
 }
 
-#[cfg(feature = "menu_systems")]
+fn random_char() -> char {
+    thread_rng().sample_iter(&Alphanumeric).next().unwrap()
+}
+
 fn random_text(len: u32) -> String {
     thread_rng()
         .sample_iter(&Alphanumeric)
