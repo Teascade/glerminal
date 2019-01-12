@@ -102,10 +102,10 @@ pub(crate) fn clear() {
     }
 }
 
-pub(crate) fn update_viewport(dimensions: (u32, u32)) {
+pub(crate) fn update_viewport(dimensions: (i32, i32)) {
     let (width, height) = dimensions;
     unsafe {
-        gl::Viewport(0, 0, width as i32, height as i32);
+        gl::Viewport(0, 0, width, height);
     }
 }
 
@@ -146,10 +146,10 @@ pub(crate) fn create_proj_matrix(dimensions: (f32, f32), aspect_ratio: f32) -> M
     } else {
         overflow_height = (height - true_height) / true_height;
     }
-    let left = 0.0 - overflow_width / 2 as f32;
-    let top = 0.0 - overflow_height / 2 as f32;
-    let right = 1.0 + overflow_width / 2 as f32;
-    let bottom = 1.0 + overflow_height / 2 as f32;
+    let left = 0.0 - overflow_width / 2.0;
+    let top = 0.0 - overflow_height / 2.0;
+    let right = 1.0 + overflow_width / 2.0;
+    let bottom = 1.0 + overflow_height / 2.0;
 
     let far = 1.0;
     let near = -1.0;
