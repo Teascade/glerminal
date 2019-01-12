@@ -22,7 +22,7 @@
 //! // Initialize terminal and text buffer
 //! let terminal = TerminalBuilder::new().build();
 //! let mut text_buffer;
-//! match TextBuffer::new(&terminal, (80, 24)) {
+//! match TextBuffer::create(&terminal, (80, 24)) {
 //!     Ok(buffer) => text_buffer = buffer,
 //!     Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 //! }
@@ -434,7 +434,7 @@ impl Filter {
     }
 
     /// Get the character from the specified VirtualKeyCode, None if it doesn't exist.
-    pub fn get(&self, keycode: &VirtualKeyCode) -> Option<&char> {
-        self.map.get(keycode)
+    pub fn get(&self, keycode: VirtualKeyCode) -> Option<&char> {
+        self.map.get(&keycode)
     }
 }

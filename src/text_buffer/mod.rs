@@ -43,7 +43,7 @@ static INDEX_COUNTER: AtomicUsize = AtomicUsize::new(0);
 ///     .build();
 ///
 /// let mut text_buffer;
-/// match TextBuffer::new(&terminal, (80, 24)) {
+/// match TextBuffer::create(&terminal, (80, 24)) {
 ///   Ok(buffer) => text_buffer = buffer,
 ///   Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 /// }
@@ -69,7 +69,7 @@ static INDEX_COUNTER: AtomicUsize = AtomicUsize::new(0);
 ///     .build();
 ///
 /// let mut text_buffer;
-/// match TextBuffer::new(&terminal, (80, 24)) {
+/// match TextBuffer::create(&terminal, (80, 24)) {
 ///   Ok(buffer) => text_buffer = buffer,
 ///   Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 /// }
@@ -92,13 +92,13 @@ static INDEX_COUNTER: AtomicUsize = AtomicUsize::new(0);
 /// let terminal = TerminalBuilder::new().build();
 ///
 /// let mut background_text_buffer;
-/// match TextBuffer::new(&terminal, (80, 24)) {
+/// match TextBuffer::create(&terminal, (80, 24)) {
 ///   Ok(buffer) => background_text_buffer = buffer,
 ///   Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 /// }
 ///
 /// let mut foreground_text_buffer;
-/// match TextBuffer::new(&terminal, (80, 24)) {
+/// match TextBuffer::create(&terminal, (80, 24)) {
 ///   Ok(buffer) => foreground_text_buffer = buffer,
 ///   Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 /// }
@@ -137,7 +137,7 @@ pub struct TextBuffer {
 
 impl TextBuffer {
     /// Creates a new text buffer with the given dimensions (width in characters, height in characters)
-    pub fn new(terminal: &Terminal, dimensions: (i32, i32)) -> Result<TextBuffer, String> {
+    pub fn create(terminal: &Terminal, dimensions: (i32, i32)) -> Result<TextBuffer, String> {
         let (width, height) = dimensions;
 
         if width <= 0 || height <= 0 {

@@ -10,6 +10,7 @@ use regex::Regex;
 ///**Note:** This struct requires _parser_ feature to be enabled.
 ///
 /// See [TextBuffer](struct.TextBuffer.html) for examples and more detailed documentation.
+#[derive(Default)]
 pub struct Parser {
     colors: HashMap<String, Color>,
 }
@@ -41,7 +42,7 @@ impl Parser {
     ///
     /// // Initialize a TextBuffer for the Parser
     /// let mut text_buffer;
-    /// match TextBuffer::new(&terminal, (80, 24)) {
+    /// match TextBuffer::create(&terminal, (80, 24)) {
     ///   Ok(buffer) => text_buffer = buffer,
     ///   Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
     /// }
@@ -104,7 +105,7 @@ impl Parser {
 
     /// Gets the color specified, not compiled in a non-testing environment.
     #[cfg(test)]
-    pub(crate) fn get_color(&self, color: String) -> Option<&Color> {
-        self.colors.get(&color)
+    pub(crate) fn get_color(&self, color: &str) -> Option<&Color> {
+        self.colors.get(color)
     }
 }

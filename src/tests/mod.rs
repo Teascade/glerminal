@@ -17,7 +17,7 @@ use rand::{thread_rng, Rng};
 #[test]
 fn gl_error() {
     let terminal = test_setup_open_terminal();
-    let buffer = match TextBuffer::new(&terminal, (2, 2)) {
+    let buffer = match TextBuffer::create(&terminal, (2, 2)) {
         Ok(buffer) => buffer,
         Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
     };
@@ -40,7 +40,7 @@ fn test_setup_open_terminal() -> Terminal {
 
 fn test_setup_text_buffer(dimensions: (i32, i32)) -> TextBuffer {
     let terminal = test_setup_open_terminal();
-    match TextBuffer::new(&terminal, dimensions) {
+    match TextBuffer::create(&terminal, dimensions) {
         Ok(buffer) => buffer,
         Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
     }
@@ -49,7 +49,7 @@ fn test_setup_text_buffer(dimensions: (i32, i32)) -> TextBuffer {
 fn test_setup_text_buffer_with_terminal(dimensions: (i32, i32)) -> (TextBuffer, Terminal) {
     let terminal = test_setup_open_terminal();
     (
-        match TextBuffer::new(&terminal, dimensions) {
+        match TextBuffer::create(&terminal, dimensions) {
             Ok(buffer) => buffer,
             Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
         },

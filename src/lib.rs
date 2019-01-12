@@ -23,7 +23,7 @@
 //!         .with_dimensions((1280, 720))
 //!         .build();
 //!     let mut text_buffer;
-//!     match TextBuffer::new(&terminal, (80, 24)) {
+//!     match TextBuffer::create(&terminal, (80, 24)) {
 //!         Ok(buffer) => text_buffer = buffer,
 //!         Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 //!     }
@@ -66,6 +66,7 @@
 //! | menu_systems             | enables the [menu_systems](menu_systems/index.html) module. |
 #![warn(missing_docs)]
 #![warn(clippy::all)]
+#![allow(clippy::float_cmp)]
 
 #[cfg(test)]
 mod tests;

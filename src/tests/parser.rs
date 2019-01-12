@@ -8,7 +8,7 @@ fn add_color() {
 
         let color = random_color();
         parser.add_color("test", color);
-        assert_eq!(*parser.get_color("test".to_owned()).unwrap(), color);
+        assert_eq!(*parser.get_color("test").unwrap(), color);
     });
 }
 

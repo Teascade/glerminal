@@ -7,13 +7,13 @@ fn main() {
         .build();
 
     let mut text_buffer_bg;
-    match TextBuffer::new(&terminal, (80, 24)) {
+    match TextBuffer::create(&terminal, (80, 24)) {
         Ok(buffer) => text_buffer_bg = buffer,
         Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
     }
 
     let mut text_buffer_overlay;
-    match TextBuffer::new(&terminal, (40, 12)) {
+    match TextBuffer::create(&terminal, (40, 12)) {
         Ok(buffer) => text_buffer_overlay = buffer,
         Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
     }

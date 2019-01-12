@@ -15,7 +15,7 @@ use std::collections::HashMap;
 ///     .build();
 ///
 /// let mut text_buffer;
-/// match TextBuffer::new(&terminal, (80, 24)) {
+/// match TextBuffer::create(&terminal, (80, 24)) {
 ///     Ok(buffer) => text_buffer = buffer,
 ///     Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 /// }

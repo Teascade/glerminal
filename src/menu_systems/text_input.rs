@@ -305,7 +305,7 @@ impl InterfaceItem for TextInput {
                 if self.character_limit.is_none()
                     || self.character_limit.unwrap() > self.text.len() as u32
                 {
-                    if let Some(character) = self.filter.get(&keycode) {
+                    if let Some(character) = self.filter.get(keycode) {
                         let mut text = String::new();
                         if events.keyboard.is_pressed(VirtualKeyCode::LShift)
                             || events.keyboard.is_pressed(VirtualKeyCode::RShift)

@@ -6,6 +6,7 @@ use glutin::VirtualKeyCode;
 /// Represents a list of InterfaceItems that is passed to the Menu when updating
 ///
 /// MenuList is used to draw and handle updates in the Menu and will also determines the order of the InferfaceItems in the menu.
+#[derive(Default)]
 pub struct MenuList<'a> {
     items_ref: Vec<Box<&'a mut dyn InterfaceItem>>,
     positions: Vec<MenuPosition>,
@@ -105,7 +106,7 @@ pub enum FocusSelection {
 /// // Initialize terminal and text buffer
 /// let terminal = TerminalBuilder::new().build();
 /// let mut text_buffer;
-/// match TextBuffer::new(&terminal, (80, 24)) {
+/// match TextBuffer::create(&terminal, (80, 24)) {
 ///     Ok(buffer) => text_buffer = buffer,
 ///     Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 /// }
@@ -156,9 +157,8 @@ pub struct Menu {
     focus_selection: FocusSelection,
 }
 
-impl Menu {
-    /// Initializes a new empty menu
-    pub fn new() -> Menu {
+impl Default for Menu {
+    fn default() -> Menu {
         Menu {
             x: 0,
             y: 0,
@@ -172,6 +172,13 @@ impl Menu {
             growth_direction: GrowthDirection::Down,
             focus_selection: FocusSelection::Keyboard(None, None),
         }
+    }
+}
+
+impl Menu {
+    /// Initializes a new empty menu
+    pub fn new() -> Menu {
+        Default::default()
     }
 
     /// Sets the position and consumes the Menu, then returns it

@@ -11,6 +11,7 @@ use crate::{MouseButton, VirtualKeyCode};
 /// unless force one selected is toggled on, in which case the index given with it will be selected at first, and the group will disallow having none selected.
 ///
 /// Updating this CheckboxGroup with the given Checkboxes will ensure that the functionality explained above will be enforced.
+#[derive(Default)]
 pub struct CheckboxGroup {
     selected_idx: Option<u32>,
     force_one_checked: Option<u32>,
