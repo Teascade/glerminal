@@ -153,6 +153,9 @@ impl Display {
                         ));
                     }
                     WindowEvent::CursorLeft { .. } => self.events.borrow_mut().cursor.cursor_left(),
+                    WindowEvent::ReceivedCharacter(character) => {
+                        self.events.borrow_mut().chars.add_char(character);
+                    }
                     _ => (),
                 }
             }

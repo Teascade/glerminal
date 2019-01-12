@@ -32,6 +32,8 @@ pub struct Events {
     pub mouse: Input<MouseButton>,
     /// Allows getting information related to cursor position
     pub cursor: Cursor,
+    /// Allows the gathering of unicode characters that the terminal received. Optimal for text receiving.
+    pub chars: Chars,
 }
 
 impl Events {
@@ -40,6 +42,7 @@ impl Events {
             keyboard: Input::new(),
             mouse: Input::new(),
             cursor: Cursor::new(text_buffer_aspect_ratio),
+            chars: Chars::new(),
         }
     }
 
@@ -47,6 +50,34 @@ impl Events {
         self.keyboard.clear_just_lists();
         self.mouse.clear_just_lists();
         self.cursor.clear_just_moved();
+        self.chars.clear_just_received();
+    }
+}
+
+/// Chars can get the character that the terminal received that frame, if any.
+#[derive(Clone)]
+pub struct Chars {
+    just_received_chars: Vec<char>,
+}
+
+impl Chars {
+    pub(crate) fn new() -> Chars {
+        Chars {
+            just_received_chars: Vec::new(),
+        }
+    }
+
+    pub(crate) fn add_char(&mut self, character: char) {
+        self.just_received_chars.push(character);
+    }
+
+    pub(crate) fn clear_just_received(&mut self) {
+        self.just_received_chars = Vec::new();
+    }
+
+    /// Get the characters that were pressed this frame
+    pub fn get_chars(&self) -> Vec<char> {
+        self.just_received_chars.clone()
     }
 }
 
