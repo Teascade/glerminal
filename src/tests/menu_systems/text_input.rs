@@ -132,7 +132,7 @@ fn draw() {
             item.draw(&mut text_buffer);
             for (idx, c) in whole.chars().enumerate() {
                 assert_eq!(
-                    text_buffer.get_character(idx as i32, 0).unwrap().get_char(),
+                    text_buffer.get_character(idx as u32, 0).unwrap().get_char(),
                     c
                 )
             }

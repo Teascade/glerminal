@@ -102,7 +102,7 @@ impl Window {
     /// Draws the window
     pub fn draw(&self, text_buffer: &mut TextBuffer) {
         for y in 0..(self.height + 2) {
-            text_buffer.move_cursor(self.x as i32, (self.y + y) as i32);
+            text_buffer.move_cursor(self.x, self.y + y);
             for x in 0..(self.width + 2) {
                 if x == 0 || y == 0 || x == self.width + 1 || y == self.height + 1 {
                     text_buffer.change_cursor_bg_color(self.border_color);
@@ -112,7 +112,7 @@ impl Window {
                 text_buffer.put_char(' ');
             }
         }
-        text_buffer.move_cursor((self.x + 1) as i32, self.y as i32);
+        text_buffer.move_cursor(self.x + 1, self.y);
         text_buffer.change_cursor_bg_color(self.border_color);
         text_buffer.change_cursor_fg_color(self.border_title_color);
         text_buffer.write(

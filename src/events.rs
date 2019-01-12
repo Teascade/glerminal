@@ -108,7 +108,7 @@ impl Cursor {
     }
 
     /// Returns the current position of the cursor (the coordinates on the text buffer).
-    pub fn get_location(&self, text_buffer: &TextBuffer) -> Option<(i32, i32)> {
+    pub fn get_location(&self, text_buffer: &TextBuffer) -> Option<(u32, u32)> {
         if let Some(location) = self.location {
             let mut overflows = self.display_overflows;
             let mut relative_dimensions = self.display_relative_dimensions;
@@ -128,8 +128,8 @@ impl Cursor {
                 let y = (location.1 - overflows.1) * relative_dimensions.1;
 
                 Some((
-                    (x * text_buffer.width as f32).floor() as i32,
-                    (y * text_buffer.height as f32).floor() as i32,
+                    (x * text_buffer.width as f32).floor() as u32,
+                    (y * text_buffer.height as f32).floor() as u32,
                 ))
             } else {
                 None

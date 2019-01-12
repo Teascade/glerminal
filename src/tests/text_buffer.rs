@@ -9,12 +9,12 @@ fn aspect_ratio() {
     run_multiple_times(10, || {
         let mut rnd = thread_rng();
 
-        let width = rnd.gen_range(2i32, 100);
-        let height = rnd.gen_range(2i32, 100);
+        let width = rnd.gen_range(2, 100);
+        let height = rnd.gen_range(2, 100);
 
         let (text_buffer, terminal) = test_setup_text_buffer_with_terminal((width, height));
-        let ar_height = height * terminal.font.line_height as i32;
-        let ar_width = width * terminal.font.size as i32;
+        let ar_height = height * terminal.font.line_height;
+        let ar_width = width * terminal.font.size;
         let ar = ar_width as f32 / ar_height as f32;
 
         assert_eq!(text_buffer.aspect_ratio, ar);
@@ -26,8 +26,8 @@ fn size() {
     run_multiple_times(10, || {
         let mut rnd = thread_rng();
 
-        let width = rnd.gen_range(2i32, 100);
-        let height = rnd.gen_range(2i32, 100);
+        let width = rnd.gen_range(2, 100);
+        let height = rnd.gen_range(2, 100);
 
         let text_buffer = test_setup_text_buffer((width, height));
         assert_eq!(text_buffer.chars.len(), (width * height) as usize);
@@ -110,12 +110,12 @@ fn cursor_move() {
     run_multiple_times(10, || {
         let mut rnd = thread_rng();
 
-        let width = rnd.gen_range(3i32, 100);
-        let height = rnd.gen_range(3i32, 100);
+        let width = rnd.gen_range(3, 100);
+        let height = rnd.gen_range(3, 100);
 
         let mut text_buffer = test_setup_text_buffer((width, height));
-        let x = rnd.gen_range(0i32, width - 2);
-        let y = rnd.gen_range(0i32, height - 2);
+        let x = rnd.gen_range(0, width - 2);
+        let y = rnd.gen_range(0, height - 2);
         text_buffer.move_cursor(x, y);
         //assert_eq!(text_buffer.get_cursor_position(), (x, y));
         text_buffer.move_cursor(width, height);

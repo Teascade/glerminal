@@ -4,8 +4,8 @@ use super::{Program, Renderable, Texture, Vao, Vbo};
 use crate::text_buffer::TextBuffer;
 
 pub(crate) struct BackgroundMesh {
-    width: i32,
-    height: i32,
+    width: u32,
+    height: u32,
     vbo_pos: Vbo,
     vbo_col: Vbo,
     vao: Vao,
@@ -27,7 +27,7 @@ impl Renderable for BackgroundMesh {
 }
 
 impl BackgroundMesh {
-    pub fn new(program: Program, dimensions: (i32, i32)) -> BackgroundMesh {
+    pub fn new(program: Program, dimensions: (u32, u32)) -> BackgroundMesh {
         let (width, height) = dimensions;
 
         let mut vertex_buffer_pos = Vec::new();
@@ -64,7 +64,7 @@ impl BackgroundMesh {
         let vbo_shakiness = super::create_vbo(&vertex_buffer_shakiness);
         let vao = super::create_vao(program, vbo_pos, vbo_col, vbo_shakiness, None);
 
-        let count = width * height * 6;
+        let count = (width * height * 6) as i32;
 
         BackgroundMesh {
             width: width,

@@ -136,7 +136,7 @@ impl InterfaceItem for TextItem {
             text_buffer.change_cursor_fg_color(self.fg_color_unfocused);
             text_buffer.change_cursor_bg_color(self.bg_color_unfocused);
         }
-        text_buffer.move_cursor(self.base.x as i32, self.base.y as i32);
+        text_buffer.move_cursor(self.base.x, self.base.y);
         text_buffer.write(
             self.text
                 .chars()

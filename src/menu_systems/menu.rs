@@ -369,9 +369,9 @@ impl Menu {
                             if !base.can_be_focused {
                                 continue;
                             }
-                            let (x, y) = (base.get_pos().0 as i32, base.get_pos().1 as i32);
-                            let width = item.get_total_width() as i32;
-                            let height = item.get_total_height() as i32;
+                            let (x, y) = (base.get_pos().0, base.get_pos().1);
+                            let width = item.get_total_width();
+                            let height = item.get_total_height();
 
                             let (x0, x1);
                             if grow_right {

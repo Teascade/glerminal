@@ -276,7 +276,7 @@ impl InterfaceItem for Checkbox {
             text_buffer.change_cursor_fg_color(self.fg_color_unfocused);
             text_buffer.change_cursor_bg_color(self.bg_color_unfocused);
         }
-        text_buffer.move_cursor(self.base.x as i32, self.base.y as i32);
+        text_buffer.move_cursor(self.base.x, self.base.y);
         let checked_text = if self.checked {
             (&self.checked_text).to_owned()
         } else {

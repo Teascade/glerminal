@@ -218,7 +218,7 @@ use glutin::VirtualKeyCode;
 ///
 ///         text_buffer.change_cursor_fg_color([0.2, 0.2, 0.2, 1.0]);
 ///         text_buffer.change_cursor_bg_color([0.0; 4]);
-///         text_buffer.move_cursor(pos.0 as i32, pos.1 as i32);
+///         text_buffer.move_cursor(pos.0, pos.1);
 ///         text_buffer.write(self.text.clone());
 ///     }
 ///

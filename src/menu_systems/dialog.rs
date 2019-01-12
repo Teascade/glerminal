@@ -250,7 +250,7 @@ impl InterfaceItem for Dialog {
             } else {
                 text = repeat(' ').take(self.width as usize).collect();
             }
-            text_buffer.move_cursor(self.base.x as i32, self.base.y as i32 + idx as i32);
+            text_buffer.move_cursor(self.base.x, self.base.y + idx);
             text_buffer.write(text);
         }
     }

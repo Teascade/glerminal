@@ -122,8 +122,8 @@ pub struct TextBuffer {
     index: u32,
 
     pub(crate) chars: Vec<TermCharacter>,
-    pub(crate) height: i32,
-    pub(crate) width: i32,
+    pub(crate) height: u32,
+    pub(crate) width: u32,
     pub(crate) mesh: Option<TextBufferMesh>,
     pub(crate) background_mesh: Option<BackgroundMesh>,
 
@@ -137,10 +137,10 @@ pub struct TextBuffer {
 
 impl TextBuffer {
     /// Creates a new text buffer with the given dimensions (width in characters, height in characters)
-    pub fn create(terminal: &Terminal, dimensions: (i32, i32)) -> Result<TextBuffer, String> {
+    pub fn create(terminal: &Terminal, dimensions: (u32, u32)) -> Result<TextBuffer, String> {
         let (width, height) = dimensions;
 
-        if width <= 0 || height <= 0 {
+        if width == 0 || height == 0 {
             return Err(
                 "TextBuffer dimensions are erronous; either width or height is below 1".to_owned(),
             );
@@ -166,8 +166,8 @@ impl TextBuffer {
             )
         };
 
-        let true_height = height * terminal.font.line_height as i32;
-        let true_width = width * terminal.font.size as i32;
+        let true_height = height * terminal.font.line_height;
+        let true_width = width * terminal.font.size;
 
         let index = INDEX_COUNTER.fetch_add(1, Ordering::Relaxed) as u32;
         Ok(TextBuffer {
@@ -187,7 +187,7 @@ impl TextBuffer {
 
             aspect_ratio: true_width as f32 / true_height as f32,
 
-            limits: TermLimits::new(width as u32, height as u32),
+            limits: TermLimits::new(width, height),
             dirty: true,
         })
     }
@@ -209,20 +209,20 @@ impl TextBuffer {
     }
 
     /// Get the dimensions of the text buffer (in characters). Returns (width, height)
-    pub fn get_dimensions(&self) -> (i32, i32) {
+    pub fn get_dimensions(&self) -> (u32, u32) {
         (self.width, self.height)
     }
 
     /// Sets the character at the specified position. It is the user's responsibility to check if such a position exists.
     pub fn set_char(&mut self, x: u32, y: u32, character: TermCharacter) {
-        self.chars[(y * self.width as u32 + x) as usize] = character;
+        self.chars[(y * self.width + x) as usize] = character;
     }
 
     /// Gets the TermChaacter in the given position
     ///
     /// Returns None if x/y are out of bounds
-    pub fn get_character(&self, x: i32, y: i32) -> Option<TermCharacter> {
-        if x < 0 || x >= self.width || y < 0 || y >= self.height {
+    pub fn get_character(&self, x: u32, y: u32) -> Option<TermCharacter> {
+        if x >= self.width || y >= self.height {
             None
         } else {
             Some(self.chars[(y * self.width + x) as usize])
@@ -301,19 +301,19 @@ impl TextBuffer {
     }
 
     /// Moves the cursor to a specified location in the terminal. If the location does not exist, nothing happens.
-    pub fn move_cursor(&mut self, x: i32, y: i32) {
+    pub fn move_cursor(&mut self, x: u32, y: u32) {
         let x = x
-            .max(self.limits.get_min_x() as i32)
-            .min(self.limits.get_max_x() as i32 - 1);
+            .max(self.limits.get_min_x())
+            .min(self.limits.get_max_x() - 1);
         let y = y
-            .max(self.limits.get_min_y() as i32)
-            .min(self.limits.get_max_y() as i32 - 1);
+            .max(self.limits.get_min_y())
+            .min(self.limits.get_max_y() - 1);
         self.cursor.x = x;
         self.cursor.y = y;
     }
 
     /// Returns the current position of the cursor
-    pub fn get_cursor_position(&self) -> (i32, i32) {
+    pub fn get_cursor_position(&self) -> (u32, u32) {
         (self.cursor.x, self.cursor.y)
     }
 
@@ -342,16 +342,13 @@ impl TextBuffer {
         self.dirty
     }
 
-    fn move_cursor_by(&mut self, amount: i32) {
-        let new_pos = self.cursor.x + amount;
-        if new_pos >= 0 {
-            self.cursor.x += amount;
-            if self.cursor.x >= self.limits.get_max_x() as i32 {
-                self.cursor.x = self.limits.get_min_x() as i32;
-                self.cursor.y += 1;
-                if self.cursor.y >= self.limits.get_max_y() as i32 {
-                    self.cursor.y = self.limits.get_min_y() as i32;
-                }
+    fn move_cursor_by(&mut self, amount: u32) {
+        self.cursor.x += amount;
+        if self.cursor.x >= self.limits.get_max_x() {
+            self.cursor.x = self.limits.get_min_x();
+            self.cursor.y += 1;
+            if self.cursor.y >= self.limits.get_max_y() {
+                self.cursor.y = self.limits.get_min_y();
             }
         }
     }
@@ -407,8 +404,8 @@ impl TermCharacter {
 }
 
 struct TermCursor {
-    x: i32,
-    y: i32,
+    x: u32,
+    y: u32,
     foreground_color: Color,
     background_color: Color,
     shakiness: f32,

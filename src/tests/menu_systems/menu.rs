@@ -169,7 +169,7 @@ fn draw() {
         let mut actual_rows = [String::new(), String::new(), String::new(), String::new()];
         for (y, row) in actual_rows.iter_mut().enumerate() {
             for x in 0..8 {
-                row.push(text_buffer.get_character(x, y as i32).unwrap().get_char());
+                row.push(text_buffer.get_character(x, y as u32).unwrap().get_char());
             }
         }
 

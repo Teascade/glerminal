@@ -38,7 +38,7 @@ fn test_setup_open_terminal() -> Terminal {
         .build()
 }
 
-fn test_setup_text_buffer(dimensions: (i32, i32)) -> TextBuffer {
+fn test_setup_text_buffer(dimensions: (u32, u32)) -> TextBuffer {
     let terminal = test_setup_open_terminal();
     match TextBuffer::create(&terminal, dimensions) {
         Ok(buffer) => buffer,
@@ -46,7 +46,7 @@ fn test_setup_text_buffer(dimensions: (i32, i32)) -> TextBuffer {
     }
 }
 
-fn test_setup_text_buffer_with_terminal(dimensions: (i32, i32)) -> (TextBuffer, Terminal) {
+fn test_setup_text_buffer_with_terminal(dimensions: (u32, u32)) -> (TextBuffer, Terminal) {
     let terminal = test_setup_open_terminal();
     (
         match TextBuffer::create(&terminal, dimensions) {

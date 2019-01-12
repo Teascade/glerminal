@@ -13,7 +13,7 @@ fn draw() {
         let width = rand.gen_range(10, 15);
         let height = rand.gen_range(3, 5);
 
-        let mut text_buffer = test_setup_text_buffer((width as i32, height as i32));
+        let mut text_buffer = test_setup_text_buffer((width, height));
 
         let word_amount = rand.gen_range(5, 20);
 
@@ -56,7 +56,7 @@ fn draw() {
                 assert_eq!(
                     c,
                     text_buffer
-                        .get_character(char_idx as i32, idx as i32)
+                        .get_character(char_idx as u32, idx as u32)
                         .unwrap()
                         .get_char()
                 );

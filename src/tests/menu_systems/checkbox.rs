@@ -83,7 +83,7 @@ fn draw() {
         for (idx, c) in expected.chars().enumerate() {
             assert_eq!(
                 c,
-                text_buffer.get_character(idx as i32, 0).unwrap().get_char()
+                text_buffer.get_character(idx as u32, 0).unwrap().get_char()
             );
         }
     });
