@@ -17,14 +17,14 @@ static IOSEVKA_PNG: &'static [u8] = include_bytes!("../fonts/iosevka.png");
 ///
 /// See [terminal mod](index.html) for examples and more detailed documentation.
 pub struct TerminalBuilder {
-    title: String,
-    dimensions: (u32, u32),
-    clear_color: (f32, f32, f32, f32),
-    font: Font,
-    visibility: bool,
-    headless: bool,
-    text_buffer_aspect_ratio: bool,
-    vsync: bool,
+    pub(crate) title: String,
+    pub(crate) dimensions: (u32, u32),
+    pub(crate) clear_color: (f32, f32, f32, f32),
+    pub(crate) font: Font,
+    pub(crate) visibility: bool,
+    pub(crate) headless: bool,
+    pub(crate) text_buffer_aspect_ratio: bool,
+    pub(crate) vsync: bool,
 }
 
 #[allow(dead_code)]
@@ -99,16 +99,7 @@ impl TerminalBuilder {
 
     /// Builds the actual terminal and opens the window
     pub fn build(self) -> Terminal {
-        Terminal::new(
-            self.title,
-            self.dimensions,
-            self.clear_color,
-            self.font,
-            self.visibility,
-            self.headless,
-            self.text_buffer_aspect_ratio,
-            self.vsync,
-        )
+        Terminal::new(self)
     }
 }
 
@@ -162,41 +153,24 @@ pub struct Terminal {
 }
 
 impl Terminal {
-    fn new<T: Into<String>>(
-        title: T,
-        window_dimensions: (u32, u32),
-        clear_color: (f32, f32, f32, f32),
-        font: Font,
-        visibility: bool,
-        headless: bool,
-        text_buffer_aspect_ratio: bool,
-        vsync: bool,
-    ) -> Terminal {
-        let display;
-        let program;
-        let background_program;
-        let debug_program;
-        if headless {
-            display = None;
-            program = Program::empty();
-            background_program = Program::empty();
-            debug_program = Program::empty();
+    fn new(builder: TerminalBuilder) -> Terminal {
+        let (display, program, background_program, debug_program) = if builder.headless {
+            (None, Program::empty(), Program::empty(), Program::empty())
         } else {
-            display = Some(Display::new(
-                title,
-                window_dimensions,
-                clear_color,
-                visibility,
-                text_buffer_aspect_ratio,
-                vsync,
-            ));
-            program = renderer::create_program(renderer::VERT_SHADER, renderer::FRAG_SHADER);
-            background_program =
-                renderer::create_program(renderer::VERT_SHADER, renderer::BG_FRAG_SHADER);
-            debug_program =
-                renderer::create_program(renderer::VERT_SHADER, renderer::DEBUG_FRAG_SHADER);
-        }
-        let font = font;
+            (
+                Some(Display::new(
+                    builder.title,
+                    builder.dimensions,
+                    builder.clear_color,
+                    builder.visibility,
+                    builder.text_buffer_aspect_ratio,
+                    builder.vsync,
+                )),
+                renderer::create_program(renderer::VERT_SHADER, renderer::FRAG_SHADER),
+                renderer::create_program(renderer::VERT_SHADER, renderer::BG_FRAG_SHADER),
+                renderer::create_program(renderer::VERT_SHADER, renderer::DEBUG_FRAG_SHADER),
+            )
+        };
         Terminal {
             display,
             program,
@@ -204,11 +178,11 @@ impl Terminal {
             debug_program,
             debug: Cell::new(false),
             running: Cell::new(true),
-            headless,
+            headless: builder.headless,
             since_start: SystemTime::now(),
-            font,
+            font: builder.font,
             timer: RefCell::new(Timer::new()),
-            text_buffer_aspect_ratio,
+            text_buffer_aspect_ratio: builder.text_buffer_aspect_ratio,
         }
     }
 
@@ -276,12 +250,11 @@ impl Terminal {
             &text_buffer.mesh,
             &text_buffer.background_mesh,
         ) {
-            let proj_matrix;
-            if self.text_buffer_aspect_ratio {
-                proj_matrix = display.get_display_data(&text_buffer).proj_matrix;
+            let proj_matrix = if self.text_buffer_aspect_ratio {
+                display.get_display_data(&text_buffer).proj_matrix
             } else {
-                proj_matrix = display.proj_matrix.get();
-            }
+                display.proj_matrix.get()
+            };
 
             let duration = SystemTime::now().duration_since(self.since_start).unwrap();
 

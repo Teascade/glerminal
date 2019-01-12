@@ -181,7 +181,7 @@ impl Dialog {
         let mut curr_row = String::new();
         let width = self.width;
 
-        let mut parts = self.text.split(' ').flat_map(|word| {
+        let parts = self.text.split(' ').flat_map(|word| {
             let mut word = word.to_owned();
             let mut words = Vec::new();
             while word.len() as u32 > width {
@@ -193,9 +193,9 @@ impl Dialog {
             words
         });
 
-        while let Some(word) = parts.next() {
+        for word in parts {
             if (curr_row.len() + word.len() + 1) as u32 <= width {
-                if curr_row.len() != 0 {
+                if !curr_row.is_empty() {
                     curr_row += " ";
                 }
                 curr_row += &word;

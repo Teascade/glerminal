@@ -19,13 +19,13 @@ use rand::{thread_rng, Rng};
 #[test]
 fn gl_error() {
     let terminal = test_setup_open_terminal();
-    let mut buffer = match TextBuffer::new(&terminal, (2, 2)) {
+    let buffer = match TextBuffer::new(&terminal, (2, 2)) {
         Ok(buffer) => buffer,
         Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
     };
 
     while terminal.refresh() {
-        terminal.draw(&mut buffer);
+        terminal.draw(&buffer);
         terminal.close();
     }
 

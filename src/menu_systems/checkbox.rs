@@ -57,10 +57,8 @@ impl CheckboxGroup {
                         }
                         self.selected_idx = Some(idx as u32);
                         selection_changed = true;
-                    } else {
-                        if let Some(checkbox) = checkboxes.get_mut(idx) {
-                            checkbox.set_checked(false);
-                        }
+                    } else if let Some(checkbox) = checkboxes.get_mut(idx) {
+                        checkbox.set_checked(false);
                     }
                 }
             } else if curr_is_checked {
@@ -76,7 +74,7 @@ impl CheckboxGroup {
                     }
                 } else {
                     if checkboxes.len() > forced_idx as usize {
-                        let checkbox = checkboxes.get_mut(forced_idx as usize).unwrap();
+                        let checkbox = &mut checkboxes[forced_idx as usize];
                         checkbox.set_checked(true);
                         self.selected_idx = Some(forced_idx);
                     } else if let Some(checkbox) = checkboxes.get_mut(0) {
@@ -278,12 +276,11 @@ impl InterfaceItem for Checkbox {
             text_buffer.change_cursor_bg_color(self.bg_color_unfocused);
         }
         text_buffer.move_cursor(self.base.x as i32, self.base.y as i32);
-        let checked_text;
-        if self.checked {
-            checked_text = (&self.checked_text).to_owned();
+        let checked_text = if self.checked {
+            (&self.checked_text).to_owned()
         } else {
-            checked_text = repeat(" ").take(self.checked_text.len()).collect();
-        }
+            repeat(" ").take(self.checked_text.len()).collect()
+        };
         let text = (&self.text).to_owned() + &self.prefix + &checked_text + &self.suffix;
         text_buffer.write(text);
     }

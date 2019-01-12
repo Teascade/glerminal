@@ -150,22 +150,21 @@ impl TextBuffer {
             TermCharacter::new(' ' as u16, [0.0; 4], [0.0; 4], 0.0);
             (width * height) as usize
         ];
-        let mesh;
-        let background_mesh;
-        if terminal.headless {
-            mesh = None;
-            background_mesh = None;
+        let (mesh, background_mesh) = if terminal.headless {
+            (None, None)
         } else {
-            mesh = Some(TextBufferMesh::new(
-                terminal.get_program(),
-                dimensions,
-                &terminal.font,
-            ));
-            background_mesh = Some(BackgroundMesh::new(
-                terminal.get_background_program(),
-                dimensions,
-            ));
-        }
+            (
+                Some(TextBufferMesh::new(
+                    terminal.get_program(),
+                    dimensions,
+                    &terminal.font,
+                )),
+                Some(BackgroundMesh::new(
+                    terminal.get_background_program(),
+                    dimensions,
+                )),
+            )
+        };
 
         let true_height = height * terminal.font.line_height as i32;
         let true_width = width * terminal.font.size as i32;

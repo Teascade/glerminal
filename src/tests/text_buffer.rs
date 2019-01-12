@@ -74,7 +74,7 @@ fn put_single_character() {
 fn write_three_characters() {
     run_multiple_times(10, || {
         let mut text = String::new();
-        while text.len() == 0 {
+        while text.is_empty() {
             text = match String::from_utf16(&[
                 rand::random::<u16>(),
                 rand::random::<u16>(),
@@ -131,8 +131,7 @@ fn cursor_move() {
         text_buffer.move_cursor(x, y);
         //assert_eq!(text_buffer.get_cursor_position(), (x, y));
         text_buffer.move_cursor(width, height);
-        //assert_eq!(text_buffer.get_cursor_position(), (x, y))
-;
+        //assert_eq!(text_buffer.get_cursor_position(), (x, y));
     });
 }
 

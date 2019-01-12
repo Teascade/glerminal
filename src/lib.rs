@@ -65,6 +65,7 @@
 //! | parser _(on by default)_ | enables the [Praser](struct.Parser.html) struct.            |
 //! | menu_systems             | enables the [menu_systems](menu_systems/index.html) module. |
 #![warn(missing_docs)]
+#![warn(clippy::all)]
 
 #[cfg(test)]
 mod tests;

@@ -320,10 +320,7 @@ impl Menu {
 
                         let start_idx = self.select_idx.min(length as u32 - 1).max(0);
                         while {
-                            !list
-                                .items_ref
-                                .get(self.select_idx as usize)
-                                .unwrap()
+                            !list.items_ref[self.select_idx as usize]
                                 .get_base()
                                 .can_be_focused
                         } {
@@ -358,7 +355,7 @@ impl Menu {
                     };
                     if let Some(loc) = events.cursor.get_location(&text_buffer) {
                         for idx in 0..self.cloned_interface_items.len() {
-                            let item = self.cloned_interface_items.get(idx).unwrap();
+                            let item = &self.cloned_interface_items[idx];
                             let base = item.get_base();
                             let idx = idx as u32;
 
@@ -399,10 +396,7 @@ impl Menu {
             // Ensure that any unselectable menu items aren't selected. If none are found, c'est la vie
             let start_idx = self.select_idx.min(length as u32 - 1).max(0);
             while {
-                !list
-                    .items_ref
-                    .get(self.select_idx as usize)
-                    .unwrap()
+                !list.items_ref[self.select_idx as usize]
                     .get_base()
                     .can_be_focused
             } {
@@ -414,104 +408,16 @@ impl Menu {
         }
 
         // Update children and focus the focused child.
-        let mut idx = 0;
-        for item in &mut list.items_ref {
+        for (idx, item) in (&mut list.items_ref).iter_mut().enumerate() {
             item.get_mut_base()
-                .set_focused((self.select_idx == idx) && self.focused);
+                .set_focused((self.select_idx == idx as u32) && self.focused);
             item.update(delta);
-            idx += 1;
         }
 
         // Check if the children are dirty, if they are then update them to be drawn
         self.is_dirty = self.children_are_dirty(&mut list.items_ref);
         if self.is_dirty {
-            self.cloned_interface_items = list.get_cloned_list();
-
-            let mut off: (i32, i32) = (0, 0);
-            let mut last_off: (i32, i32) = (0, 0);
-            let mut last_pos: (i32, i32) = (self.x as i32, self.y as i32);
-
-            // Set the positions of the children relative to the growth direction and their own positions
-            match self.growth_direction {
-                GrowthDirection::Down => {
-                    for (idx, item) in (&mut self.cloned_interface_items).iter_mut().enumerate() {
-                        let position = list.positions.get(idx).unwrap();
-
-                        last_pos = Menu::calc_new_pos(
-                            self.x as i32,
-                            self.y as i32,
-                            position,
-                            off,
-                            last_off,
-                            last_pos,
-                        );
-                        item.get_mut_base()
-                            .set_pos((last_pos.0 as u32, last_pos.1 as u32));
-
-                        last_off = (0, item.get_total_height() as i32);
-                        off.1 += last_off.1;
-                    }
-                }
-                GrowthDirection::Up => {
-                    for (idx, item) in (&mut self.cloned_interface_items).iter_mut().enumerate() {
-                        let position = list.positions.get(idx).unwrap();
-
-                        last_off = (0, -(item.get_total_height() as i32));
-
-                        last_pos = Menu::calc_new_pos(
-                            self.x as i32,
-                            self.y as i32,
-                            position,
-                            off,
-                            last_off,
-                            last_pos,
-                        );
-                        item.get_mut_base()
-                            .set_pos((last_pos.0 as u32, last_pos.1 as u32));
-
-                        off.1 += last_off.1;
-                    }
-                }
-                GrowthDirection::Right => {
-                    for (idx, item) in (&mut self.cloned_interface_items).iter_mut().enumerate() {
-                        let position = list.positions.get(idx).unwrap();
-
-                        last_pos = Menu::calc_new_pos(
-                            self.x as i32,
-                            self.y as i32,
-                            position,
-                            off,
-                            last_off,
-                            last_pos,
-                        );
-                        item.get_mut_base()
-                            .set_pos((last_pos.0 as u32, last_pos.1 as u32));
-
-                        last_off = (item.get_total_width() as i32, 0);
-                        off.0 += last_off.0;
-                    }
-                }
-                GrowthDirection::Left => {
-                    for (idx, item) in (&mut self.cloned_interface_items).iter_mut().enumerate() {
-                        let position = list.positions.get(idx).unwrap();
-
-                        last_off = (-(item.get_total_width() as i32), 0);
-
-                        last_pos = Menu::calc_new_pos(
-                            self.x as i32,
-                            self.y as i32,
-                            position,
-                            off,
-                            last_off,
-                            last_pos,
-                        );
-                        item.get_mut_base()
-                            .set_pos((last_pos.0 as u32, last_pos.1 as u32));
-
-                        off.0 += last_off.0;
-                    }
-                }
-            }
+            self.set_new_positions(&list);
         }
 
         self.is_dirty
@@ -536,6 +442,96 @@ impl Menu {
         children_are_dirty
     }
 
+    fn set_new_positions(&mut self, list: &MenuList) {
+        self.cloned_interface_items = list.get_cloned_list();
+
+        let mut off: (i32, i32) = (0, 0);
+        let mut last_off: (i32, i32) = (0, 0);
+        let mut last_pos: (i32, i32) = (self.x as i32, self.y as i32);
+
+        // Set the positions of the children relative to the growth direction and their own positions
+        match self.growth_direction {
+            GrowthDirection::Down => {
+                for (idx, item) in (&mut self.cloned_interface_items).iter_mut().enumerate() {
+                    let position = &list.positions[idx];
+
+                    last_pos = Menu::calc_new_pos(
+                        self.x as i32,
+                        self.y as i32,
+                        position,
+                        off,
+                        last_off,
+                        last_pos,
+                    );
+                    item.get_mut_base()
+                        .set_pos((last_pos.0 as u32, last_pos.1 as u32));
+
+                    last_off = (0, item.get_total_height() as i32);
+                    off.1 += last_off.1;
+                }
+            }
+            GrowthDirection::Up => {
+                for (idx, item) in (&mut self.cloned_interface_items).iter_mut().enumerate() {
+                    let position = &list.positions[idx];
+
+                    last_off = (0, -(item.get_total_height() as i32));
+
+                    last_pos = Menu::calc_new_pos(
+                        self.x as i32,
+                        self.y as i32,
+                        position,
+                        off,
+                        last_off,
+                        last_pos,
+                    );
+                    item.get_mut_base()
+                        .set_pos((last_pos.0 as u32, last_pos.1 as u32));
+
+                    off.1 += last_off.1;
+                }
+            }
+            GrowthDirection::Right => {
+                for (idx, item) in (&mut self.cloned_interface_items).iter_mut().enumerate() {
+                    let position = &list.positions[idx];
+
+                    last_pos = Menu::calc_new_pos(
+                        self.x as i32,
+                        self.y as i32,
+                        position,
+                        off,
+                        last_off,
+                        last_pos,
+                    );
+                    item.get_mut_base()
+                        .set_pos((last_pos.0 as u32, last_pos.1 as u32));
+
+                    last_off = (item.get_total_width() as i32, 0);
+                    off.0 += last_off.0;
+                }
+            }
+            GrowthDirection::Left => {
+                for (idx, item) in (&mut self.cloned_interface_items).iter_mut().enumerate() {
+                    let position = &list.positions[idx];
+
+                    last_off = (-(item.get_total_width() as i32), 0);
+
+                    last_pos = Menu::calc_new_pos(
+                        self.x as i32,
+                        self.y as i32,
+                        position,
+                        off,
+                        last_off,
+                        last_pos,
+                    );
+                    item.get_mut_base()
+                        .set_pos((last_pos.0 as u32, last_pos.1 as u32));
+
+                    off.0 += last_off.0;
+                }
+            }
+        }
+    }
+
     /// Gets the correct position of the menu-item relative to the
     /// 1. Growth direction of the menu
     /// 2. Position of the menu item itself
@@ -549,11 +545,11 @@ impl Menu {
         last_pos: (i32, i32),
     ) -> (i32, i32) {
         match position {
-            &MenuPosition::Relative(x, y) => (root_x + x + off.0, root_y + y + off.1),
-            &MenuPosition::RelativeToLast(x, y) => {
+            MenuPosition::Relative(x, y) => (root_x + x + off.0, root_y + y + off.1),
+            MenuPosition::RelativeToLast(x, y) => {
                 (last_pos.0 + x + last_off.0, last_pos.1 + y + last_off.1)
             }
-            &MenuPosition::Absolute(x, y) => (x as i32, y as i32),
+            MenuPosition::Absolute(x, y) => (*x as i32, *y as i32),
         }
     }
 }

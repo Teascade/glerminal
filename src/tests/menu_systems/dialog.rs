@@ -21,14 +21,14 @@ fn draw() {
         let mut row_text = String::new();
         let mut rows = Vec::new();
         for _ in 0..word_amount {
-            if text.len() != 0 {
+            if !text.is_empty() {
                 text += " ";
             }
             text += &random_text(rand.gen_range(2, 5));
         }
         for word in text.split(' ') {
             if (row_text.len() + word.len() + 1) as u32 <= width {
-                if row_text.len() != 0 {
+                if !row_text.is_empty() {
                     row_text += " ";
                 }
                 row_text += &word;
@@ -51,8 +51,7 @@ fn draw() {
             .skip(scroll as usize)
             .take(height as usize)
             .collect();
-        let mut idx = 0;
-        for row in expected {
+        for (idx, row) in expected.iter().enumerate() {
             for (char_idx, c) in row.chars().enumerate() {
                 assert_eq!(
                     c,
@@ -62,7 +61,6 @@ fn draw() {
                         .get_char()
                 );
             }
-            idx += 1;
         }
     });
 }
@@ -79,7 +77,7 @@ fn scroll() {
 
     let mut text = String::new();
     for _ in 0..rows {
-        if text.len() == 0 {
+        if text.is_empty() {
             text += " ";
         }
         text += &random_text(width);
@@ -118,7 +116,7 @@ fn handle_input() {
 
         let mut text = String::new();
         for _ in 0..3 {
-            if text.len() == 0 {
+            if text.is_empty() {
                 text += " ";
             }
             text += &random_text(width);
