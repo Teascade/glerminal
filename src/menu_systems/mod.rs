@@ -327,7 +327,7 @@ impl InterfaceItemBase {
 /// Represents a list of characters that is used to filter which character are registered in a [`TextInput`](struct.TextInput.html).
 ///
 /// Use `Filter::empty_filter()` to create a new filter and for example `.with_basic_latin_characters` to add basic latin characters to the filter.  
-/// Use `.with_char` or `add` to create your own filters.
+/// Use `.with_char` or `add` to create your own filters, or `remove` to remove characters from pre-existing filters.
 #[derive(Clone, Debug)]
 pub struct Filter {
     chars: Vec<char>,
@@ -358,11 +358,34 @@ impl Filter {
         self
     }
 
-    /// Creates a Filter with basic special symbols
+    /// Creates a Filter with basic special symbols  
+    /// (or symbols that are easily created with a Finnish layout, plus ¥ and ¿)
     ///
-    /// Includes `'`, `\`, `:`, `.`, `;`, `,`, `=`, `-`, `*`, `_`, `/`, `[`, `]`
+    /// Includes the following characters:  
+    /// `!`, `"`, `#`, `¤`, `%`, `&`, `/`, `(`, `)`, `=`, `?`, `´`, `\``
+    /// `@`, `£`, `$`, `€`, `{`, `[`, `]`, `}`, `\\`
+    /// `'`, `¨`, `^`, `*`, `~`, `,`, `.`, `-`, `;`, `:`, `_`, `<`, `>`, `|`
+    /// `€`, `§`, `¥`, `¿`, `½`
     pub fn with_basic_special_symbols(mut self) -> Filter {
-        self.add_all("\'\\:.;,=-*_/[]");
+        self.add_all("!\"#¤%&/()=?´`");
+        self.add_all("@£$€{[]}\\");
+        self.add_all("'¨^*~,.-;:_<>|");
+        self.add_all("€§¥¿½");
+        self
+    }
+
+    /// Creates a filter with some basic germanic special symbols that are easily producible with a Finnish layout
+    ///
+    /// Includes the following characters:  
+    /// `á`, `à`, `ä`, `â`, `ã`
+    /// `ü`, `û`, `ú`, `ù`
+    /// `ö`, `ó`, `ò`, `ô`
+    pub fn with_basic_germanic_alphabet_extension(mut self) -> Filter {
+        let mut chars = String::new();
+        chars += "áàäâã";
+        chars += "üûúù";
+        chars += "öóòô";
+
         self
     }
 
@@ -382,9 +405,14 @@ impl Filter {
     /// Insert a specific character to be accepted in this filter.
     ///
     /// Works similarly to with_pair
-    pub fn add(&mut self, character: char) {
+    ///
+    /// Returns whether the character was added.
+    pub fn add(&mut self, character: char) -> bool {
         if !self.has(&character) {
             self.chars.push(character);
+            true
+        } else {
+            false
         }
     }
 
@@ -395,6 +423,31 @@ impl Filter {
     pub fn add_all(&mut self, characters: &str) {
         for character in characters.chars() {
             self.add(character);
+        }
+    }
+
+    /// Remove the given character from the filter, if it exists.
+    /// Returns whether the character was removed.
+    pub fn remove(&mut self, character: char) -> bool {
+        if !self.has(&character) {
+            false
+        } else {
+            let mut idx = 0;
+            for c in self.chars.clone() {
+                if c == character {
+                    break;
+                }
+                idx += 1;
+            }
+            self.chars.remove(idx);
+            true
+        }
+    }
+
+    /// Remove all the characters in the given string of characters, if they exist in the filter.
+    pub fn remove_all(&mut self, characters: &str) {
+        for character in characters.chars() {
+            self.remove(character);
         }
     }
 
