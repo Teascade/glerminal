@@ -304,7 +304,7 @@ impl InterfaceItem for TextInput {
 
                 if (self.character_limit.is_none()
                     || self.character_limit.unwrap() > self.text.len() as u32)
-                    && self.filter.has(&character)
+                    && self.filter.has(character)
                 {
                     self.text.push(character);
                 }

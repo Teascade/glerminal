@@ -471,7 +471,7 @@ impl Filter {
     ///
     /// Returns whether the character was added.
     pub fn add(&mut self, character: char) -> bool {
-        if !self.has(&character) {
+        if !self.has(character) {
             self.chars.push(character);
             true
         } else {
@@ -492,7 +492,7 @@ impl Filter {
     /// Remove the given character from the filter, if it exists.
     /// Returns whether the character was removed.
     pub fn remove(&mut self, character: char) -> bool {
-        if !self.has(&character) {
+        if !self.has(character) {
             false
         } else {
             let mut idx = 0;
@@ -515,7 +515,7 @@ impl Filter {
     }
 
     /// Whether the character specified exists in this filter or not.
-    pub fn has(&self, character: &char) -> bool {
-        self.chars.contains(character)
+    pub fn has(&self, character: char) -> bool {
+        self.chars.contains(&character)
     }
 }
