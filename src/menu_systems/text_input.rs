@@ -18,7 +18,7 @@ use crate::{Events, MouseButton, VirtualKeyCode};
 /// let filter = Filter::empty_filter()
 ///     .with_basic_latin_characters() // Add basic latin letters
 ///     .with_basic_numerals()         // Add basic numerals
-///     .with_pair(Equals, '=');       // Add custom pair
+///     .with_char('=');       // Add custom character
 ///
 /// TextInput::new(None, None).with_filter(filter);
 /// ```
@@ -132,6 +132,7 @@ impl TextInput {
     /// Sets the text of the TextInput.
     pub fn with_text<T: Into<String>>(mut self, text: T) -> TextInput {
         self.text = text.into();
+        self.text_width = self.text.chars().count() as u32;
         self
     }
 
@@ -193,6 +194,7 @@ impl TextInput {
     /// Set the current text
     pub fn set_text<T: Into<String>>(&mut self, text: T) {
         self.text = text.into();
+        self.text_width = self.text.chars().count() as u32;
     }
 
     /// Returns the current text in the input

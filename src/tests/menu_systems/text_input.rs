@@ -1,7 +1,7 @@
 use super::{random_text, run_multiple_times, test_setup_text_buffer};
 use crate::menu_systems::{Filter, InterfaceItem, TextInput};
 use crate::Events;
-use crate::VirtualKeyCode::{Back, Key1, Return, A};
+use crate::VirtualKeyCode::Return;
 
 use rand::{thread_rng, Rng};
 
@@ -30,7 +30,7 @@ fn back_removing() {
 
     let expected: String = text.chars().take(10 - removed).collect();
 
-    events.keyboard.update_button_press(Back, true);
+    events.chars.add_char('\u{8}'); // Backspace-character
     for _ in 0..removed {
         item.handle_events(&events);
     }
@@ -63,12 +63,11 @@ fn input_handling_and_filters() {
         }
         item.filter = filter;
 
-        events.keyboard.update_button_press(A, true);
+        events.chars.add_char('a');
         item.handle_events(&events);
         events.clear_just_lists();
-        events.keyboard.update_button_press(A, false);
 
-        events.keyboard.update_button_press(Key1, true);
+        events.chars.add_char('1');
         item.handle_events(&events);
 
         assert_eq!(expected, item.get_text());
