@@ -49,7 +49,7 @@ impl TextItem {
             fg_color_focused: [0.2, 0.2, 0.2, 1.0],
 
             base: InterfaceItemBase::new(false),
-            max_width: text.len() as u32,
+            max_width: text.chars().count() as u32,
             text: text,
 
             is_button: false,

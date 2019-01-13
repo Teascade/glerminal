@@ -260,7 +260,10 @@ impl InterfaceItem for Checkbox {
     }
 
     fn get_total_width(&self) -> u32 {
-        (self.text.len() + self.prefix.len() + self.checked_text.len() + self.suffix.len()) as u32
+        (self.text.chars().count()
+            + self.prefix.chars().count()
+            + self.checked_text.chars().count()
+            + self.suffix.chars().count()) as u32
     }
 
     fn get_total_height(&self) -> u32 {
@@ -280,7 +283,9 @@ impl InterfaceItem for Checkbox {
         let checked_text = if self.checked {
             (&self.checked_text).to_owned()
         } else {
-            repeat(" ").take(self.checked_text.len()).collect()
+            repeat(" ")
+                .take(self.checked_text.chars().count())
+                .collect()
         };
         let text = (&self.text).to_owned() + &self.prefix + &checked_text + &self.suffix;
         text_buffer.write(text);
