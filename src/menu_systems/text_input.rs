@@ -48,6 +48,9 @@ pub struct TextInput {
     prefix: String,
     suffix: String,
 
+    // Cache text.chars().count() for optimization
+    text_width: u32,
+
     /// The filter used to determine which button presses are registered for writing
     pub filter: Filter,
 
@@ -90,6 +93,8 @@ impl TextInput {
             prefix: String::new(),
             suffix: String::new(),
             filter: Filter::empty_filter(),
+
+            text_width: 0,
 
             button_press_inputs: vec![VirtualKeyCode::Return],
             mouse_button_press_inputs: Vec::new(),
@@ -215,11 +220,11 @@ impl InterfaceItem for TextInput {
         if let Some(max_width) = self.max_width {
             text_width = max_width
         } else if let Some(min_width) = self.min_width {
-            text_width = self.text.len().max(min_width as usize) as u32;
+            text_width = self.text_width.max(min_width);
         } else {
-            text_width = self.text.len() as u32;
+            text_width = self.text_width as u32;
         }
-        (self.prefix.len() + self.suffix.len()) as u32 + text_width
+        (self.prefix.chars().count() + self.suffix.chars().count()) as u32 + text_width
     }
 
     fn get_total_height(&self) -> u32 {
@@ -250,29 +255,29 @@ impl InterfaceItem for TextInput {
         let field_width;
         if let (Some(min_width), Some(max_width)) = (self.min_width, self.max_width) {
             // Max width and min width
-            text_width = ((max_width - text_w_offset) as usize).min(self.text.len());
-            field_width = min_width.max(self.text.len() as u32).min(max_width);
+            text_width = (max_width - text_w_offset).min(self.text_width);
+            field_width = min_width.max(self.text_width).min(max_width);
         } else if let Some(min_width) = self.min_width {
             // Only min width
-            text_width = self.text.len();
-            field_width = min_width.max(self.text.len() as u32 + text_w_offset);
+            text_width = self.text_width;
+            field_width = min_width.max(self.text_width + text_w_offset);
         } else if let Some(max_width) = self.max_width {
             // Only max width
-            text_width = ((max_width - text_w_offset) as usize).min(self.text.len());
-            field_width = max_width.min(self.text.len() as u32 + 1);
+            text_width = (max_width - text_w_offset).min(self.text_width);
+            field_width = max_width.min(self.text_width + 1);
         } else {
             // Neither
-            text_width = self.text.len();
-            field_width = (self.text.len() as u32 + text_w_offset).max(1);
+            text_width = self.text_width;
+            field_width = (self.text_width + text_w_offset).max(1);
         }
 
-        let mut text: String = self.text[(self.text.len() - text_width)..].to_string();
+        let mut text: String = self.text.chars().take(text_width as usize).collect();
         if self.caret_showing {
             text.push('_');
         }
 
         let spaces: String = repeat(" ")
-            .take(field_width as usize - text_width - space_offset)
+            .take((field_width - text_width - space_offset) as usize)
             .collect();
         let text = text + &*spaces;
 
@@ -303,7 +308,7 @@ impl InterfaceItem for TextInput {
                 }
 
                 if (self.character_limit.is_none()
-                    || self.character_limit.unwrap() > self.text.len() as u32)
+                    || self.character_limit.unwrap() > self.text_width)
                     && self.filter.has(character)
                 {
                     self.text.push(character);
@@ -311,6 +316,8 @@ impl InterfaceItem for TextInput {
 
                 self.base.dirty = true;
                 handled = true;
+
+                self.text_width = self.text.chars().count() as u32;
             }
         }
         handled
