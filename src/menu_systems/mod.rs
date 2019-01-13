@@ -158,7 +158,6 @@ pub use self::window::Window;
 
 use crate::events::Events;
 use crate::text_buffer::TextBuffer;
-use glutin::VirtualKeyCode;
 
 /// Represents a single menu item: an item that is somewhere, can handle events and can be drawn.
 ///
@@ -341,7 +340,7 @@ impl Filter {
 
     /// Creates a Filter with basic latin characters
     ///
-    /// Includes characters A-z and spacebar.
+    /// Includes characters `A-z` and spacebar (upper and lowercase).
     pub fn with_basic_latin_characters(mut self) -> Filter {
         let chars = "abcdefghijklmnopqrstuvwxyz";
         self.add_all(&chars.to_uppercase());
@@ -352,40 +351,104 @@ impl Filter {
 
     /// Creates a Filter with basic numerals
     ///
-    /// Includes numerals from 0-9
+    /// Includes numerals from `0-9`
     pub fn with_basic_numerals(mut self) -> Filter {
         self.add_all("0123456789");
         self
     }
 
-    /// Creates a Filter with basic special symbols  
-    /// (or symbols that are easily created with a Finnish layout, plus ¥ and ¿)
+    /// Creates a Filter with all special symbols from
+    /// "basic latin", "latin-1 supplement" and "currency symbols" unicode blocks
     ///
     /// Includes the following characters:  
-    /// `!`, `"`, `#`, `¤`, `%`, `&`, `/`, `(`, `)`, `=`, `?`, `´`, `\``
-    /// `@`, `£`, `$`, `€`, `{`, `[`, `]`, `}`, `\\`
-    /// `'`, `¨`, `^`, `*`, `~`, `,`, `.`, `-`, `;`, `:`, `_`, `<`, `>`, `|`
-    /// `€`, `§`, `¥`, `¿`, `½`
+    /// From basic latin:  
+    /// `!` `"` `#` `$` `%` `&` `'` `(` `)` `*` `+` `,` `-` `.` `/`  
+    /// `@` `:` `;` `<` `=` `>` `?`  
+    /// `` ` `` `[` `\` `]` `^` `_`   
+    /// `{` `|` `}` `~`
+    ///
+    /// From latin-1 supplement:  
+    /// `¡` `¢` `£` `¤` `¥` `¦` `§` `¨` `©` `ª` `«` `¬` `®` `¯`  
+    /// `°` `±` `²` `³` `´` `µ` `¶` `·` `¸` `¹` `º` `»` `¼` `½` `¾` `¿`  
+    /// `×` `÷`
+    ///
+    ///
+    /// From currency symbols:  
+    /// `₠` `₡` `₢` `₣` `₤` `₥` `₦` `₧` `₨` `₩` `₪` `₫` `€` `₭` `₮` `₯`  
+    /// `₰` `₱` `₲` `₳` `₴` `₵` `₶` `₷` `₸` `₹` `₺` `₻` `₼` `₽` `₾` `₿`
     pub fn with_basic_special_symbols(mut self) -> Filter {
-        self.add_all("!\"#¤%&/()=?´`");
-        self.add_all("@£$€{[]}\\");
-        self.add_all("'¨^*~,.-;:_<>|");
-        self.add_all("€§¥¿½");
+        // Basic latin -block
+        self.add_all("!\"#$%&'()*+,-./");
+        self.add_all("@:;<=>?");
+        self.add_all("`[\\]^_");
+        self.add_all("{|}~");
+
+        // latin-1 supplement -block
+        self.add_all("¡¢£¤¥¦§¨©ª«¬®¯");
+        self.add_all("°±²³´µ¶·¸¹º»¼½¾¿");
+        self.add_all("×÷");
+
+        // Currency symbols -block
+        self.add_all("₠₡₢₣₤₥₦₧₨₩₪₫€₭₮₯");
+        self.add_all("₰₱₲₳₴₵₶₷₸₹₺₻₼₽₾₿");
         self
     }
 
-    /// Creates a filter with some basic germanic special symbols that are easily producible with a Finnish layout
+    /// Creates a filter with all letter-like symbols from the latin-1 supplement unicode block
     ///
-    /// Includes the following characters:  
-    /// `á`, `à`, `ä`, `â`, `ã`
-    /// `ü`, `û`, `ú`, `ù`
-    /// `ö`, `ó`, `ò`, `ô`
-    pub fn with_basic_germanic_alphabet_extension(mut self) -> Filter {
+    /// Includes the following characters (upper and lowercase):  
+    /// `à` `á` `â` `ã` `ä` `å` `æ`  
+    /// `ç` `è` `é` `ê` `ë`  
+    /// `ì` `í` `î` `ï`  
+    /// `ð` `ñ` `ò` `ó` `ô` `õ` `ö` `ø`  
+    /// `ù` `ú` `û` `ü` `ý` `þ` `ß` `ÿ`
+    pub fn with_latin_1_supplement(mut self) -> Filter {
         let mut chars = String::new();
-        chars += "áàäâã";
-        chars += "üûúù";
-        chars += "öóòô";
+        chars += "àáâãäåæ";
+        chars += "çèéêë";
+        chars += "ìíîï";
+        chars += "ðñòóôõöø";
+        chars += "ùúûüýþßÿ";
 
+        self.add_all(&chars.to_uppercase());
+        self.add_all(&chars);
+        self
+    }
+
+    /// Creates a filter with all letter-like symbols from the latin extended A unicode block
+    ///
+    /// Includes the following characters (upper and lowercase):  
+    /// `ā` `ă` `ą`  
+    /// `ć` `ĉ` `ċ` `č`  
+    /// `ď` `đ` `ē` `ĕ` `ė` `ę` `ě`  
+    /// `ĝ` `ğ` `ġ` `ģ` `ĥ` `ħ`  
+    /// `ĩ` `ī` `ĭ` `į` `i` `̇ı`  
+    /// `ĳ` `ĵ` `ķ` `ĸ`  
+    /// `ĺ` `ļ` `ľ` `ŀ` `ł`  
+    /// `ń` `ņ` `ň` `ŉ` `ŋ`  
+    /// `ō` `ŏ` `ő` `œ`  
+    /// `ŕ` `ŗ` `ř`  
+    /// `ś` `ŝ` `ş` `š` `ţ` `ť` `ŧ`  
+    /// `ũ` `ū` `ŭ` `ů` `ű` `ų`  
+    /// `ŵ` `ŷ` `ÿ` `ź` `ż` `ž` `ſ`
+    pub fn with_latin_extended_a(mut self) -> Filter {
+        let mut chars = String::new();
+        chars += "āăą";
+        chars += "ćĉċč";
+        chars += "ďđēĕėęě";
+        chars += "ĝğġģĥħ";
+        chars += "ĩīĭįi̇ı";
+        chars += "ĳĵķĸ";
+        chars += "ĺļľŀł";
+        chars += "ńņňŉŋ";
+        chars += "ōŏőœ";
+        chars += "ŕŗř";
+        chars += "śŝşšţťŧ";
+        chars += "ũūŭůűų";
+        chars += "ŵŷÿźżžſ";
+
+        self.add_all(&chars.to_uppercase());
+        self.add_all(&chars);
         self
     }
 

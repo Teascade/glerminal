@@ -18,6 +18,8 @@ fn main() {
     let filter = Filter::empty_filter()
         .with_basic_latin_characters()
         .with_basic_numerals()
+        .with_latin_1_supplement()
+        .with_latin_extended_a()
         .with_basic_special_symbols();
 
     let mut text_label = TextItem::new("FPS: -").with_max_width(40);
