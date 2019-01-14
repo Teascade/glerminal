@@ -67,7 +67,14 @@ fn main() {
 ![What the example looks like](images/example_screenshot.png)
 
 ### Custom font?
-The default font that comes with GLerminal only supports basic latin and some extended characters, as well as characters used for box creating, to save space on the end product (the default font is compiled into the library).
+The default font that comes with GLerminal only includes a few more popular unicode blocks, to save space on the end product (the default font is compiled into the library).  
+The following blocks are included in the default font:
+- [`Basic latin`][basic_latin]
+- [`Latin-1 supplement`][latin_1_supplement]
+- [`Latin Extended-A`][latin_extended_a]
+- [`Currency Symbols`][currency_symbols]
+- [`Box Drawing`][box_drawing]
+- [`Block Elements`][block_elements]
 
 Using a custom font currently can be a little difficult, as the only format [`sfl_parser`][sfl_parser] currently supports, is `.sfl`, 
 so you will need to create font files of that sort.  
@@ -91,3 +98,10 @@ This crate also uses a font as a default font, called [Iosevka][iosevka], which 
 [license-iosevka]: LICENSE-IOSEVKA.md
 [fontbuilder]: https://github.com/andryblack/fontbuilder
 [sfl_parser]: https://github.com/teascade/sfl_parser
+
+[basic_latin]: https://en.wikipedia.org/wiki/Basic_Latin_(Unicode_block)
+[latin_1_supplement]: https://en.wikipedia.org/wiki/Latin-1_Supplement_(Unicode_block)
+[latin_extended_a]: https://en.wikipedia.org/wiki/Latin_Extended-A
+[currency_symbols]: https://en.wikipedia.org/wiki/Currency_Symbols_(Unicode_block)
+[box_drawing]: https://en.wikipedia.org/wiki/Box_Drawing
+[block_elements]: https://en.wikipedia.org/wiki/Block_Elements
