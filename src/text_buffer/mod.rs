@@ -167,7 +167,7 @@ impl TextBuffer {
         };
 
         let true_height = height * terminal.font.line_height;
-        let true_width = width * terminal.font.size;
+        let true_width = (width as f32 * terminal.font.average_xadvance) as u32;
 
         let index = INDEX_COUNTER.fetch_add(1, Ordering::Relaxed) as u32;
         Ok(TextBuffer {

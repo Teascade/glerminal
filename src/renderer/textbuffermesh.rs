@@ -95,14 +95,14 @@ impl TextBufferMesh {
                     Ok(data) => data,
                     Err(_) => default_char_data.clone(),
                 };
-                let width = character_width * (char_data.width as f32 / font.size as f32);
+                let width =
+                    character_width * (char_data.width as f32 / font.average_xadvance as f32);
                 let height = character_height * (char_data.height as f32 / font.line_height as f32);
 
-                let font_offset = -(font.min_offset_y);
-
-                let bmoffset_x = character_width * (char_data.x_off as f32 / font.size as f32);
-                let bmoffset_y = character_height
-                    * ((char_data.y_off + font_offset) as f32 / font.line_height as f32);
+                let bmoffset_x =
+                    character_width * (char_data.x_off as f32 / font.average_xadvance as f32);
+                let bmoffset_y =
+                    character_height * (char_data.y_off as f32 / font.line_height as f32);
 
                 let x_off = x as f32 * character_width + bmoffset_x;
                 let y_off = y as f32 * character_height + bmoffset_y;

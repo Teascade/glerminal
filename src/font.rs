@@ -61,6 +61,7 @@ pub struct Font {
     /// Size of the font (width)
     pub size: u32,
     pub(crate) min_offset_y: i32,
+    pub(crate) average_xadvance: f32,
     pub(crate) characters: HashMap<u16, CharacterData>,
 }
 
@@ -132,6 +133,7 @@ impl Font {
         let width_float = info.width as f32;
         let height_float = info.height as f32;
         let mut min_off_y = 100_000;
+        let mut xadvance_sum = 0.0;
         for (key, value) in bm_font.chars.iter() {
             let x1 = value.x as f32 / width_float;
             let x2 = (value.x as f32 + value.width as f32) / width_float;
@@ -140,6 +142,7 @@ impl Font {
             if value.yoffset < min_off_y {
                 min_off_y = value.yoffset;
             }
+            xadvance_sum += value.xadvance as f32;
 
             characters.insert(
                 *key as u16,
@@ -157,6 +160,8 @@ impl Font {
             );
         }
 
+        let avg_xadvances = xadvance_sum / characters.len() as f32;
+
         Font {
             name: (&bm_font.font_name).clone(),
             image_buffer: image_buffer,
@@ -165,6 +170,7 @@ impl Font {
             line_height: bm_font.line_height,
             size: bm_font.size,
             min_offset_y: min_off_y,
+            average_xadvance: avg_xadvances,
             characters: characters,
         }
     }
