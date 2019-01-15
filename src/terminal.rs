@@ -6,9 +6,9 @@ use std::time::SystemTime;
 use crate::display::Display;
 use crate::events::Events;
 use crate::font::Font;
-use crate::renderer;
 use crate::renderer::Program;
 use crate::text_buffer::TextBuffer;
+use crate::{renderer, FontFormat};
 
 static IOSEVKA_SFL: &'static str = include_str!("../fonts/iosevka.sfl");
 static IOSEVKA_PNG: &'static [u8] = include_bytes!("../fonts/iosevka.png");
@@ -47,7 +47,7 @@ impl Default for TerminalBuilder {
             title: "Hello, Glerminal!".to_owned(),
             dimensions: (1280, 720),
             clear_color: (0.14, 0.19, 0.28, 1.0),
-            font: Font::load_raw(IOSEVKA_SFL, IOSEVKA_PNG),
+            font: Font::load_raw(&FontFormat::SFL, IOSEVKA_SFL, IOSEVKA_PNG),
             visibility: true,
             headless: false,
             text_buffer_aspect_ratio: true,

@@ -91,3 +91,4 @@ pub mod menu_systems;
 
 pub use glutin::MouseButton;
 pub use glutin::VirtualKeyCode;
+pub use bmfont_parser::Format as FontFormat;

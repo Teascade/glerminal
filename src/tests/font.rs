@@ -1,14 +1,15 @@
 use crate::font::Font;
+use crate::FontFormat;
 
 static IOSEVKA_SFL: &'static str = include_str!("../../fonts/iosevka.sfl");
 static IOSEVKA_PNG: &'static [u8] = include_bytes!("../../fonts/iosevka.png");
 
 fn test_load_font() -> Font {
-    Font::load("fonts/iosevka.sfl")
+    Font::load(&FontFormat::SFL, "fonts/iosevka.sfl")
 }
 
 fn test_load_font_raw() -> Font {
-    Font::load_raw(IOSEVKA_SFL, IOSEVKA_PNG)
+    Font::load_raw(&FontFormat::SFL, IOSEVKA_SFL, IOSEVKA_PNG)
 }
 
 #[test]
