@@ -4,18 +4,18 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 
-use sfl_parser::BMFont;
+use bmfont_parser::{BMFont, Format};
 
 /// Contains data of a single character in a Font
 #[derive(Debug, Clone, PartialEq)]
 pub struct CharacterData {
-    pub(crate) id: i32,
+    pub(crate) id: u32,
     pub(crate) x1: f32,
     pub(crate) x2: f32,
     pub(crate) y1: f32,
     pub(crate) y2: f32,
-    pub(crate) width: i32,
-    pub(crate) height: i32,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
     pub(crate) x_off: i32,
     pub(crate) y_off: i32,
 }
@@ -77,13 +77,15 @@ impl Font {
         }
         // Load Font .sfl file
         let bm_font;
-        match BMFont::from_path(fnt_path) {
+        match BMFont::from_path(&Format::SFL, fnt_path) {
             Ok(bmf) => bm_font = bmf,
             Err(error) => panic!("Failed to load .sfl file: {}", error),
         }
 
         // Load Font image file
-        Font::load_with_bmfont_and_image_read(&bm_font, File::open(&bm_font.image_path).unwrap())
+        let image_path = &bm_font.pages[0].image_path;
+        println!("{:?}", image_path);
+        Font::load_with_bmfont_and_image_read(&bm_font, File::open(image_path).unwrap())
     }
 
     /// Loads the font from the given string (.sfl file contents) and Read (image read)
@@ -96,7 +98,7 @@ impl Font {
     /// ```
     pub fn load_raw<T: Into<String>, R: Read>(sfl_content: T, image_read: R) -> Font {
         let bm_font;
-        match BMFont::from_loaded(sfl_content.into(), "image.png".to_owned()) {
+        match BMFont::from_loaded(&Format::SFL, sfl_content.into(), &["image.png"]) {
             Ok(bmf) => bm_font = bmf,
             Err(error) => panic!("Failed to load .sfl file: {}", error),
         }

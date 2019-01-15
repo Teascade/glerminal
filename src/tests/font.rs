@@ -24,8 +24,8 @@ fn load_raw_eq_load() {
 #[test]
 fn size() {
     let font = test_load_font();
-    assert_eq!(font.width, 664);
-    assert_eq!(font.height, 653);
+    assert_eq!(font.width, 640);
+    assert_eq!(font.height, 684);
 }
 
 #[test]
@@ -38,7 +38,7 @@ fn line_height_and_size() {
 #[test]
 fn character_amount() {
     let font = test_load_font();
-    assert_eq!(font.characters.keys().len(), 478);
+    assert_eq!(font.characters.keys().len(), 486);
 }
 
 #[test]
@@ -57,7 +57,7 @@ fn single_character_height() {
 fn single_character_offsets() {
     let font = test_load_font();
     assert_eq!(font.get_character('a' as u16).unwrap().x_off, 2);
-    assert_eq!(font.get_character('a' as u16).unwrap().y_off, 32);
+    assert_eq!(font.get_character('a' as u16).unwrap().y_off, 20);
 }
 
 #[test]

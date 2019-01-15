@@ -67,7 +67,7 @@ fn main() {
 ![What the example looks like](images/example_screenshot.png)
 
 ### Custom font?
-The default font that comes with GLerminal only includes a few more popular unicode blocks, to save space on the end product (the default font is compiled into the library).  
+The default font that comes with GLerminal is a render of [Iosevka](#iosevka) and only includes a few more popular unicode blocks, to save space on the end product (the default font is compiled into the library).  
 The following blocks are included in the default font:
 - [`Basic latin`][basic_latin]
 - [`Latin-1 supplement`][latin_1_supplement]
@@ -76,11 +76,10 @@ The following blocks are included in the default font:
 - [`Box Drawing`][box_drawing]
 - [`Block Elements`][block_elements]
 
-Using a custom font currently can be a little difficult, as the only format [`sfl_parser`][sfl_parser] currently supports, is `.sfl`, 
-so you will need to create font files of that sort.  
-Sadly currently the only sofware I know of that can produce .sfl files is [fontbuilder][fontbuilder], and it currently cannot produce .sfl files on the Windows release available on the GitHub page. the version in Arch Linux AUR repository can however, and that is the one I've been using.
+To make a custom font, you have to use either the [`BMFont standard / .fnt`](#bmfont_standard), or `.sfl`, 
+and software that can produce such files are [BMFont](#bmfont) (can produce only `.fnt`), or [Fontbuilder](#fontbuilder) (can produce both).
 
-Support for more popular bitmap font standards are on the way for [`sfl_parser`][sfl_parser], but it might take some time. Pull requests, and suggestions for a more popular format are welcome!
+After that it is advisable to look at glerminal [font documentation](#font_docs) on how a custom font is then loaded to use.
 
 ### Contributing & Code of Conduct
 You are welcome to contribute to this project, but before do review the [Contributing guidelines](CONTRIBUTING.md).
@@ -96,8 +95,11 @@ This crate also uses a font as a default font, called [Iosevka][iosevka], which 
 [license]: LICENSE.md
 [iosevka]: https://github.com/be5invis/Iosevka
 [license-iosevka]: LICENSE-IOSEVKA.md
-[fontbuilder]: https://github.com/andryblack/fontbuilder
 [sfl_parser]: https://github.com/teascade/sfl_parser
+[bmfont]: http://www.angelcode.com/products/bmfont/
+[bmfont_standard]: http://www.angelcode.com/products/bmfont/doc/render_text.html
+[fontbuilder]: https://github.com/andryblack/fontbuilder
+[font_docs]: https://docs.rs/glerminal/0.3.0/glerminal/struct.Font.html
 
 [basic_latin]: https://en.wikipedia.org/wiki/Basic_Latin_(Unicode_block)
 [latin_1_supplement]: https://en.wikipedia.org/wiki/Latin-1_Supplement_(Unicode_block)
