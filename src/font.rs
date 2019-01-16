@@ -23,14 +23,14 @@ pub struct CharacterData {
 
 /// The Font is used to load fonts that can be used in the [`TextBuffer`](text_buffer/struct.TextBuffer.html)
 ///
-/// The Font can be loaded from an `.sfl` file and then used in the `TextBuffer`, in example:
+/// The Font can be loaded from an `.sfl` or `.fnt` file and then used in the `TextBuffer`, in example:
 /// ```
 /// use glerminal::{TerminalBuilder, Font, FontFormat};
 ///
 /// let mut terminal = TerminalBuilder::new()
 ///     .with_title("Hello glerminal::font::Font!")
 ///     .with_dimensions((1280, 720))
-///     .with_font(Font::load(&FontFormat::SFL, "fonts/iosevka.sfl"))
+///     .with_font(Font::load(&FontFormat::SFL, "fonts/source_code_pro.sfl"))
 ///     .with_headless(true)
 ///     .build();
 /// ```
@@ -39,13 +39,13 @@ pub struct CharacterData {
 /// ```
 /// use glerminal::{TerminalBuilder, Font, FontFormat};
 ///
-/// static IOSEVKA_SFL: &'static str = include_str!("../fonts/iosevka.sfl");
-/// static IOSEVKA_PNG: &'static [u8] = include_bytes!("../fonts/iosevka.png");
+/// static SCP_SFL: &'static str = include_str!("../fonts/source_code_pro.sfl");
+/// static SCP_PNG: &'static [u8] = include_bytes!("../fonts/source_code_pro.png");
 ///
 /// let mut terminal = TerminalBuilder::new()
 ///     .with_title("Hello glerminal::font::Font!")
 ///     .with_dimensions((1280, 720))
-///     .with_font(Font::load_raw(&FontFormat::SFL, IOSEVKA_SFL, IOSEVKA_PNG))
+///     .with_font(Font::load_raw(&FontFormat::SFL, SCP_SFL, SCP_PNG))
 ///     .with_headless(true)
 ///     .build();
 /// ```
@@ -66,22 +66,22 @@ pub struct Font {
 }
 
 impl Font {
-    /// Loads the font fron the given .sfl file, for example:
+    /// Loads the font fron the given font file, for example:
     ///
     /// ```
     /// use glerminal::{Font, FontFormat};
-    /// let font = Font::load(&FontFormat::SFL, "fonts/iosevka.sfl");
+    /// let font = Font::load(&FontFormat::SFL, "fonts/source_code_pro.sfl");
     /// ```
     pub fn load<T: Into<PathBuf>>(format: &FontFormat, fnt_path: T) -> Font {
         let fnt_path = fnt_path.into();
         if !fnt_path.exists() {
-            panic!("Font image or .sfl file missing");
+            panic!("Font image or format file missing");
         }
         // Load Font .sfl file
         let bm_font;
         match BMFont::from_path(format, fnt_path) {
             Ok(bmf) => bm_font = bmf,
-            Err(error) => panic!("Failed to load .sfl file: {}", error),
+            Err(error) => panic!("Failed to load font file: {}", error),
         }
 
         // Load Font image file
@@ -90,13 +90,13 @@ impl Font {
         Font::load_with_bmfont_and_image_read(&bm_font, File::open(image_path).unwrap())
     }
 
-    /// Loads the font from the given string (.sfl file contents) and Read (image read)
+    /// Loads the font from the given string (font file contents) and Read (image read)
     ///
     /// ```
     /// use glerminal::{Font, FontFormat};
     /// use std::fs::File;
     ///
-    /// let font = Font::load_raw(&FontFormat::SFL, include_str!("../fonts/iosevka.sfl"), File::open("fonts/iosevka.png").unwrap());
+    /// let font = Font::load_raw(&FontFormat::SFL, include_str!("../fonts/source_code_pro.sfl"), File::open("fonts/source_code_pro.png").unwrap());
     /// ```
     pub fn load_raw<T: Into<String>, R: Read>(
         format: &FontFormat,
@@ -106,7 +106,7 @@ impl Font {
         let bm_font;
         match BMFont::from_loaded(format, content.into(), &["image.png"]) {
             Ok(bmf) => bm_font = bmf,
-            Err(error) => panic!("Failed to load .sfl file: {}", error),
+            Err(error) => panic!("Failed to load font file: {}", error),
         }
 
         Font::load_with_bmfont_and_image_read(&bm_font, image_read)
@@ -178,7 +178,7 @@ impl Font {
     ///
     /// ```
     /// use glerminal::{Font, FontFormat};
-    /// let a_char_data = Font::load(&FontFormat::SFL, "fonts/iosevka.sfl").get_character('a' as u16);
+    /// let a_char_data = Font::load(&FontFormat::SFL, "fonts/source_code_pro.sfl").get_character('a' as u16);
     /// ```
     pub fn get_character(&self, character: u16) -> Result<CharacterData, String> {
         if let Some(character_data) = self.characters.get(&character) {
