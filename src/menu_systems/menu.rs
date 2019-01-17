@@ -295,15 +295,28 @@ impl Menu {
         }
     }
 
-    /// Returns the amount of interface items in the menu
+    /// Tries to set the select idx for the Menu. If idx is greater than get_item_count() - 1, it will cap to that.
     ///
-    /// **Note:** Uses a cloned version of the list that has  
-    pub fn get_item_count(&self) -> u32 {
-        self.cloned_interface_items.len() as u32
+    /// **Note:** Uses a cloned version of the list that is cloned in `update`. (See [`get_cloned_list()`](#method.get_cloned_list))  
+    /// Also the idx can move in update, if the item selected can not be selected.
+    pub fn set_select_idx(&mut self, idx: u32) {
+        self.select_idx = (idx as i32)
+            .min(self.cloned_interface_items.len() as i32 - 1)
+            .max(0) as u32;
+    }
+
+    /// Get the currently cloned items in the menu.
+    ///
+    /// In every `update`, if the items given are dirty (or the amount of items has changed),
+    /// the list of items is deemed dirty and is then cloned. This cloned list can then be used for drawing or other heuristics, but not altering the actual items.
+    pub fn get_cloned_list(&self) -> &[Box<dyn InterfaceItem>] {
+        &self.cloned_interface_items
     }
 
     /// Update the menu, first handling any events if necessary, checking dirtyness,
-    /// saving changes for later drawing and returning whether the menu should be redrawn or not.
+    /// saving changes (as a cloned list) for later drawing and functionality. (See [`get_cloned_list()`](#method.get_cloned_list))
+    ///
+    /// Returning whether the menu should be redrawn or not.
     pub fn update(
         &mut self,
         events: &Events,
@@ -311,8 +324,26 @@ impl Menu {
         text_buffer: &TextBuffer,
         list: &mut MenuList,
     ) -> bool {
+        let length = list.items_ref.len() as i32;
+
+        self.select_idx = (self.select_idx as i32).min(length - 1).max(0) as u32;
+
+        // Handle events if focused
         if self.focused {
             self.handle_events(events, list, text_buffer);
+        }
+
+        // Ensure that any unselectable menu items aren't selected. If none are found, c'est la vie
+        let start_idx = (self.select_idx as i32).min(length - 1).max(0) as u32;
+        while {
+            !list.items_ref[self.select_idx as usize]
+                .get_base()
+                .can_be_focused
+        } {
+            self.select_idx = (((self.select_idx as i32) + 1) % length) as u32;
+            if self.select_idx == start_idx {
+                break;
+            }
         }
 
         // Update children and focus the focused child.
@@ -340,6 +371,12 @@ impl Menu {
 
     fn handle_events(&mut self, events: &Events, list: &mut MenuList, text_buffer: &TextBuffer) {
         let length = list.items_ref.len();
+
+        // There isn't anything to handle.
+        if length == 0 {
+            self.select_idx = 0;
+            return;
+        }
 
         // Handle input for focused child and consume input if necessary.
         let mut focused_handled_input = false;
@@ -431,19 +468,6 @@ impl Menu {
                         }
                     }
                 }
-            }
-        }
-
-        // Ensure that any unselectable menu items aren't selected. If none are found, c'est la vie
-        let start_idx = self.select_idx.min(length as u32 - 1).max(0);
-        while {
-            !list.items_ref[self.select_idx as usize]
-                .get_base()
-                .can_be_focused
-        } {
-            self.select_idx = (((self.select_idx as i32) + 1) % length as i32) as u32;
-            if self.select_idx == start_idx {
-                break;
             }
         }
     }
