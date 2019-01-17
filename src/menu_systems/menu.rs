@@ -88,7 +88,7 @@ pub enum FocusSelection {
     Keyboard(Option<VirtualKeyCode>, Option<VirtualKeyCode>),
     /// With mouse (point which item should be focused)
     Mouse(),
-    /// With mouse or keyboard (see mouse and keyboard individually)
+    /// With mouse or keyboard (see mouse and keyboard individually) (previous key, next key)
     MouseAndKeyboard(Option<VirtualKeyCode>, Option<VirtualKeyCode>),
 }
 
@@ -255,6 +255,16 @@ impl Menu {
         self.select_idx
     }
 
+    /// Tries to set the select idx for the Menu. If idx is greater than get_item_count() - 1, it will cap to that.
+    ///
+    /// **Note:** Uses a cloned version of the list that is cloned in `update`. (See [`get_cloned_list()`](#method.get_cloned_list))  
+    /// Also the idx can move in update, if the item selected can not be selected.
+    pub fn set_select_idx(&mut self, idx: u32) {
+        self.select_idx = (idx as i32)
+            .min(self.cloned_interface_items.len() as i32 - 1)
+            .max(0) as u32;
+    }
+
     /// Returns the button that must be pressed in order to select the previous menu item.
     pub fn get_previous_button(&self) -> VirtualKeyCode {
         let previous_button;
@@ -293,16 +303,6 @@ impl Menu {
                 GrowthDirection::Right => VirtualKeyCode::Right,
             }
         }
-    }
-
-    /// Tries to set the select idx for the Menu. If idx is greater than get_item_count() - 1, it will cap to that.
-    ///
-    /// **Note:** Uses a cloned version of the list that is cloned in `update`. (See [`get_cloned_list()`](#method.get_cloned_list))  
-    /// Also the idx can move in update, if the item selected can not be selected.
-    pub fn set_select_idx(&mut self, idx: u32) {
-        self.select_idx = (idx as i32)
-            .min(self.cloned_interface_items.len() as i32 - 1)
-            .max(0) as u32;
     }
 
     /// Get the currently cloned items in the menu.

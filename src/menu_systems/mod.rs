@@ -145,6 +145,7 @@ macro_rules! with_base {
 mod checkbox;
 mod dialog;
 mod menu;
+mod menu_switcher;
 mod text_input;
 mod text_item;
 mod window;
@@ -152,6 +153,7 @@ mod window;
 pub use self::checkbox::{Checkbox, CheckboxGroup};
 pub use self::dialog::Dialog;
 pub use self::menu::{FocusSelection, GrowthDirection, Menu, MenuList, MenuPosition};
+pub use self::menu_switcher::{MenuSwitcher, MenuSelectionMethod};
 pub use self::text_input::TextInput;
 pub use self::text_item::TextItem;
 pub use self::window::Window;
