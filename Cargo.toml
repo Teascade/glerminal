@@ -22,7 +22,7 @@ menu_systems = []
 parser = ["regex"]
 
 [dependencies]
-glutin = "0.19"
+glutin = "0.16"
 gl = "0.11"
 libc = "0.2"
 png = "0.14"

@@ -1,5 +1,4 @@
 use gl;
-use glutin::dpi::LogicalSize;
 use glutin::{
     ContextBuilder, ElementState, Event, EventsLoop, GlContext, GlRequest, GlWindow, WindowBuilder,
     WindowEvent,
@@ -56,14 +55,12 @@ impl Display {
         vsync: bool,
     ) -> Display {
         let (width, height) = dimensions;
-        let width = width as f32;
-        let height = height as f32;
         let aspect_ratio = width as f32 / height as f32;
         let title = title.into();
         let events_loop = EventsLoop::new();
         let window = WindowBuilder::new()
             .with_title(title)
-            .with_dimensions(LogicalSize::new(f64::from(width), f64::from(height)))
+            .with_dimensions(width, height)
             .with_visibility(visibility);
         let context = ContextBuilder::new()
             .with_vsync(vsync)
@@ -72,6 +69,9 @@ impl Display {
             Ok(window) => window,
             Err(err) => panic!(err),
         };
+
+        let width = width as f32;
+        let height = height as f32;
 
         unsafe {
             let (r, g, b, a) = clear_color;
@@ -130,8 +130,8 @@ impl Display {
                     WindowEvent::Destroyed => {
                         running = false;
                     }
-                    WindowEvent::Resized(size) => {
-                        dimensions = Some((size.width as f32, size.height as f32));
+                    WindowEvent::Resized(width, height) => {
+                        dimensions = Some((width as f32, height as f32));
                     }
                     WindowEvent::KeyboardInput { input, .. } => {
                         if let (state, Some(keycode)) = (input.state, input.virtual_keycode) {
@@ -148,8 +148,8 @@ impl Display {
                         .update_button_press(button, state == ElementState::Pressed),
                     WindowEvent::CursorMoved { position, .. } => {
                         self.events.borrow_mut().cursor.update_location((
-                            position.x as f32 / self.width.get(),
-                            position.y as f32 / self.height.get(),
+                            position.0 as f32 / self.width.get(),
+                            position.1 as f32 / self.height.get(),
                         ));
                     }
                     WindowEvent::CursorLeft { .. } => self.events.borrow_mut().cursor.cursor_left(),
