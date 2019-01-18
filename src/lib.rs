@@ -84,6 +84,12 @@ pub use crate::terminal::{Terminal, TerminalBuilder};
 pub use crate::text_buffer::{TermCharacter, TermCursor, TermLimits, TextBuffer, TextStyle};
 
 #[cfg(feature = "parser")]
+pub use crate::text_buffer::parser::ParsedChar;
+#[cfg(feature = "parser")]
+pub use crate::text_buffer::parser::ParsedTextPart;
+#[cfg(feature = "parser")]
+pub use crate::text_buffer::parser::ParsedText;
+#[cfg(feature = "parser")]
 pub use crate::text_buffer::parser::Parser;
 
 #[cfg(feature = "menu_systems")]
