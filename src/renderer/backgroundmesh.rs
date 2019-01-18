@@ -93,7 +93,7 @@ impl BackgroundMesh {
             for x in 0..text_buffer.width {
                 let character = text_buffer.get_character(x, y).unwrap();
 
-                if character.get_bg_color() == [0.0; 4] {
+                if character.style.bg_color == [0.0; 4] {
                     continue;
                 }
 
@@ -118,7 +118,7 @@ impl BackgroundMesh {
 
                 // Get colors
                 for _ in 0..6 {
-                    vertex_buffer_col.append(&mut character.get_bg_color().to_vec());
+                    vertex_buffer_col.append(&mut character.style.bg_color.to_vec());
                 }
             }
         }

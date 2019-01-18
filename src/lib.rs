@@ -81,7 +81,7 @@ mod text_buffer;
 pub use crate::events::{Cursor, Events, Input};
 pub use crate::font::{CharacterData, Font};
 pub use crate::terminal::{Terminal, TerminalBuilder};
-pub use crate::text_buffer::{TermLimits, TextBuffer};
+pub use crate::text_buffer::{TermCharacter, TermCursor, TermLimits, TextBuffer, TextStyle};
 
 #[cfg(feature = "parser")]
 pub use crate::text_buffer::parser::Parser;
@@ -89,6 +89,6 @@ pub use crate::text_buffer::parser::Parser;
 #[cfg(feature = "menu_systems")]
 pub mod menu_systems;
 
+pub use bmfont_parser::Format as FontFormat;
 pub use glutin::MouseButton;
 pub use glutin::VirtualKeyCode;
-pub use bmfont_parser::Format as FontFormat;

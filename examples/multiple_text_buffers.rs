@@ -20,17 +20,17 @@ fn main() {
 
     while terminal.refresh() {
         text_buffer_bg.clear();
-        text_buffer_bg.move_cursor(0, 0);
+        text_buffer_bg.cursor.move_to(0, 0);
         text_buffer_bg.write("On Background!");
 
         terminal.flush(&mut text_buffer_bg);
 
         text_buffer_overlay.clear();
-        text_buffer_overlay.move_cursor(1, 0);
-        text_buffer_overlay.change_cursor_bg_color([0.0, 0.0, 1.0, 0.5]);
+        text_buffer_overlay.cursor.move_to(1, 0);
+        text_buffer_overlay.cursor.style.bg_color = [0.0, 0.0, 1.0, 0.5];
         text_buffer_overlay.put_char('^');
-        text_buffer_overlay.move_cursor(0, 1);
-        text_buffer_overlay.change_cursor_bg_color([0.0; 4]);
+        text_buffer_overlay.cursor.move_to(0, 1);
+        text_buffer_overlay.cursor.style = Default::default();
         text_buffer_overlay.write("Above!");
 
         terminal.flush(&mut text_buffer_overlay);

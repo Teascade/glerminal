@@ -124,8 +124,8 @@ impl TextBufferMesh {
 
                 // Color and Shakiness
                 for _ in 0..6 {
-                    vertex_buffer_col.append(&mut character.get_fg_color().to_vec());
-                    vertex_buffer_shakiness.push(character.get_shakiness());
+                    vertex_buffer_col.append(&mut character.style.fg_color.to_vec());
+                    vertex_buffer_shakiness.push(character.style.shakiness);
                 }
 
                 // Calculate tex coords

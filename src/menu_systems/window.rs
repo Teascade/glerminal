@@ -102,19 +102,19 @@ impl Window {
     /// Draws the window
     pub fn draw(&self, text_buffer: &mut TextBuffer) {
         for y in 0..(self.height + 2) {
-            text_buffer.move_cursor(self.x, self.y + y);
+            text_buffer.cursor.move_to(self.x, self.y + y);
             for x in 0..(self.width + 2) {
                 if x == 0 || y == 0 || x == self.width + 1 || y == self.height + 1 {
-                    text_buffer.change_cursor_bg_color(self.border_color);
+                    text_buffer.cursor.style.bg_color = self.border_color;
                 } else {
-                    text_buffer.change_cursor_bg_color(self.background_color);
+                    text_buffer.cursor.style.bg_color = self.background_color;
                 }
                 text_buffer.put_char(' ');
             }
         }
-        text_buffer.move_cursor(self.x + 1, self.y);
-        text_buffer.change_cursor_bg_color(self.border_color);
-        text_buffer.change_cursor_fg_color(self.border_title_color);
+        text_buffer.cursor.move_to(self.x + 1, self.y);
+        text_buffer.cursor.style.bg_color = self.border_color;
+        text_buffer.cursor.style.fg_color = self.border_title_color;
         text_buffer.write(
             self.title
                 .chars()
@@ -125,7 +125,7 @@ impl Window {
 
     /// Set limits for the TextBuffer so that nothing can be written outside the window.
     pub fn set_limits(&self, text_buffer: &mut TextBuffer) {
-        text_buffer.set_limits(
+        text_buffer.cursor.set_limits(
             Some(self.x),
             Some(self.x + self.width + 2),
             Some(self.y),

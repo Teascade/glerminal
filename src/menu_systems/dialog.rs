@@ -234,11 +234,11 @@ impl InterfaceItem for Dialog {
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
         self.base.dirty = false;
         if self.base.is_focused() {
-            text_buffer.change_cursor_bg_color(self.bg_color_focused);
-            text_buffer.change_cursor_fg_color(self.fg_color_focused);
+            text_buffer.cursor.style.bg_color = self.bg_color_focused;
+            text_buffer.cursor.style.fg_color = self.fg_color_focused;
         } else {
-            text_buffer.change_cursor_bg_color(self.bg_color_unfocused);
-            text_buffer.change_cursor_fg_color(self.fg_color_unfocused);
+            text_buffer.cursor.style.bg_color = self.bg_color_unfocused;
+            text_buffer.cursor.style.fg_color = self.fg_color_unfocused;
         }
         for idx in 0..self.get_total_height() {
             let text: String;
@@ -250,7 +250,7 @@ impl InterfaceItem for Dialog {
             } else {
                 text = repeat(' ').take(self.width as usize).collect();
             }
-            text_buffer.move_cursor(self.base.x, self.base.y + idx);
+            text_buffer.cursor.move_to(self.base.x, self.base.y + idx);
             text_buffer.write(text);
         }
     }

@@ -1,5 +1,3 @@
-//! The module that contains the `Parser`.
-
 use std::collections::HashMap;
 
 use super::{Color, TextBuffer};
@@ -59,9 +57,9 @@ impl Parser {
     pub fn write<T: Into<String>>(&self, text_buffer: &mut TextBuffer, text: T) {
         let text = text.into();
 
-        let default_fg = text_buffer.get_cursor_fg_color();
-        let default_bg = text_buffer.get_cursor_bg_color();
-        let default_shakiness = text_buffer.get_cursor_shakiness();
+        let default_fg = text_buffer.cursor.style.fg_color;
+        let default_bg = text_buffer.cursor.style.bg_color;
+        let default_shakiness = text_buffer.cursor.style.shakiness;
 
         let regex = Regex::new(r"\[(/)?((fg|bg|shake)(=([A-z]+|\d+(\.\d+)?))?)\]").unwrap();
         let mut parts = regex.split(&text);
@@ -71,11 +69,11 @@ impl Parser {
             if let Some(target) = capture.get(3) {
                 if capture.get(1).is_some() {
                     if target.as_str() == "shake" {
-                        text_buffer.change_cursor_shakiness(default_shakiness);
+                        text_buffer.cursor.style.shakiness = default_shakiness;
                     } else if target.as_str() == "fg" {
-                        text_buffer.change_cursor_fg_color(default_fg);
+                        text_buffer.cursor.style.fg_color = default_fg;
                     } else if target.as_str() == "bg" {
-                        text_buffer.change_cursor_bg_color(default_bg);
+                        text_buffer.cursor.style.bg_color = default_bg;
                     }
                 }
                 if let Some(value) = capture.get(5) {
@@ -84,12 +82,12 @@ impl Parser {
                             Ok(val) => val,
                             Err(e) => panic!("Failed to parse shake-number: {}", e),
                         };
-                        text_buffer.change_cursor_shakiness(value);
+                        text_buffer.cursor.style.shakiness = value;
                     } else if let Some(color) = self.colors.get(value.as_str()) {
                         if target.as_str() == "fg" {
-                            text_buffer.change_cursor_fg_color(*color);
+                            text_buffer.cursor.style.fg_color = *color;
                         } else {
-                            text_buffer.change_cursor_bg_color(*color);
+                            text_buffer.cursor.style.bg_color = *color;
                         }
                     }
                 }
@@ -99,8 +97,8 @@ impl Parser {
             text_buffer.write(last_part);
         }
 
-        text_buffer.change_cursor_fg_color(default_fg);
-        text_buffer.change_cursor_bg_color(default_bg);
+        text_buffer.cursor.style.fg_color = default_fg;
+        text_buffer.cursor.style.bg_color = default_bg;
     }
 
     /// Gets the color specified, not compiled in a non-testing environment.

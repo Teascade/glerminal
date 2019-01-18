@@ -12,15 +12,14 @@ fn main() {
     }
 
     text_buffer.write("Hello, ");
-    text_buffer.change_cursor_fg_color([0.0, 1.0, 0.0, 1.0]);
+    text_buffer.cursor.style.fg_color = [0.0, 1.0, 0.0, 1.0];
     text_buffer.write("this is green, ");
-    text_buffer.change_cursor_bg_color([1.0, 0.0, 0.0, 1.0]);
+    text_buffer.cursor.style.bg_color = [1.0, 0.0, 0.0, 1.0];
     text_buffer.write("and this is on red bg!");
-    text_buffer.change_cursor_fg_color([1.0, 1.0, 1.0, 1.0]);
-    text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
-    text_buffer.move_cursor(0, 1);
+    text_buffer.cursor.style = Default::default();
+    text_buffer.cursor.move_to(0, 1);
     text_buffer.write("And now back to normal, on second row ");
-    text_buffer.change_cursor_shakiness(1.0);
+    text_buffer.cursor.style.shakiness = 1.0;
     text_buffer.write("shaking!");
 
     terminal.flush(&mut text_buffer);

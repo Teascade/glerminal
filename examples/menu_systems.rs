@@ -2,7 +2,7 @@ use glerminal::menu_systems::{
     Checkbox, CheckboxGroup, Dialog, Filter, FocusSelection, GrowthDirection, Menu, MenuList,
     MenuPosition, TextInput, TextItem, Window,
 };
-use glerminal::{MouseButton, TerminalBuilder, TextBuffer, VirtualKeyCode};
+use glerminal::{MouseButton, TerminalBuilder, TextBuffer, TextStyle, VirtualKeyCode};
 
 fn main() {
     let terminal = TerminalBuilder::new()
@@ -112,17 +112,20 @@ fn main() {
             test_window.draw(&mut text_buffer);
             menu.draw(&mut text_buffer);
 
-            text_buffer.change_cursor_fg_color([0.8, 0.8, 0.8, 1.0]);
-            text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
-            text_buffer.move_cursor(30, 15);
+            text_buffer.cursor.style = TextStyle {
+                fg_color: [0.8, 0.8, 0.8, 1.0],
+                bg_color: [0.0, 0.0, 0.0, 0.0],
+                ..Default::default()
+            };
+            text_buffer.cursor.move_to(30, 15);
             text_buffer.write(format!(
                 "Text: {} {}",
                 text_input.get_text(),
                 text_input_2.get_text()
             ));
-            text_buffer.move_cursor(40, 16);
+            text_buffer.cursor.move_to(40, 16);
             text_buffer.write(format!("Button presses: {}", button_presses));
-            text_buffer.move_cursor(40, 17);
+            text_buffer.cursor.move_to(40, 17);
             text_buffer.write(format!("Checked: {:?}", checkbox_group.get_selection_idx()));
 
             terminal.flush(&mut text_buffer);

@@ -153,7 +153,7 @@ mod window;
 pub use self::checkbox::{Checkbox, CheckboxGroup};
 pub use self::dialog::Dialog;
 pub use self::menu::{FocusSelection, GrowthDirection, Menu, MenuList, MenuPosition};
-pub use self::menu_switcher::{MenuSwitcher, MenuSelectionMethod};
+pub use self::menu_switcher::{MenuSelectionMethod, MenuSwitcher};
 pub use self::text_input::TextInput;
 pub use self::text_item::TextItem;
 pub use self::window::Window;
@@ -175,7 +175,7 @@ use crate::text_buffer::TextBuffer;
 /// A simple example of how to make an InterfaceItem that you can use for Menus
 /// ```
 /// use glerminal::menu_systems::{InterfaceItem, InterfaceItemBase};
-/// use glerminal::{with_base, Events, TextBuffer};
+/// use glerminal::{with_base, Events, TextBuffer, TextStyle};
 ///
 /// #[derive(Clone)]
 /// struct TextLabel {
@@ -215,9 +215,12 @@ use crate::text_buffer::TextBuffer;
 ///         self.base.dirty = false;
 ///         let pos = self.base.get_pos();
 ///
-///         text_buffer.change_cursor_fg_color([0.2, 0.2, 0.2, 1.0]);
-///         text_buffer.change_cursor_bg_color([0.0; 4]);
-///         text_buffer.move_cursor(pos.0, pos.1);
+///         text_buffer.cursor.style = TextStyle {
+///             fg_color: [0.8, 0.8, 0.8, 1.0],
+///             bg_color: [0.0, 0.0, 0.0, 0.0],
+///             ..Default::default()
+///         };
+///         text_buffer.cursor.move_to(pos.0, pos.1);
 ///         text_buffer.write(self.text.clone());
 ///     }
 ///
