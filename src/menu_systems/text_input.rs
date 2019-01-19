@@ -299,6 +299,9 @@ impl InterfaceItem for TextInput {
 
     fn update(&mut self, delta: f32, processor: &TextProcessor) {
         if !self.base.is_focused() || self.caret == 0.0 {
+            if self.caret_showing {
+                self.needs_processing = true;
+            }
             self.caret_timer = 0.0;
             self.caret_showing = false;
         } else {
@@ -307,6 +310,7 @@ impl InterfaceItem for TextInput {
                 self.caret_timer -= self.caret;
                 self.caret_showing = !self.caret_showing;
                 self.base.dirty = true;
+                self.needs_processing = true;
             }
         }
 
