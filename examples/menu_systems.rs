@@ -51,6 +51,7 @@ fn main() {
 
     let mut parser = Parser::new();
     parser.add_color("green", [0.2, 1.0, 0.2, 1.0]);
+    parser.add_color("red", [1.0, 0.2, 0.2, 1.0]);
 
     let mut menu = Menu::new()
         .with_pos((5, 5))
@@ -62,7 +63,7 @@ fn main() {
     let mut checkbox_group = CheckboxGroup::new().with_force_one_checked(Some(0));
 
     let mut dialog = Dialog::new(30, 3, 3).with_text(
-        "Hello! This is a test text with some stuff, this is supposed to test the dialog window. Testwordlongerthan30charactersfortest",
+        "Hello! This is a test text [fg=red][shake=0.5]with some stuff[/shake][/fg], this is supposed to test the dialog window. [fg=red]Testwordlongerthan30charactersfortest[/fg]",
     ).with_up_buttons(vec!(VirtualKeyCode::O)).with_down_buttons(vec!(VirtualKeyCode::L));
 
     let test_window = Window::new(70, 20)
@@ -122,7 +123,7 @@ fn main() {
                 bg_color: [0.0, 0.0, 0.0, 0.0],
                 ..Default::default()
             };
-            text_buffer.cursor.move_to(30, 15);
+            text_buffer.cursor.move_to(40, 15);
             text_buffer.write(format!(
                 "Text: {} {}",
                 text_input.get_text(),
