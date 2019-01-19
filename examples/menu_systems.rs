@@ -8,6 +8,7 @@ fn main() {
     let terminal = TerminalBuilder::new()
         .with_title("Simple window")
         .with_dimensions((1280, 720))
+        .with_vsync(false)
         .build();
     let mut text_buffer;
     match TextBuffer::create(&terminal, (80, 24)) {
@@ -31,8 +32,8 @@ fn main() {
         .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.2, 0.8, 0.2, 1.0]));
 
     let mut text_input_2 = TextInput::new(10, 10)
-        .with_prefix("Test 2: [")
-        .with_suffix("]")
+        .with_prefix("Test 2: [[fg=green]")
+        .with_suffix("[/fg]]")
         .with_filter(filter.clone())
         .with_focused_colors(([0.8, 0.8, 0.8, 1.0], [0.8, 0.2, 0.2, 1.0]))
         .with_caret(0.0);
@@ -50,7 +51,7 @@ fn main() {
 
     let mut parser = Parser::new();
     parser.add_color("green", [0.2, 1.0, 0.2, 1.0]);
-    
+
     let mut menu = Menu::new()
         .with_pos((5, 5))
         .with_focus(true)

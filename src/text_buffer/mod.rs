@@ -270,10 +270,13 @@ impl TextBuffer {
 
     /// Write a list of [`ProcessedChar`](text_processing/struct.ProcessedChar.html)s
     pub fn write_processed(&mut self, char_list: &[ProcessedChar]) {
+        let default_fg = self.cursor.style.fg_color;
+        let default_bg = self.cursor.style.bg_color;
+        let default_shakiness = self.cursor.style.shakiness;
         for character in char_list {
-            if self.cursor.style != character.style {
-                self.cursor.style = character.style;
-            }
+            self.cursor.style.fg_color = character.style.fg_color.unwrap_or(default_fg);
+            self.cursor.style.bg_color = character.style.bg_color.unwrap_or(default_bg);
+            self.cursor.style.shakiness = character.style.shakiness.unwrap_or(default_shakiness);
             self.put_char(character.character);
         }
     }

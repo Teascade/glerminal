@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use super::{Color, TextBuffer, TextStyle};
+use super::{Color, TextBuffer};
 use regex::Regex;
 
-use crate::text_processing::{Processable, ProcessedChar, TextProcessor};
+use crate::text_processing::{OptTextStyle, Processable, ProcessedChar, TextProcessor};
 
 /// Represents a parser (A [`TextProcessor`](text_processing/struct.TextProcessor.html)), that is able to read given texts and use [`TextBuffer`](struct.TextBuffer.html) accordingly, to write text and styles matching to the text.
 ///
@@ -58,14 +58,14 @@ impl Parser {
 
     /// Parses the given text and immediately writes it to the text buffer
     pub fn write<T: Into<String>>(&self, text_buffer: &mut TextBuffer, text: T) {
-        text_buffer.write_processed(&self.parse(text, text_buffer.cursor.style));
+        text_buffer.write_processed(&self.parse(text));
     }
 
     /// Parse any text into a `ProcessedChar`s, alias for `parser.process`
-    pub fn parse<T: Into<String>>(&self, text: T, default_style: TextStyle) -> Vec<ProcessedChar> {
+    pub fn parse<T: Into<String>>(&self, text: T) -> Vec<ProcessedChar> {
         let text = text.into();
 
-        self.process(vec![text.into()], default_style)
+        self.process(vec![text.into()])
     }
 
     /// Gets the color specified, not compiled in a non-testing environment.
@@ -76,14 +76,15 @@ impl Parser {
 }
 
 impl TextProcessor for Parser {
-    fn process(&self, processables: Vec<Processable>, style: TextStyle) -> Vec<ProcessedChar> {
-        let default_fg = style.fg_color;
-        let default_bg = style.bg_color;
-        let default_shakiness = style.shakiness;
+    fn process(&self, processables: Vec<Processable>) -> Vec<ProcessedChar> {
         let mut fg_stack = Vec::new();
         let mut bg_stack = Vec::new();
         let mut shakiness_stack = Vec::new();
-        let mut current_style = style;
+        let mut current_style = OptTextStyle {
+            fg_color: None,
+            bg_color: None,
+            shakiness: None,
+        };
 
         let regex = Regex::new(r"\[(/)?((fg|bg|shake)(=([A-z]+|\d+(\.\d+)?))?)\]").unwrap();
 
@@ -96,18 +97,17 @@ impl TextProcessor for Parser {
                     for capture in regex.captures_iter(&text) {
                         parsed.push(ParsedText {
                             text: parts.next().unwrap().to_owned(),
-                            style: current_style,
+                            style: current_style.clone(),
                         });
 
                         if let Some(target) = capture.get(3) {
                             if capture.get(1).is_some() {
                                 if target.as_str() == "shake" {
-                                    current_style.shakiness =
-                                        shakiness_stack.pop().unwrap_or(default_shakiness);
+                                    current_style.shakiness = shakiness_stack.pop();
                                 } else if target.as_str() == "fg" {
-                                    current_style.fg_color = fg_stack.pop().unwrap_or(default_fg);
+                                    current_style.fg_color = fg_stack.pop();
                                 } else if target.as_str() == "bg" {
-                                    current_style.bg_color = bg_stack.pop().unwrap_or(default_bg);
+                                    current_style.bg_color = bg_stack.pop();
                                 }
                             }
                             if let Some(value) = capture.get(5) {
@@ -116,15 +116,21 @@ impl TextProcessor for Parser {
                                         Ok(val) => val,
                                         Err(e) => panic!("Failed to parse shake-number: {}", e),
                                     };
-                                    shakiness_stack.push(current_style.shakiness);
-                                    current_style.shakiness = value;
+                                    if let Some(shakiness) = current_style.shakiness {
+                                        shakiness_stack.push(shakiness);
+                                    }
+                                    current_style.shakiness = Some(value);
                                 } else if let Some(color) = self.colors.get(value.as_str()) {
                                     if target.as_str() == "fg" {
-                                        fg_stack.push(current_style.fg_color);
-                                        current_style.fg_color = *color;
+                                        if let Some(fg) = current_style.fg_color {
+                                            fg_stack.push(fg);
+                                        }
+                                        current_style.fg_color = Some(*color);
                                     } else {
-                                        bg_stack.push(current_style.bg_color);
-                                        current_style.bg_color = *color;
+                                        if let Some(bg) = current_style.bg_color {
+                                            bg_stack.push(bg);
+                                        }
+                                        current_style.bg_color = Some(*color);
                                     }
                                 }
                             }
@@ -133,14 +139,14 @@ impl TextProcessor for Parser {
                     if let Some(last_part) = parts.next() {
                         parsed.push(ParsedText {
                             text: last_part.to_owned(),
-                            style: current_style,
+                            style: current_style.clone(),
                         });
                     }
                 }
                 Processable::NoProcess(text) => {
                     parsed.push(ParsedText {
                         text: text,
-                        style: current_style,
+                        style: current_style.clone(),
                     });
                 }
             }
@@ -151,7 +157,7 @@ impl TextProcessor for Parser {
             for character in text.text.chars() {
                 list.push(ProcessedChar {
                     character: character,
-                    style: text.style,
+                    style: text.style.clone(),
                 });
             }
         }
@@ -162,5 +168,5 @@ impl TextProcessor for Parser {
 #[derive(Clone, Debug)]
 struct ParsedText {
     pub text: String,
-    pub style: TextStyle,
+    pub style: OptTextStyle,
 }

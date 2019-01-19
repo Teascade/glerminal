@@ -1,6 +1,6 @@
 use super::{InterfaceItem, InterfaceItemBase};
 use crate::text_processing::{ProcessedChar, TextProcessor};
-use crate::{Color, Events, MouseButton, TextBuffer, TextStyle, VirtualKeyCode};
+use crate::{Color, Events, MouseButton, TextBuffer, VirtualKeyCode};
 
 #[derive(Debug, Clone)]
 /// Represents a simple text item that by default can not be selected,
@@ -136,6 +136,14 @@ impl InterfaceItem for TextItem {
 
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
         self.base.dirty = false;
+
+        if self.base.is_focused() {
+            text_buffer.cursor.style.fg_color = self.fg_color_focused;
+            text_buffer.cursor.style.bg_color = self.bg_color_focused;
+        } else {
+            text_buffer.cursor.style.fg_color = self.fg_color_unfocused;
+            text_buffer.cursor.style.bg_color = self.bg_color_unfocused;
+        };
         text_buffer.cursor.move_to(self.base.x, self.base.y);
         text_buffer.write_processed(
             &(self
@@ -165,18 +173,8 @@ impl InterfaceItem for TextItem {
     }
 
     fn update(&mut self, _: f32, processor: &TextProcessor) {
-        if self.needs_processing || self.base.dirty {
-            let (fg, bg) = if self.base.is_focused() {
-                (self.fg_color_focused, self.bg_color_focused)
-            } else {
-                (self.fg_color_unfocused, self.bg_color_unfocused)
-            };
-            let style = TextStyle {
-                fg_color: fg,
-                bg_color: bg,
-                ..Default::default()
-            };
-            self.processed_text = processor.process(vec![self.text.clone().into()], style);
+        if self.needs_processing {
+            self.processed_text = processor.process(vec![self.text.clone().into()]);
             self.needs_processing = false;
         }
     }

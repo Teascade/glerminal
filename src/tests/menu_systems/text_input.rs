@@ -125,6 +125,7 @@ fn draw() {
             .with_text(text.clone())
             .with_focused(true);
 
+        item.update(0.0, &processor);
         item.draw(&mut text_buffer);
 
         let mut caret_should_show = false;
