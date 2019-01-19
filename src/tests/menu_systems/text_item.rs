@@ -64,7 +64,7 @@ fn set_functions() {
 
 #[test]
 fn draw() {
-    run_multiple_times(50, || {
+    run_multiple_times(20, || {
         let mut text_buffer = test_setup_text_buffer((15, 1));
         let text = random_text(15);
         let mut item = TextItem::new(text.clone());

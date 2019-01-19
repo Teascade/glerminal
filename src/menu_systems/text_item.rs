@@ -166,17 +166,17 @@ impl InterfaceItem for TextItem {
 
     fn update(&mut self, _: f32, processor: &TextProcessor) {
         if self.needs_processing || self.base.dirty {
-        let (fg, bg) = if self.base.is_focused() {
-            (self.fg_color_focused, self.bg_color_focused)
-        } else {
-            (self.fg_color_unfocused, self.bg_color_unfocused)
-        };
-        let style = TextStyle {
-            fg_color: fg,
-            bg_color: bg,
-            ..Default::default()
-        };
-            self.processed_text = processor.process(&self.text, style);
+            let (fg, bg) = if self.base.is_focused() {
+                (self.fg_color_focused, self.bg_color_focused)
+            } else {
+                (self.fg_color_unfocused, self.bg_color_unfocused)
+            };
+            let style = TextStyle {
+                fg_color: fg,
+                bg_color: bg,
+                ..Default::default()
+            };
+            self.processed_text = processor.process(vec![self.text.clone().into()], style);
             self.needs_processing = false;
         }
     }

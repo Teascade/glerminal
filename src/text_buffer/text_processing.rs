@@ -9,15 +9,42 @@ use crate::TextStyle;
 pub struct DefaultProcessor;
 
 impl TextProcessor for DefaultProcessor {
-    fn process(&self, text: &str, style: TextStyle) -> Vec<ProcessedChar> {
+    fn process(&self, processables: Vec<Processable>, style: TextStyle) -> Vec<ProcessedChar> {
         let mut list = Vec::new();
-        for c in text.chars() {
-            list.push(ProcessedChar {
-                character: c,
-                style: style,
-            });
+        for processable in processables {
+            let text = match processable {
+                Processable::ToProcess(text) => text,
+                Processable::NoProcess(text) => text,
+            };
+            for c in text.chars() {
+                list.push(ProcessedChar {
+                    character: c,
+                    style: style,
+                });
+            }
         }
         list
+    }
+}
+
+/// A string that can be given for a TextProcessor.
+pub enum Processable {
+    /// A String that will be processed when given to a processor
+    ToProcess(String),
+    /// A String that will be not be processed when given to a processor,
+    /// meaning the processor will keep it's previously determined style and insert only the chars
+    NoProcess(String),
+}
+
+impl From<String> for Processable {
+    fn from(item: String) -> Processable {
+        Processable::ToProcess(item)
+    }
+}
+
+impl From<&'static str> for Processable {
+    fn from(item: &'static str) -> Processable {
+        Processable::ToProcess(item.to_owned())
     }
 }
 
@@ -28,8 +55,10 @@ impl TextProcessor for DefaultProcessor {
 /// Primarily used in places where the Parser could be used, but isn't necessarily included in compilation,
 /// but could be used in other places to process text in a wanted way.
 pub trait TextProcessor {
-    /// Process the given text with the given style and produce a list of `ProcessedChar`s
-    fn process(&self, text: &str, style: TextStyle) -> Vec<ProcessedChar>;
+    /// Process the given processables with the given style and produce a list of `ProcessedChar`s
+    /// Strings and &'static str have From and Into for Processable so the following is possible:
+    /// `processor.process(vec!("something".into()), style);`
+    fn process(&self, processables: Vec<Processable>, style: TextStyle) -> Vec<ProcessedChar>;
 }
 
 /// A `char` that has been processed by a `TextProcessor`. Contains the `char` and it's style
