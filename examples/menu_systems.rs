@@ -38,8 +38,8 @@ fn main() {
         .with_focused_colors(([0.8, 0.8, 0.8, 1.0], [0.8, 0.2, 0.2, 1.0]))
         .with_caret(0.0);
 
-    let mut checkbox =
-        Checkbox::new("Thing 1: ").with_mouse_button_press_inputs(vec![MouseButton::Left]);
+    let mut checkbox = Checkbox::new("[fg=green]Thing[/fg] 1: ")
+        .with_mouse_button_press_inputs(vec![MouseButton::Left]);
     let mut checkbox_2 =
         Checkbox::new("Thing 2: ").with_mouse_button_press_inputs(vec![MouseButton::Left]);
     let mut checkbox_3 =
