@@ -1,10 +1,13 @@
 #[cfg(feature = "parser")]
 pub mod parser;
 
+pub mod text_processing;
+
 use crate::font::Font;
 use crate::renderer::backgroundmesh::BackgroundMesh;
 use crate::renderer::textbuffermesh::TextBufferMesh;
 use crate::terminal::Terminal;
+use crate::text_processing::ProcessedChar;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -262,6 +265,16 @@ impl TextBuffer {
         let text = text.into();
         for c in text.to_owned().encode_utf16() {
             self.put_raw_char(c);
+        }
+    }
+
+    /// Write a list of [`ProcessedChar`](text_processing/struct.ProcessedChar.html)s
+    pub fn write_processed(&mut self, char_list: &[ProcessedChar]) {
+        for character in char_list {
+            if self.cursor.style != character.style {
+                self.cursor.style = character.style;
+            }
+            self.put_char(character.character);
         }
     }
 
