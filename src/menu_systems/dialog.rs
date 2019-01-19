@@ -4,6 +4,7 @@ use super::{InterfaceItem, InterfaceItemBase};
 
 use crate::events::Events;
 use crate::text_buffer::{Color, TextBuffer};
+use crate::text_processing::TextProcessor;
 
 use std::iter::repeat;
 
@@ -267,5 +268,5 @@ impl InterfaceItem for Dialog {
         handled
     }
 
-    fn update(&mut self, _: f32) {}
+    fn update(&mut self, _: f32, processor: &TextProcessor) {}
 }

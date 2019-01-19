@@ -160,6 +160,7 @@ pub use self::window::Window;
 
 use crate::events::Events;
 use crate::text_buffer::TextBuffer;
+use crate::text_processing::TextProcessor;
 
 /// Represents a single menu item: an item that is somewhere, can handle events and can be drawn.
 ///
@@ -176,6 +177,7 @@ use crate::text_buffer::TextBuffer;
 /// ```
 /// use glerminal::menu_systems::{InterfaceItem, InterfaceItemBase};
 /// use glerminal::{with_base, Events, TextBuffer, TextStyle};
+/// use glerminal::text_processing::TextProcessor;
 ///
 /// #[derive(Clone)]
 /// struct TextLabel {
@@ -228,7 +230,9 @@ use crate::text_buffer::TextBuffer;
 ///         false
 ///     }
 ///
-///     fn update(&mut self, _: f32) {}
+///     // If you want TextProcessor support, ie. Parser support, implement the processing here.
+///     // Also remember to not process every frame, but only when necessary.
+///     fn update(&mut self, _: f32, processor: &TextProcessor) {}
 /// }
 /// ```
 pub trait InterfaceItem: InterfaceItemClone {
@@ -250,8 +254,9 @@ pub trait InterfaceItem: InterfaceItemClone {
     ///
     /// Returns whether it handled any events.
     fn handle_events(&mut self, events: &Events) -> bool;
-    /// Update this InterfaceItem; delta is given in seconds. (see [Terminal.delta_time()](../terminal/struct.Terminal.html))
-    fn update(&mut self, delta: f32);
+    /// Update this InterfaceItem; delta is given in seconds. (see [Terminal.delta_time()](../terminal/struct.Terminal.html)).
+    /// Also process any text that has changed since last update.
+    fn update(&mut self, delta: f32, processor: &TextProcessor);
 }
 
 /// Represents a cloneable InterfaceItem; You should never implement this yourself, but instead

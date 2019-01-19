@@ -3,6 +3,7 @@ use std::iter::repeat;
 use super::{InterfaceItem, InterfaceItemBase};
 use crate::events::Events;
 use crate::text_buffer::{Color, TextBuffer};
+use crate::text_processing::TextProcessor;
 use crate::{MouseButton, VirtualKeyCode};
 
 /// Represents a group of checkboxes that can be managed like they were radio buttons.
@@ -312,5 +313,5 @@ impl InterfaceItem for Checkbox {
         false
     }
 
-    fn update(&mut self, _: f32) {}
+    fn update(&mut self, _: f32, processor: &TextProcessor) {}
 }

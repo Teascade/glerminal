@@ -2,7 +2,7 @@ use glerminal::menu_systems::{
     Checkbox, CheckboxGroup, Dialog, Filter, FocusSelection, GrowthDirection, Menu, MenuList,
     MenuPosition, TextInput, TextItem, Window,
 };
-use glerminal::{MouseButton, TerminalBuilder, TextBuffer, TextStyle, VirtualKeyCode};
+use glerminal::{MouseButton, Parser, TerminalBuilder, TextBuffer, TextStyle, VirtualKeyCode};
 
 fn main() {
     let terminal = TerminalBuilder::new()
@@ -22,7 +22,7 @@ fn main() {
         .with_latin_extended_a()
         .with_basic_special_symbols();
 
-    let mut text_label = TextItem::new("FPS: -").with_max_width(40);
+    let mut text_label = TextItem::new("FPS: [fg=green]-[/fg]").with_max_width(40);
 
     let mut text_input = TextInput::new(None, None)
         .with_prefix("Test your might: ")
@@ -48,11 +48,15 @@ fn main() {
         .with_is_button(true)
         .with_mouse_button_press_inputs(vec![MouseButton::Left]);
 
+    let mut parser = Parser::new();
+    parser.add_color("green", [0.2, 1.0, 0.2, 1.0]);
+    
     let mut menu = Menu::new()
         .with_pos((5, 5))
         .with_focus(true)
         .with_growth_direction(GrowthDirection::Down)
-        .with_focus_selection(FocusSelection::MouseAndKeyboard(None, None));
+        .with_focus_selection(FocusSelection::MouseAndKeyboard(None, None))
+        .with_text_processor(parser);
 
     let mut checkbox_group = CheckboxGroup::new().with_force_one_checked(Some(0));
 
@@ -75,7 +79,7 @@ fn main() {
         if timer > 1.0 {
             timer -= 1.0;
             text_label.set_text(format!(
-                "FPS: {}, delta_time (ms): {:.6}",
+                "FPS: [fg=green]{}[/fg], delta_time (ms): [fg=green]{:.6}[/fg]",
                 frames,
                 terminal.delta_time() * 1000 as f32
             ));

@@ -33,6 +33,7 @@ pub trait TextProcessor {
 }
 
 /// A `char` that has been processed by a `TextProcessor`. Contains the `char` and it's style
+#[derive(Debug, Clone, Copy)]
 pub struct ProcessedChar {
     /// The character
     pub character: char,

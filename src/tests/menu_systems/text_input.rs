@@ -1,5 +1,6 @@
 use super::{random_text, run_multiple_times, test_setup_text_buffer};
 use crate::menu_systems::{Filter, InterfaceItem, TextInput};
+use crate::text_processing::DefaultProcessor;
 use crate::Events;
 use crate::VirtualKeyCode::Return;
 
@@ -91,14 +92,15 @@ fn input_handling_no_focus() {
 fn caret() {
     run_multiple_times(20, || {
         let caret_time = thread_rng().gen_range(0.05, 0.2);
+        let processor = DefaultProcessor;
 
         let mut item = TextInput::new(None, None)
             .with_focused(true)
             .with_caret(caret_time);
         assert_eq!(item.caret_showing(), false);
-        item.update(caret_time);
+        item.update(caret_time, &processor);
         assert_eq!(item.caret_showing(), true);
-        item.update(caret_time);
+        item.update(caret_time, &processor);
         assert_eq!(item.caret_showing(), false);
     });
 }
@@ -109,6 +111,7 @@ fn draw() {
         let mut rng = thread_rng();
 
         let mut text_buffer = test_setup_text_buffer((20, 1));
+        let processor = DefaultProcessor;
 
         let text = random_text(5);
         let prefix = random_text(5);
@@ -136,7 +139,7 @@ fn draw() {
                 )
             }
             caret_should_show = !caret_should_show;
-            item.update(caret);
+            item.update(caret, &processor);
         }
     });
 }

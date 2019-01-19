@@ -4,6 +4,7 @@ use std::iter::repeat;
 
 use crate::text_buffer::Color;
 use crate::text_buffer::TextBuffer;
+use crate::text_processing::TextProcessor;
 use crate::{Events, MouseButton, VirtualKeyCode};
 
 /// Represents a text-input field, that can be focused, takes in events (keyboard events as text),
@@ -325,7 +326,7 @@ impl InterfaceItem for TextInput {
         handled
     }
 
-    fn update(&mut self, delta: f32) {
+    fn update(&mut self, delta: f32, processor: &TextProcessor) {
         if !self.base.is_focused() || self.caret == 0.0 {
             self.caret_timer = 0.0;
             self.caret_showing = false;

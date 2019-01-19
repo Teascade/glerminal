@@ -1,6 +1,6 @@
 use super::{InterfaceItem, InterfaceItemBase};
-use crate::text_buffer::{Color, TextBuffer};
-use crate::{Events, MouseButton, VirtualKeyCode};
+use crate::text_processing::{ProcessedChar, TextProcessor};
+use crate::{Color, Events, MouseButton, TextBuffer, TextStyle, VirtualKeyCode};
 
 #[derive(Debug, Clone)]
 /// Represents a simple text item that by default can not be selected,
@@ -33,6 +33,9 @@ pub struct TextItem {
     base: InterfaceItemBase,
     text: String,
 
+    processed_text: Vec<ProcessedChar>,
+    needs_processing: bool,
+
     is_button: bool,
     was_just_pressed: bool,
 }
@@ -51,6 +54,9 @@ impl TextItem {
             base: InterfaceItemBase::new(false),
             max_width: text.chars().count() as u32,
             text: text,
+
+            processed_text: Vec::new(),
+            needs_processing: true,
 
             is_button: false,
             was_just_pressed: false,
@@ -92,6 +98,7 @@ impl TextItem {
     pub fn set_text<T: Into<String>>(&mut self, text: T) {
         self.text = text.into();
         self.base.dirty = true;
+        self.needs_processing = true;
     }
 
     /// Set the max width of the TextItem. This should ideally not be called, unless necessary.
@@ -129,19 +136,14 @@ impl InterfaceItem for TextItem {
 
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
         self.base.dirty = false;
-        if self.base.is_focused() {
-            text_buffer.cursor.style.fg_color = self.fg_color_focused;
-            text_buffer.cursor.style.bg_color = self.bg_color_focused;
-        } else {
-            text_buffer.cursor.style.fg_color = self.fg_color_unfocused;
-            text_buffer.cursor.style.bg_color = self.bg_color_unfocused;
-        }
         text_buffer.cursor.move_to(self.base.x, self.base.y);
-        text_buffer.write(
-            self.text
-                .chars()
+        text_buffer.write_processed(
+            &(self
+                .processed_text
+                .clone()
+                .into_iter()
                 .take(self.max_width as usize)
-                .collect::<String>(),
+                .collect::<Vec<ProcessedChar>>()),
         );
     }
 
@@ -162,5 +164,20 @@ impl InterfaceItem for TextItem {
         false
     }
 
-    fn update(&mut self, _: f32) {}
+    fn update(&mut self, _: f32, processor: &TextProcessor) {
+        if self.needs_processing || self.base.dirty {
+        let (fg, bg) = if self.base.is_focused() {
+            (self.fg_color_focused, self.bg_color_focused)
+        } else {
+            (self.fg_color_unfocused, self.bg_color_unfocused)
+        };
+        let style = TextStyle {
+            fg_color: fg,
+            bg_color: bg,
+            ..Default::default()
+        };
+            self.processed_text = processor.process(&self.text, style);
+            self.needs_processing = false;
+        }
+    }
 }
