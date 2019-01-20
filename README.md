@@ -1,5 +1,5 @@
 # GLerminal, an OpenGL terminal
-[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=0.3.0)](https://travis-ci.org/Teascade/glerminal)
+[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=v0.3.0)](https://travis-ci.org/Teascade/glerminal)
 [![Docs](https://docs.rs/glerminal/badge.svg)](https://docs.rs/glerminal)
 [![Crates.io](https://img.shields.io/crates/v/glerminal.svg)](https://crates.io/crates/glerminal)
 
