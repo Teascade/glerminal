@@ -116,8 +116,8 @@ fn cursor_move() {
         let x = rnd.gen_range(0, width - 2);
         let y = rnd.gen_range(0, height - 2);
         text_buffer.cursor.move_to(x, y);
-        //assert_eq!(text_buffer.get_cursor_position(), (x, y));
+        assert_eq!(text_buffer.get_cursor_position(), (x, y));
         text_buffer.cursor.move_to(width, height);
-        //assert_eq!(text_buffer.get_cursor_position(), (x, y));
+        assert_eq!(text_buffer.get_cursor_position(), (width - 1, height - 1));
     });
 }

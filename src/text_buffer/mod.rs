@@ -353,24 +353,21 @@ impl TermCursor {
         self.limits.clone()
     }
 
-    /// Moves the cursor to a specified location in the terminal. If the location does not exist, nothing happens.
+    /// Moves the cursor to a specified location in the terminal.
+    /// Clamp cursor location to current limits or text_buffer boundaries if limits do not exist.
     pub fn move_to(&mut self, x: u32, y: u32) {
-        let x = x
-            .max(self.limits.get_min_x())
-            .min(self.limits.get_max_x() - 1);
-        let y = y
-            .max(self.limits.get_min_y())
-            .min(self.limits.get_max_y() - 1);
+        let x = x.max(self.limits.get_min_x()).min(self.limits.get_max_x());
+        let y = y.max(self.limits.get_min_y()).min(self.limits.get_max_y());
         self.x = x;
         self.y = y;
     }
 
     fn move_by(&mut self, amount: u32) {
         self.x += amount;
-        if self.x >= self.limits.get_max_x() {
+        if self.x > self.limits.get_max_x() {
             self.x = self.limits.get_min_x();
             self.y += 1;
-            if self.y >= self.limits.get_max_y() {
+            if self.y > self.limits.get_max_y() {
                 self.y = self.limits.get_min_y();
             }
         }
@@ -409,12 +406,12 @@ impl TermLimits {
         }
     }
 
-    /// Represents the largest x-coordinate, where you should not be able to write anymore. (e.g. screen width)
+    /// Represents the largest x-coordinate, where you should be able to write. (e.g. screen width - 1)
     pub fn get_max_x(&self) -> u32 {
         if let Some(x_max) = self.x_max {
-            x_max.min(self.width)
+            x_max.min(self.width - 1)
         } else {
-            self.width
+            self.width - 1
         }
     }
 
@@ -427,12 +424,12 @@ impl TermLimits {
         }
     }
 
-    /// Represents the largest y-coordinate, where you should not be able to write anymore. (e.g. screen height)
+    /// Represents the largest y-coordinate, where you should be able to write. (e.g. screen height - 1)
     pub fn get_max_y(&self) -> u32 {
         if let Some(y_max) = self.y_max {
-            y_max.min(self.height)
+            y_max.min(self.height - 1)
         } else {
-            self.height
+            self.height - 1
         }
     }
 }

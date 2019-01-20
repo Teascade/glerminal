@@ -127,9 +127,9 @@ impl Window {
     pub fn set_limits(&self, text_buffer: &mut TextBuffer) {
         text_buffer.cursor.set_limits(
             Some(self.x),
-            Some(self.x + self.width + 2),
+            Some(self.x + self.width + 1),
             Some(self.y),
-            Some(self.y + self.height + 2),
+            Some(self.y + self.height + 1),
         );
     }
 }
