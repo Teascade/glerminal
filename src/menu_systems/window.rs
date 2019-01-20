@@ -1,10 +1,10 @@
 use crate::text_buffer::{Color, TextBuffer, TextStyle};
 
 pub struct BorderChars {
-    pub left_top_corner: char,
-    pub left_bottom_corner: char,
-    pub right_top_corner: char,
-    pub right_bottom_corner: char,
+    pub top_left: char,
+    pub bottom_left: char,
+    pub top_right: char,
+    pub bottom_right: char,
 
     pub vertical_line: char,
     pub horizontal_line: char,
@@ -20,10 +20,10 @@ impl BorderChars {
     /// Make BorderChars where every field is a spacebar.
     pub fn empty() -> BorderChars {
         BorderChars {
-            left_top_corner: ' ',
-            left_bottom_corner: ' ',
-            right_top_corner: ' ',
-            right_bottom_corner: ' ',
+            top_left: ' ',
+            bottom_left: ' ',
+            top_right: ' ',
+            bottom_right: ' ',
 
             vertical_line: ' ',
             horizontal_line: ' ',
@@ -40,13 +40,13 @@ impl BorderChars {
 impl Default for BorderChars {
     fn default() -> BorderChars {
         BorderChars {
-            left_top_corner: '╔',
-            left_bottom_corner: '╚',
-            right_top_corner: '╗',
-            right_bottom_corner: '╝',
+            top_left: '╔',
+            bottom_left: '╚',
+            top_right: '╗',
+            bottom_right: '╝',
 
-            vertical_line: '═',
-            horizontal_line: '║',
+            vertical_line: '║',
+            horizontal_line: '═',
 
             top_split: '╦',
             bottom_split: '╩',
@@ -155,15 +155,35 @@ impl Window {
         for y in 0..(self.height + 2) {
             text_buffer.cursor.move_to(self.x, self.y + y);
             for x in 0..(self.width + 2) {
-                if x == 0 || y == 0 || x == self.width + 1 || y == self.height + 1 {
-                    text_buffer.cursor.style = self.border_style;
+                text_buffer.cursor.style = self.border_style;
+                if x == 0 {
+                    if y == 0 {
+                        text_buffer.put_char(self.border_chars.top_left);
+                    } else if y == self.height + 1 {
+                        text_buffer.put_char(self.border_chars.bottom_left);
+                    } else {
+                        text_buffer.put_char(self.border_chars.vertical_line);
+                    }
+                } else if y == 0 {
+                    if x == self.width + 1 {
+                        text_buffer.put_char(self.border_chars.top_right);
+                    } else {
+                        text_buffer.put_char(self.border_chars.horizontal_line);
+                    }
+                } else if x == self.width + 1 && y == self.height + 1 {
+                    text_buffer.put_char(self.border_chars.bottom_right);
+                } else if x == self.width + 1 {
+                    text_buffer.put_char(self.border_chars.vertical_line);
+                } else if y == self.height + 1 {
+                    text_buffer.put_char(self.border_chars.horizontal_line);
                 } else {
+                    // Inside the window
                     text_buffer.cursor.style = TextStyle {
                         bg_color: self.background_color,
                         ..Default::default()
                     };
+                    text_buffer.put_char(' ');
                 }
-                text_buffer.put_char(' ');
             }
         }
         text_buffer.cursor.move_to(self.x + 1, self.y);
