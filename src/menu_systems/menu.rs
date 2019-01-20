@@ -99,6 +99,8 @@ pub enum FocusSelection {
 /// By default selection through Menus is done with a keyboard. It is possible to make selection with a mouse possible by changing [`FocusSelection`](enum.FocusSelection.html)
 /// with [`with_focus_selection`](#method.with_focus_selection) or [`set_focus_selection`](#method.set_focus_selection)
 ///
+/// To add a [`TextProcessor`](../text_processing/struct.TextProcessor.html) to the menu, such as the Parser, use [`with_text_processor`](#method.with_text_processor)
+///
 /// Example menu usage:
 /// ```no_run
 /// use glerminal::menu_systems::{Filter, Menu, MenuList, MenuPosition, TextInput, TextItem};

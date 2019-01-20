@@ -5,7 +5,11 @@
 //! input text, do whatever you want with GUI items generally. You can even make your own `InterfaceItem`s if you want.  
 //! Selection in [`Menu`](struct.Menu.html)s works with keyboard and mouse, changeable with [`FocusSelection`](enum.FocusSelection.html).
 //!
-//! Current pre-implemented items to use in Menus are
+//! To add a [`TextProcessor`](../text_processing/struct.TextProcessor.html) to the menu, such as the Parser, use [`with_text_processor`](struct.Menu.html/#method.with_text_processor)
+//!
+//! If you wish to use [`InterfaceItem`](trait.InterfaceItem.html)s without the Menu struct, it is required to call `update` and then `draw` for them, in that order.
+//!
+//! Current pre-implemented items to use are
 //! - [TextItem](struct.TextItem.html), functions as a text label and a button.
 //! - [TextInput](struct.TextInput.html), can accept text input that can be get with `get_text`.
 //! - [Dialog](struct.Dialog.html), can be used to display large volumes of text compactly.
