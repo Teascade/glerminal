@@ -38,7 +38,7 @@ use crate::text_processing::{OptTextStyle, Processable, ProcessedChar, TextProce
 /// ```
 ///
 /// See [TextBuffer](struct.TextBuffer.html) for examples and more detailed documentation.
-#[derive(Default)]
+#[derive(Default, Debug, Clone)]
 pub struct Parser {
     colors: HashMap<String, Color>,
 }

@@ -6,6 +6,7 @@
 use crate::Color;
 
 /// The default processor that does nothing else, but take the text and apply the given style to each of those `char`s
+#[derive(Debug, Clone, Copy)]
 pub struct DefaultProcessor;
 
 impl TextProcessor for DefaultProcessor {
