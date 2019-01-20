@@ -67,15 +67,19 @@ impl Default for BorderChars {
 ///
 /// Window::new(2, 2);
 ///
-/// // Creates a window that looks like (box-drawing characters used in places of borders)
-/// // ████
-/// // █  █
-/// // █  █
-/// // ████
+/// // Creates a window that looks like following
+/// // ╔══╗
+/// // ║  ║
+/// // ║  ║
+/// // ╚══╝
 /// ```
 pub struct Window {
     x: u32,
     y: u32,
+
+    vertical_splits: Vec<u32>,
+    horizontal_splits: Vec<u32>,
+
     /// The width of the window
     pub width: u32,
     /// The height of the window
@@ -96,6 +100,10 @@ impl Window {
         Window {
             x: 0,
             y: 0,
+
+            vertical_splits: Vec::new(),
+            horizontal_splits: Vec::new(),
+
             width: width.max(1),
             height: height.max(1),
             title: String::new(),
@@ -143,6 +151,30 @@ impl Window {
         self
     }
 
+    /// Add a vertical split to the given index. Lowest index is 0, and highest is width - 1.
+    /// A 3x3 window with vertical split at idx 1 looks like this:
+    ///  ╔═╦═╗
+    ///  ║ ║ ║
+    ///  ║ ║ ║
+    ///  ║ ║ ║
+    ///  ╚═╩═╝
+    pub fn with_vertical_split(mut self, split_index: u32) -> Window {
+        self.add_vertical_split(split_index);
+        self
+    }
+
+    /// Add a horizontal split to the given index. Lowest index is 0, and highest is height - 1.
+    /// A 3x3 window with vertical split at idx 1 looks like this:
+    ///  ╔═╦═╗
+    ///  ║ ║ ║
+    ///  ║ ║ ║
+    ///  ║ ║ ║
+    ///  ╚═╩═╝
+    pub fn with_horizontal_split(mut self, split_index: u32) -> Window {
+        self.add_horizontal_split(split_index);
+        self
+    }
+
     /// Sets the position of the window.
     pub fn set_pos(&mut self, position: (u32, u32)) {
         let (x, y) = position;
@@ -150,8 +182,40 @@ impl Window {
         self.y = y;
     }
 
+    /// Add a vertical split to the given index. Lowest index is 0, and highest is width.
+    /// A 3x3 window with vertical split at idx 1 looks like this:
+    ///  ╔═╦═╗
+    ///  ║ ║ ║
+    ///  ║ ║ ║
+    ///  ║ ║ ║
+    ///  ╚═╩═╝
+    pub fn add_vertical_split(&mut self, split_index: u32) {
+        let split_index = split_index.max(0).min(self.width);
+        if !self.vertical_splits.contains(&split_index) {
+            self.vertical_splits.push(split_index);
+        }
+    }
+
+    /// Add a vertical split to the given index. Lowest index is 0, and highest is height.
+    /// A 3x3 window with vertical split at idx 1 looks like this:
+    ///  ╔═══╗
+    ///  ║   ║
+    ///  ╠═══╣
+    ///  ║   ║
+    ///  ╚═══╝
+    pub fn add_horizontal_split(&mut self, split_index: u32) {
+        let split_index = split_index.max(0).min(self.height);
+        if !self.horizontal_splits.contains(&split_index) {
+            self.horizontal_splits.push(split_index);
+        }
+    }
+
     /// Draws the window
     pub fn draw(&self, text_buffer: &mut TextBuffer) {
+        let empty_style = TextStyle {
+            bg_color: self.background_color,
+            ..Default::default()
+        };
         for y in 0..(self.height + 2) {
             text_buffer.cursor.move_to(self.x, self.y + y);
             for x in 0..(self.width + 2) {
@@ -159,13 +223,17 @@ impl Window {
                 if x == 0 {
                     if y == 0 {
                         text_buffer.put_char(self.border_chars.top_left);
+                    } else if self.h_split(y) {
+                        text_buffer.put_char(self.border_chars.left_split);
                     } else if y == self.height + 1 {
                         text_buffer.put_char(self.border_chars.bottom_left);
                     } else {
                         text_buffer.put_char(self.border_chars.vertical_line);
                     }
                 } else if y == 0 {
-                    if x == self.width + 1 {
+                    if self.v_split(x) {
+                        text_buffer.put_char(self.border_chars.top_split);
+                    } else if x == self.width + 1 {
                         text_buffer.put_char(self.border_chars.top_right);
                     } else {
                         text_buffer.put_char(self.border_chars.horizontal_line);
@@ -173,15 +241,28 @@ impl Window {
                 } else if x == self.width + 1 && y == self.height + 1 {
                     text_buffer.put_char(self.border_chars.bottom_right);
                 } else if x == self.width + 1 {
-                    text_buffer.put_char(self.border_chars.vertical_line);
+                    if self.h_split(y) {
+                        text_buffer.put_char(self.border_chars.right_split);
+                    } else {
+                        text_buffer.put_char(self.border_chars.vertical_line);
+                    }
                 } else if y == self.height + 1 {
-                    text_buffer.put_char(self.border_chars.horizontal_line);
+                    if self.v_split(x) {
+                        text_buffer.put_char(self.border_chars.bottom_split);
+                    } else {
+                        text_buffer.put_char(self.border_chars.horizontal_line);
+                    }
+                } else if self.h_split(y) {
+                    if self.v_split(x) {
+                        text_buffer.put_char(self.border_chars.middle_split);
+                    } else {
+                        text_buffer.put_char(self.border_chars.horizontal_line);
+                    }
+                } else if self.v_split(x) {
+                    text_buffer.put_char(self.border_chars.vertical_line);
                 } else {
                     // Inside the window
-                    text_buffer.cursor.style = TextStyle {
-                        bg_color: self.background_color,
-                        ..Default::default()
-                    };
+                    text_buffer.cursor.style = empty_style;
                     text_buffer.put_char(' ');
                 }
             }
@@ -204,5 +285,15 @@ impl Window {
             Some(self.y),
             Some(self.y + self.height + 1),
         );
+    }
+
+    /// Returns whether the given idx contains a vertical split
+    fn v_split(&self, idx: u32) -> bool {
+        self.vertical_splits.contains(&idx)
+    }
+
+    /// Returns whether the given idx contains a horizontal split
+    fn h_split(&self, idx: u32) -> bool {
+        self.horizontal_splits.contains(&idx)
     }
 }

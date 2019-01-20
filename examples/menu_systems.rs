@@ -70,7 +70,8 @@ fn main() {
 
     let test_window = Window::new(70, 20)
         .with_pos((1, 1))
-        .with_title("Hello, World!");
+        .with_title("Hello, World!")
+        .with_horizontal_split(5);
     test_window.set_limits(&mut text_buffer);
 
     let mut frames = 0;
@@ -125,15 +126,15 @@ fn main() {
                 bg_color: [0.0, 0.0, 0.0, 0.0],
                 ..Default::default()
             };
-            text_buffer.cursor.move_to(40, 15);
+            text_buffer.cursor.move_to(42, 15);
             text_buffer.write(format!(
                 "Text: {} {}",
                 text_input.get_text(),
                 text_input_2.get_text()
             ));
-            text_buffer.cursor.move_to(40, 16);
+            text_buffer.cursor.move_to(43, 16);
             text_buffer.write(format!("Button presses: {}", button_presses));
-            text_buffer.cursor.move_to(40, 17);
+            text_buffer.cursor.move_to(43, 17);
             text_buffer.write(format!("Checked: {:?}", checkbox_group.get_selection_idx()));
 
             terminal.flush(&mut text_buffer);
