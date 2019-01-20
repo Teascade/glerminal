@@ -5,9 +5,12 @@
 //! input text, do whatever you want with GUI items generally. You can even make your own `InterfaceItem`s if you want.  
 //! Selection in [`Menu`](struct.Menu.html)s works with keyboard and mouse, changeable with [`FocusSelection`](enum.FocusSelection.html).
 //!
-//! To add a [`TextProcessor`](../text_processing/struct.TextProcessor.html) to the menu, such as the Parser, use [`with_text_processor`](struct.Menu.html/#method.with_text_processor)
+//! To add a [`TextProcessor`](../text_processing/struct.TextProcessor.html) to the menu, such as the Parser,
+//! use [`with_text_processor`](struct.Menu.html/#method.with_text_processor)
 //!
-//! If you wish to use [`InterfaceItem`](trait.InterfaceItem.html)s without the Menu struct, it is required to call `update` and then `draw` for them, in that order.
+//! If you wish to use [`InterfaceItem`](trait.InterfaceItem.html)s without the Menu struct,
+//! it is required to call `handle_events`, `update` and then `draw` for them, in that order.
+//! (See [Example InterfaceItem usage without Menu](#example-interfaceitem-usage-without-menu))
 //!
 //! Current pre-implemented items to use are
 //! - [TextItem](struct.TextItem.html), functions as a text label and a button.
@@ -17,7 +20,7 @@
 //!
 //! **Note:** This module requires _menu_systems_ feature to be enabled.
 //!
-//! Example usage of menu-systems:
+//! ## Example usage of Menu:
 //! (Same example can be found in [`Menu`](struct.Menu.html))
 //! ```no_run
 //! use glerminal::menu_systems::{Filter, Menu, MenuList, MenuPosition, TextInput, TextItem};
@@ -60,6 +63,41 @@
 //!         terminal.flush(&mut text_buffer); // Apply changes; flush
 //!     }
 //!
+//!     terminal.draw(&text_buffer);
+//! }
+//! ```
+//!
+//!
+//! ## Example InterfaceItem usage without [`Menu`](struct.Menu.html)
+//! ```no_run
+//! use glerminal::menu_systems::{InterfaceItem, TextItem};
+//! use glerminal::{TerminalBuilder, TextBuffer};
+//!
+//! // Initialize terminal and text buffer
+//! let terminal = TerminalBuilder::new().build();
+//! let mut text_buffer;
+//! match TextBuffer::create(&terminal, (80, 24)) {
+//!     Ok(buffer) => text_buffer = buffer,
+//!     Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
+//! }
+//!
+//! // Create a button
+//! let mut button = TextItem::new("Press me")
+//!     .with_is_button(true)
+//!     .with_focused(true);
+//!
+//! let processor = glerminal::text_processing::DefaultProcessor;
+//!
+//! while terminal.refresh() {
+//!     button.handle_events(&terminal.get_current_events());
+//!     if button.was_just_pressed() {
+//!         button.set_text("Pressed!");
+//!     }
+//!     button.update(terminal.delta_time(), &processor);
+//!     if button.get_base().dirty {
+//!         button.draw(&mut text_buffer);
+//!         terminal.flush(&mut text_buffer);
+//!     }
 //!     terminal.draw(&text_buffer);
 //! }
 //! ```
