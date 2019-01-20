@@ -180,7 +180,7 @@ pub use self::menu::{FocusSelection, GrowthDirection, Menu, MenuList, MenuPositi
 pub use self::menu_switcher::{MenuSelectionMethod, MenuSwitcher};
 pub use self::text_input::TextInput;
 pub use self::text_item::TextItem;
-pub use self::window::Window;
+pub use self::window::{BorderChars, Window};
 
 use crate::events::Events;
 use crate::text_buffer::TextBuffer;
