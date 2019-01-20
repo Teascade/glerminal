@@ -82,7 +82,7 @@ pub use crate::events::{Cursor, Events, Input};
 pub use crate::font::{CharacterData, Font};
 pub use crate::terminal::{Terminal, TerminalBuilder};
 pub use crate::text_buffer::text_processing;
-pub use crate::text_buffer::{TermCharacter, TermCursor, TermLimits, TextBuffer, TextStyle, Color};
+pub use crate::text_buffer::{Color, TermCharacter, TermCursor, TermLimits, TextBuffer, TextStyle};
 
 #[cfg(feature = "parser")]
 pub use crate::text_buffer::parser::Parser;
