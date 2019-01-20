@@ -1,5 +1,6 @@
 use super::{random_text, run_multiple_times, test_setup_text_buffer};
 use crate::menu_systems::{Dialog, InterfaceItem};
+use crate::text_processing::DefaultProcessor;
 use crate::VirtualKeyCode::{Down, Up, L, O};
 use crate::{Events, VirtualKeyCode};
 
@@ -13,7 +14,7 @@ fn draw() {
         let width = rand.gen_range(10, 15);
         let height = rand.gen_range(3, 5);
 
-        let mut text_buffer = test_setup_text_buffer((width as i32, height as i32));
+        let mut text_buffer = test_setup_text_buffer((width, height));
 
         let word_amount = rand.gen_range(5, 20);
 
@@ -42,8 +43,9 @@ fn draw() {
         let scroll = rand.gen_range(0, rows.len() as u32 - 1);
 
         let mut dialog = Dialog::new(width, height, height).with_text(text);
-        dialog.set_scroll(scroll);
+        dialog.update(0.0, &DefaultProcessor);
 
+        dialog.set_scroll(scroll);
         dialog.draw(&mut text_buffer);
 
         let expected: Vec<String> = rows
@@ -56,7 +58,7 @@ fn draw() {
                 assert_eq!(
                     c,
                     text_buffer
-                        .get_character(char_idx as i32, idx as i32)
+                        .get_character(char_idx as u32, idx as u32)
                         .unwrap()
                         .get_char()
                 );
@@ -84,6 +86,7 @@ fn scroll() {
     }
 
     let mut dialog = Dialog::new(width, height, height).with_text(text);
+    dialog.update(0.0, &DefaultProcessor);
 
     assert_eq!(dialog.get_scroll(), 0);
 
@@ -123,6 +126,7 @@ fn handle_input() {
         }
 
         let mut dialog = Dialog::new(width, height, height).with_text(text);
+        dialog.update(0.0, &DefaultProcessor);
 
         if change_up_button {
             dialog.up_buttons = vec![O];

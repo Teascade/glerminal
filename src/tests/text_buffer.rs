@@ -2,6 +2,7 @@ use super::{
     random_char, random_color, random_text, run_multiple_times, test_setup_text_buffer,
     test_setup_text_buffer_with_terminal,
 };
+use crate::TextStyle;
 use rand::{thread_rng, Rng};
 
 #[test]
@@ -9,13 +10,13 @@ fn aspect_ratio() {
     run_multiple_times(10, || {
         let mut rnd = thread_rng();
 
-        let width = rnd.gen_range(2i32, 100);
-        let height = rnd.gen_range(2i32, 100);
+        let width = rnd.gen_range(2, 100);
+        let height = rnd.gen_range(2, 100);
 
         let (text_buffer, terminal) = test_setup_text_buffer_with_terminal((width, height));
-        let ar_height = height * terminal.font.line_height as i32;
-        let ar_width = width * terminal.font.size as i32;
-        let ar = ar_width as f32 / ar_height as f32;
+        let ar_height = height * terminal.font.line_height;
+        let ar_width = width as f32 * terminal.font.average_xadvance;
+        let ar = ar_width / ar_height as f32;
 
         assert_eq!(text_buffer.aspect_ratio, ar);
     });
@@ -26,8 +27,8 @@ fn size() {
     run_multiple_times(10, || {
         let mut rnd = thread_rng();
 
-        let width = rnd.gen_range(2i32, 100);
-        let height = rnd.gen_range(2i32, 100);
+        let width = rnd.gen_range(2, 100);
+        let height = rnd.gen_range(2, 100);
 
         let text_buffer = test_setup_text_buffer((width, height));
         assert_eq!(text_buffer.chars.len(), (width * height) as usize);
@@ -41,9 +42,9 @@ fn get_char_empty() {
     let text_buffer = test_setup_text_buffer((2, 2));
     let character = text_buffer.get_character(0, 0).unwrap();
     assert_eq!(character.get_char(), ' ');
-    assert_eq!(character.get_fg_color(), [0.0; 4]);
-    assert_eq!(character.get_bg_color(), [0.0; 4]);
-    assert_eq!(character.get_shakiness(), 0.0);
+    assert_eq!(character.style.fg_color, [1.0; 4]);
+    assert_eq!(character.style.bg_color, [0.0; 4]);
+    assert_eq!(character.style.shakiness, 0.0);
 }
 
 #[test]
@@ -88,20 +89,18 @@ fn write_three_characters() {
 #[test]
 fn put_single_styled_character() {
     run_multiple_times(10, || {
-        let fg_color = random_color();
-        let bg_color = random_color();
-        let shakiness = rand::random::<f32>();
+        let style = TextStyle {
+            fg_color: random_color(),
+            bg_color: random_color(),
+            shakiness: rand::random::<f32>(),
+        };
 
         let mut text_buffer = test_setup_text_buffer((2, 2));
-        text_buffer.change_cursor_fg_color(fg_color);
-        text_buffer.change_cursor_bg_color(bg_color);
-        text_buffer.change_cursor_shakiness(shakiness);
+        text_buffer.cursor.style = style;
         text_buffer.put_char('a');
 
         let character = text_buffer.get_character(0, 0).unwrap();
-        assert_eq!(character.get_fg_color(), fg_color);
-        assert_eq!(character.get_bg_color(), bg_color);
-        assert_eq!(character.get_shakiness(), shakiness);
+        assert_eq!(character.style, style);
     });
 }
 
@@ -110,32 +109,15 @@ fn cursor_move() {
     run_multiple_times(10, || {
         let mut rnd = thread_rng();
 
-        let width = rnd.gen_range(3i32, 100);
-        let height = rnd.gen_range(3i32, 100);
+        let width = rnd.gen_range(3, 100);
+        let height = rnd.gen_range(3, 100);
 
         let mut text_buffer = test_setup_text_buffer((width, height));
-        let x = rnd.gen_range(0i32, width - 2);
-        let y = rnd.gen_range(0i32, height - 2);
-        text_buffer.move_cursor(x, y);
-        //assert_eq!(text_buffer.get_cursor_position(), (x, y));
-        text_buffer.move_cursor(width, height);
-        //assert_eq!(text_buffer.get_cursor_position(), (x, y));
-    });
-}
-
-#[test]
-fn cursor_styles() {
-    run_multiple_times(10, || {
-        let mut text_buffer = test_setup_text_buffer((2, 2));
-        let fg = random_color();
-        let bg = random_color();
-        let shakiness = rand::random::<f32>();
-
-        text_buffer.change_cursor_fg_color(fg);
-        assert_eq!(text_buffer.get_cursor_fg_color(), fg);
-        text_buffer.change_cursor_bg_color(bg);
-        assert_eq!(text_buffer.get_cursor_bg_color(), bg);
-        text_buffer.change_cursor_shakiness(shakiness);
-        assert_eq!(text_buffer.get_cursor_shakiness(), shakiness);
+        let x = rnd.gen_range(0, width - 2);
+        let y = rnd.gen_range(0, height - 2);
+        text_buffer.cursor.move_to(x, y);
+        assert_eq!(text_buffer.get_cursor_position(), (x, y));
+        text_buffer.cursor.move_to(width, height);
+        assert_eq!(text_buffer.get_cursor_position(), (width - 1, height - 1));
     });
 }

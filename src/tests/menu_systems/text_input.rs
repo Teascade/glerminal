@@ -1,7 +1,8 @@
 use super::{random_text, run_multiple_times, test_setup_text_buffer};
 use crate::menu_systems::{Filter, InterfaceItem, TextInput};
+use crate::text_processing::DefaultProcessor;
 use crate::Events;
-use crate::VirtualKeyCode::{Back, Key1, Return, A};
+use crate::VirtualKeyCode::Return;
 
 use rand::{thread_rng, Rng};
 
@@ -30,7 +31,7 @@ fn back_removing() {
 
     let expected: String = text.chars().take(10 - removed).collect();
 
-    events.keyboard.update_button_press(Back, true);
+    events.chars.add_char('\u{8}'); // Backspace-character
     for _ in 0..removed {
         item.handle_events(&events);
     }
@@ -63,12 +64,11 @@ fn input_handling_and_filters() {
         }
         item.filter = filter;
 
-        events.keyboard.update_button_press(A, true);
+        events.chars.add_char('a');
         item.handle_events(&events);
         events.clear_just_lists();
-        events.keyboard.update_button_press(A, false);
 
-        events.keyboard.update_button_press(Key1, true);
+        events.chars.add_char('1');
         item.handle_events(&events);
 
         assert_eq!(expected, item.get_text());
@@ -92,14 +92,15 @@ fn input_handling_no_focus() {
 fn caret() {
     run_multiple_times(20, || {
         let caret_time = thread_rng().gen_range(0.05, 0.2);
+        let processor = DefaultProcessor;
 
         let mut item = TextInput::new(None, None)
             .with_focused(true)
             .with_caret(caret_time);
         assert_eq!(item.caret_showing(), false);
-        item.update(caret_time);
+        item.update(caret_time, &processor);
         assert_eq!(item.caret_showing(), true);
-        item.update(caret_time);
+        item.update(caret_time, &processor);
         assert_eq!(item.caret_showing(), false);
     });
 }
@@ -110,6 +111,7 @@ fn draw() {
         let mut rng = thread_rng();
 
         let mut text_buffer = test_setup_text_buffer((20, 1));
+        let processor = DefaultProcessor;
 
         let text = random_text(5);
         let prefix = random_text(5);
@@ -123,6 +125,7 @@ fn draw() {
             .with_text(text.clone())
             .with_focused(true);
 
+        item.update(0.0, &processor);
         item.draw(&mut text_buffer);
 
         let mut caret_should_show = false;
@@ -132,12 +135,12 @@ fn draw() {
             item.draw(&mut text_buffer);
             for (idx, c) in whole.chars().enumerate() {
                 assert_eq!(
-                    text_buffer.get_character(idx as i32, 0).unwrap().get_char(),
+                    text_buffer.get_character(idx as u32, 0).unwrap().get_char(),
                     c
                 )
             }
             caret_should_show = !caret_should_show;
-            item.update(caret);
+            item.update(caret, &processor);
         }
     });
 }

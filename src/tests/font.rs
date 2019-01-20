@@ -1,19 +1,20 @@
 use crate::font::Font;
+use crate::FontFormat;
 
-static IOSEVKA_SFL: &'static str = include_str!("../../fonts/iosevka.sfl");
-static IOSEVKA_PNG: &'static [u8] = include_bytes!("../../fonts/iosevka.png");
+static SCP_SFL: &'static str = include_str!("../../fonts/source_code_pro.sfl");
+static SCP_PNG: &'static [u8] = include_bytes!("../../fonts/source_code_pro.png");
 
 fn test_load_font() -> Font {
-    Font::load("fonts/iosevka.sfl")
+    Font::load(&FontFormat::SFL, "fonts/source_code_pro.sfl")
 }
 
 fn test_load_font_raw() -> Font {
-    Font::load_raw(IOSEVKA_SFL, IOSEVKA_PNG)
+    Font::load_raw(&FontFormat::SFL, SCP_SFL, SCP_PNG)
 }
 
 #[test]
 fn name() {
-    assert_eq!(test_load_font().name, "Iosevka");
+    assert_eq!(test_load_font().name, "Source Code Pro");
 }
 
 #[test]
@@ -24,40 +25,40 @@ fn load_raw_eq_load() {
 #[test]
 fn size() {
     let font = test_load_font();
-    assert_eq!(font.width, 664);
-    assert_eq!(font.height, 653);
+    assert_eq!(font.width, 1024);
+    assert_eq!(font.height, 1024);
 }
 
 #[test]
 fn line_height_and_size() {
     let font = test_load_font();
-    assert_eq!(font.line_height, 56);
-    assert_eq!(font.size, 32);
+    assert_eq!(font.line_height, 77);
+    assert_eq!(font.size, 44);
 }
 
 #[test]
 fn character_amount() {
     let font = test_load_font();
-    assert_eq!(font.characters.keys().len(), 478);
+    assert_eq!(font.characters.keys().len(), 482);
 }
 
 #[test]
 fn single_character_width() {
     let font = test_load_font();
-    assert_eq!(font.get_character('a' as u16).unwrap().width, 18);
+    assert_eq!(font.get_character('a' as u16).unwrap().width, 30);
 }
 
 #[test]
 fn single_character_height() {
     let font = test_load_font();
-    assert_eq!(font.get_character('a' as u16).unwrap().height, 24);
+    assert_eq!(font.get_character('a' as u16).unwrap().height, 34);
 }
 
 #[test]
 fn single_character_offsets() {
     let font = test_load_font();
-    assert_eq!(font.get_character('a' as u16).unwrap().x_off, 2);
-    assert_eq!(font.get_character('a' as u16).unwrap().y_off, 32);
+    assert_eq!(font.get_character('a' as u16).unwrap().x_off, 3);
+    assert_eq!(font.get_character('a' as u16).unwrap().y_off, 29);
 }
 
 #[test]

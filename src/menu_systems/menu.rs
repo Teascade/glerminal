@@ -1,11 +1,13 @@
 use super::InterfaceItem;
 use crate::events::Events;
 use crate::text_buffer::TextBuffer;
+use crate::text_processing::{DefaultProcessor, TextProcessor};
 use glutin::VirtualKeyCode;
 
 /// Represents a list of InterfaceItems that is passed to the Menu when updating
 ///
 /// MenuList is used to draw and handle updates in the Menu and will also determines the order of the InferfaceItems in the menu.
+#[derive(Default)]
 pub struct MenuList<'a> {
     items_ref: Vec<Box<&'a mut dyn InterfaceItem>>,
     positions: Vec<MenuPosition>,
@@ -87,7 +89,7 @@ pub enum FocusSelection {
     Keyboard(Option<VirtualKeyCode>, Option<VirtualKeyCode>),
     /// With mouse (point which item should be focused)
     Mouse(),
-    /// With mouse or keyboard (see mouse and keyboard individually)
+    /// With mouse or keyboard (see mouse and keyboard individually) (previous key, next key)
     MouseAndKeyboard(Option<VirtualKeyCode>, Option<VirtualKeyCode>),
 }
 
@@ -97,6 +99,8 @@ pub enum FocusSelection {
 /// By default selection through Menus is done with a keyboard. It is possible to make selection with a mouse possible by changing [`FocusSelection`](enum.FocusSelection.html)
 /// with [`with_focus_selection`](#method.with_focus_selection) or [`set_focus_selection`](#method.set_focus_selection)
 ///
+/// To add a [`TextProcessor`](../text_processing/struct.TextProcessor.html) to the menu, such as the Parser, use [`with_text_processor`](#method.with_text_processor)
+///
 /// Example menu usage:
 /// ```no_run
 /// use glerminal::menu_systems::{Filter, Menu, MenuList, MenuPosition, TextInput, TextItem};
@@ -105,7 +109,7 @@ pub enum FocusSelection {
 /// // Initialize terminal and text buffer
 /// let terminal = TerminalBuilder::new().build();
 /// let mut text_buffer;
-/// match TextBuffer::new(&terminal, (80, 24)) {
+/// match TextBuffer::create(&terminal, (80, 24)) {
 ///     Ok(buffer) => text_buffer = buffer,
 ///     Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 /// }
@@ -154,11 +158,12 @@ pub struct Menu {
 
     growth_direction: GrowthDirection,
     focus_selection: FocusSelection,
+
+    text_processor: Box<dyn TextProcessor>,
 }
 
-impl Menu {
-    /// Initializes a new empty menu
-    pub fn new() -> Menu {
+impl Default for Menu {
+    fn default() -> Menu {
         Menu {
             x: 0,
             y: 0,
@@ -171,7 +176,16 @@ impl Menu {
 
             growth_direction: GrowthDirection::Down,
             focus_selection: FocusSelection::Keyboard(None, None),
+
+            text_processor: Box::new(DefaultProcessor),
         }
+    }
+}
+
+impl Menu {
+    /// Initializes a new empty menu
+    pub fn new() -> Menu {
+        Default::default()
     }
 
     /// Sets the position and consumes the Menu, then returns it
@@ -200,6 +214,12 @@ impl Menu {
         self
     }
 
+    /// Set the text processor for this menu, or in other words, the `TextProcessor` that is given to each `InterfaceItem` in their `update`.
+    pub fn with_text_processor<T: 'static + TextProcessor>(mut self, processor: T) -> Menu {
+        self.text_processor = Box::new(processor);
+        self
+    }
+
     /// Sets the position of the menu
     pub fn set_pos(&mut self, pos: (u32, u32)) {
         let (x, y) = pos;
@@ -220,6 +240,11 @@ impl Menu {
     /// Sets the way the menu is browsed
     pub fn set_focus_selection(&mut self, focus_selection: FocusSelection) {
         self.focus_selection = focus_selection;
+    }
+
+    /// Set the text processor for this menu, or in other words, the `TextProcessor` that is given to each `InterfaceItem` in their `update`.
+    pub fn set_text_processor<T: 'static + TextProcessor>(&mut self, processor: T) {
+        self.text_processor = Box::new(processor);
     }
 
     /// Get the position of the Menu
@@ -246,6 +271,16 @@ impl Menu {
     /// Return the current item that is selected.
     pub fn get_select_idx(&self) -> u32 {
         self.select_idx
+    }
+
+    /// Tries to set the select idx for the Menu. If idx is greater than get_item_count() - 1, it will cap to that.
+    ///
+    /// **Note:** Uses a cloned version of the list that is cloned in `update`. (See [`get_cloned_list()`](#method.get_cloned_list))  
+    /// Also the idx can move in update, if the item selected can not be selected.
+    pub fn set_select_idx(&mut self, idx: u32) {
+        self.select_idx = (idx as i32)
+            .min(self.cloned_interface_items.len() as i32 - 1)
+            .max(0) as u32;
     }
 
     /// Returns the button that must be pressed in order to select the previous menu item.
@@ -288,8 +323,18 @@ impl Menu {
         }
     }
 
+    /// Get the currently cloned items in the menu.
+    ///
+    /// In every `update`, if the items given are dirty (or the amount of items has changed),
+    /// the list of items is deemed dirty and is then cloned. This cloned list can then be used for drawing or other heuristics, but not altering the actual items.
+    pub fn get_cloned_list(&self) -> &[Box<dyn InterfaceItem>] {
+        &self.cloned_interface_items
+    }
+
     /// Update the menu, first handling any events if necessary, checking dirtyness,
-    /// saving changes for later drawing and returning whether the menu should be redrawn or not.
+    /// saving changes (as a cloned list) for later drawing and functionality. (See [`get_cloned_list()`](#method.get_cloned_list))
+    ///
+    /// Returning whether the menu should be redrawn or not.
     pub fn update(
         &mut self,
         events: &Events,
@@ -297,113 +342,25 @@ impl Menu {
         text_buffer: &TextBuffer,
         list: &mut MenuList,
     ) -> bool {
-        let length = list.items_ref.len();
+        let length = list.items_ref.len() as i32;
 
+        self.select_idx = (self.select_idx as i32).min(length - 1).max(0) as u32;
+
+        // Handle events if focused
         if self.focused {
-            // Handle input for focused child and consume input if necessary.
-            let mut focused_handled_input = false;
-            if let Some(item) = (&mut list.items_ref).get_mut(self.select_idx as usize) {
-                focused_handled_input = item.handle_events(events);
-            }
+            self.handle_events(events, list, text_buffer);
+        }
 
-            // Handle input for the menu (selecting), if focused child didn't consume the last inpout
-            if !focused_handled_input {
-                let keyboard_focus = match self.focus_selection {
-                    FocusSelection::Keyboard(..) => true,
-                    FocusSelection::MouseAndKeyboard(..) => true,
-                    _ => false,
-                };
-                if keyboard_focus {
-                    if events.keyboard.was_just_pressed(self.get_previous_button()) {
-                        self.select_idx =
-                            (((self.select_idx as i32 + length as i32) - 1) % length as i32) as u32;
-
-                        let start_idx = self.select_idx.min(length as u32 - 1).max(0);
-                        while {
-                            !list.items_ref[self.select_idx as usize]
-                                .get_base()
-                                .can_be_focused
-                        } {
-                            self.select_idx = (((self.select_idx as i32 + length as i32) - 1)
-                                % length as i32)
-                                as u32;
-                            if self.select_idx == start_idx {
-                                break;
-                            }
-                        }
-                    }
-                    if events.keyboard.was_just_pressed(self.get_next_button()) {
-                        self.select_idx = (((self.select_idx as i32) + 1) % length as i32) as u32;
-                    }
-                }
-
-                // Do any selection with mouse
-                let mouse_focus = match self.focus_selection {
-                    FocusSelection::Mouse() => true,
-                    FocusSelection::MouseAndKeyboard(..) => true,
-                    _ => false,
-                };
-
-                if mouse_focus {
-                    let grow_right = match self.growth_direction {
-                        GrowthDirection::Left => false,
-                        _ => true,
-                    };
-                    let grow_down = match self.growth_direction {
-                        GrowthDirection::Up => false,
-                        _ => true,
-                    };
-                    if let Some(loc) = events.cursor.get_location(&text_buffer) {
-                        for idx in 0..self.cloned_interface_items.len() {
-                            let item = &self.cloned_interface_items[idx];
-                            let base = item.get_base();
-                            let idx = idx as u32;
-
-                            if !base.can_be_focused {
-                                continue;
-                            }
-                            let (x, y) = (base.get_pos().0 as i32, base.get_pos().1 as i32);
-                            let width = item.get_total_width() as i32;
-                            let height = item.get_total_height() as i32;
-
-                            let (x0, x1);
-                            if grow_right {
-                                x0 = x;
-                                x1 = x + width - 1;
-                            } else {
-                                x0 = x - width + 1;
-                                x1 = x;
-                            }
-
-                            let (y0, y1);
-                            if grow_down {
-                                y0 = y;
-                                y1 = y + height - 1;
-                            } else {
-                                y0 = y - height + 1;
-                                y1 = y;
-                            }
-
-                            if loc.0 >= x0 && loc.0 <= x1 && loc.1 >= y0 && loc.1 <= y1 {
-                                self.select_idx = idx;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Ensure that any unselectable menu items aren't selected. If none are found, c'est la vie
-            let start_idx = self.select_idx.min(length as u32 - 1).max(0);
-            while {
-                !list.items_ref[self.select_idx as usize]
-                    .get_base()
-                    .can_be_focused
-            } {
-                self.select_idx = (((self.select_idx as i32) + 1) % length as i32) as u32;
-                if self.select_idx == start_idx {
-                    break;
-                }
+        // Ensure that any unselectable menu items aren't selected. If none are found, c'est la vie
+        let start_idx = (self.select_idx as i32).min(length - 1).max(0) as u32;
+        while {
+            !list.items_ref[self.select_idx as usize]
+                .get_base()
+                .can_be_focused
+        } {
+            self.select_idx = (((self.select_idx as i32) + 1) % length) as u32;
+            if self.select_idx == start_idx {
+                break;
             }
         }
 
@@ -411,7 +368,7 @@ impl Menu {
         for (idx, item) in (&mut list.items_ref).iter_mut().enumerate() {
             item.get_mut_base()
                 .set_focused((self.select_idx == idx as u32) && self.focused);
-            item.update(delta);
+            item.update(delta, &*self.text_processor);
         }
 
         // Check if the children are dirty, if they are then update them to be drawn
@@ -427,6 +384,109 @@ impl Menu {
     pub fn draw(&mut self, text_buffer: &mut TextBuffer) {
         for item in &mut self.cloned_interface_items {
             item.draw(text_buffer);
+        }
+    }
+
+    fn handle_events(&mut self, events: &Events, list: &mut MenuList, text_buffer: &TextBuffer) {
+        let length = list.items_ref.len();
+
+        // There isn't anything to handle.
+        if length == 0 {
+            self.select_idx = 0;
+            return;
+        }
+
+        // Handle input for focused child and consume input if necessary.
+        let mut focused_handled_input = false;
+        if let Some(item) = (&mut list.items_ref).get_mut(self.select_idx as usize) {
+            focused_handled_input = item.handle_events(events);
+        }
+
+        // Handle input for the menu (selecting), if focused child didn't consume the last inpout
+        if !focused_handled_input {
+            let keyboard_focus = match self.focus_selection {
+                FocusSelection::Keyboard(..) => true,
+                FocusSelection::MouseAndKeyboard(..) => true,
+                _ => false,
+            };
+            if keyboard_focus {
+                // Do selection with the keyboard
+                if events.keyboard.was_just_pressed(self.get_previous_button()) {
+                    self.select_idx =
+                        (((self.select_idx as i32 + length as i32) - 1) % length as i32) as u32;
+
+                    let start_idx = self.select_idx.min(length as u32 - 1).max(0);
+                    while {
+                        !list.items_ref[self.select_idx as usize]
+                            .get_base()
+                            .can_be_focused
+                    } {
+                        self.select_idx =
+                            (((self.select_idx as i32 + length as i32) - 1) % length as i32) as u32;
+                        if self.select_idx == start_idx {
+                            break;
+                        }
+                    }
+                }
+                if events.keyboard.was_just_pressed(self.get_next_button()) {
+                    self.select_idx = (((self.select_idx as i32) + 1) % length as i32) as u32;
+                }
+            }
+
+            // Do any selection with mouse
+            let mouse_focus = match self.focus_selection {
+                FocusSelection::Mouse() => true,
+                FocusSelection::MouseAndKeyboard(..) => true,
+                _ => false,
+            };
+
+            if mouse_focus {
+                let grow_right = match self.growth_direction {
+                    GrowthDirection::Left => false,
+                    _ => true,
+                };
+                let grow_down = match self.growth_direction {
+                    GrowthDirection::Up => false,
+                    _ => true,
+                };
+                if let Some(loc) = events.cursor.get_location(&text_buffer) {
+                    for idx in 0..self.cloned_interface_items.len() {
+                        let item = &self.cloned_interface_items[idx];
+                        let base = item.get_base();
+                        let idx = idx as u32;
+
+                        if !base.can_be_focused {
+                            continue;
+                        }
+                        let (x, y) = (base.get_pos().0, base.get_pos().1);
+                        let width = item.get_total_width();
+                        let height = item.get_total_height();
+
+                        let (x0, x1);
+                        if grow_right {
+                            x0 = x;
+                            x1 = x + width - 1;
+                        } else {
+                            x0 = x - width + 1;
+                            x1 = x;
+                        }
+
+                        let (y0, y1);
+                        if grow_down {
+                            y0 = y;
+                            y1 = y + height - 1;
+                        } else {
+                            y0 = y - height + 1;
+                            y1 = y;
+                        }
+
+                        if loc.0 >= x0 && loc.0 <= x1 && loc.1 >= y0 && loc.1 <= y1 {
+                            self.select_idx = idx;
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 

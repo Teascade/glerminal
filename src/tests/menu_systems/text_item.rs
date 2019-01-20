@@ -1,5 +1,6 @@
 use super::{random_text, run_multiple_times, test_setup_text_buffer};
 use crate::menu_systems::{InterfaceItem, TextItem};
+use crate::text_processing::DefaultProcessor;
 use crate::Events;
 use crate::VirtualKeyCode::{Return, A};
 
@@ -63,14 +64,15 @@ fn set_functions() {
 
 #[test]
 fn draw() {
-    run_multiple_times(50, || {
+    run_multiple_times(20, || {
         let mut text_buffer = test_setup_text_buffer((15, 1));
         let text = random_text(15);
         let mut item = TextItem::new(text.clone());
+        item.update(0.0, &DefaultProcessor);
         item.draw(&mut text_buffer);
         for (idx, c) in text.chars().enumerate() {
             assert_eq!(
-                text_buffer.get_character(idx as i32, 0).unwrap().get_char(),
+                text_buffer.get_character(idx as u32, 0).unwrap().get_char(),
                 c
             );
         }

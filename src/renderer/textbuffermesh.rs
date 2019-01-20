@@ -29,7 +29,7 @@ impl Renderable for TextBufferMesh {
 }
 
 impl TextBufferMesh {
-    pub fn new(program: Program, dimensions: (i32, i32), font: &Font) -> TextBufferMesh {
+    pub fn new(program: Program, dimensions: (u32, u32), font: &Font) -> TextBufferMesh {
         let (width, height) = dimensions;
 
         let vertex_buffer_pos = vec![0.0; (width * height * 12) as usize];
@@ -44,13 +44,16 @@ impl TextBufferMesh {
         let vao = super::create_vao(program, vbo_pos, vbo_col, vbo_shakiness, Some(vbo_tex));
 
         let tex = super::create_texture(&font.image_buffer, font.width, font.height);
+
+        let count = (width * height * 6) as i32;
+
         TextBufferMesh {
             vao: vao,
             vbo_pos: vbo_pos,
             vbo_col: vbo_col,
             vbo_tex: vbo_tex,
             vbo_shakiness: vbo_shakiness,
-            count: Cell::new(width * height * 6),
+            count: Cell::new(count),
             texture: tex,
         }
     }
@@ -92,15 +95,14 @@ impl TextBufferMesh {
                     Ok(data) => data,
                     Err(_) => default_char_data.clone(),
                 };
-                let width = character_width * (char_data.width as f32 / font.size as f32);
+                let width =
+                    character_width * (char_data.width as f32 / font.average_xadvance as f32);
                 let height = character_height * (char_data.height as f32 / font.line_height as f32);
 
-                let font_offset = -(font.min_offset_y as i32);
-
                 let bmoffset_x =
-                    character_width * (char_data.x_off as i32 as f32 / font.size as f32);
-                let bmoffset_y = character_height
-                    * ((char_data.y_off as i32 + font_offset) as f32 / font.line_height as f32);
+                    character_width * (char_data.x_off as f32 / font.average_xadvance as f32);
+                let bmoffset_y =
+                    character_height * (char_data.y_off as f32 / font.line_height as f32);
 
                 let x_off = x as f32 * character_width + bmoffset_x;
                 let y_off = y as f32 * character_height + bmoffset_y;
@@ -122,8 +124,8 @@ impl TextBufferMesh {
 
                 // Color and Shakiness
                 for _ in 0..6 {
-                    vertex_buffer_col.append(&mut character.get_fg_color().to_vec());
-                    vertex_buffer_shakiness.push(character.get_shakiness());
+                    vertex_buffer_col.append(&mut character.style.fg_color.to_vec());
+                    vertex_buffer_shakiness.push(character.style.shakiness);
                 }
 
                 // Calculate tex coords

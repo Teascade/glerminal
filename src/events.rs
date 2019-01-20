@@ -15,7 +15,7 @@ use std::collections::HashMap;
 ///     .build();
 ///
 /// let mut text_buffer;
-/// match TextBuffer::new(&terminal, (80, 24)) {
+/// match TextBuffer::create(&terminal, (80, 24)) {
 ///     Ok(buffer) => text_buffer = buffer,
 ///     Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 /// }
@@ -32,6 +32,8 @@ pub struct Events {
     pub mouse: Input<MouseButton>,
     /// Allows getting information related to cursor position
     pub cursor: Cursor,
+    /// Allows the gathering of unicode characters that the terminal received. Optimal for text receiving.
+    pub chars: Chars,
 }
 
 impl Events {
@@ -40,6 +42,7 @@ impl Events {
             keyboard: Input::new(),
             mouse: Input::new(),
             cursor: Cursor::new(text_buffer_aspect_ratio),
+            chars: Chars::new(),
         }
     }
 
@@ -47,6 +50,34 @@ impl Events {
         self.keyboard.clear_just_lists();
         self.mouse.clear_just_lists();
         self.cursor.clear_just_moved();
+        self.chars.clear_just_received();
+    }
+}
+
+/// Chars can get the character that the terminal received that frame, if any.
+#[derive(Clone)]
+pub struct Chars {
+    just_received_chars: Vec<char>,
+}
+
+impl Chars {
+    pub(crate) fn new() -> Chars {
+        Chars {
+            just_received_chars: Vec::new(),
+        }
+    }
+
+    pub(crate) fn add_char(&mut self, character: char) {
+        self.just_received_chars.push(character);
+    }
+
+    pub(crate) fn clear_just_received(&mut self) {
+        self.just_received_chars = Vec::new();
+    }
+
+    /// Get the characters that were pressed this frame
+    pub fn get_chars(&self) -> Vec<char> {
+        self.just_received_chars.clone()
     }
 }
 
@@ -108,7 +139,7 @@ impl Cursor {
     }
 
     /// Returns the current position of the cursor (the coordinates on the text buffer).
-    pub fn get_location(&self, text_buffer: &TextBuffer) -> Option<(i32, i32)> {
+    pub fn get_location(&self, text_buffer: &TextBuffer) -> Option<(u32, u32)> {
         if let Some(location) = self.location {
             let mut overflows = self.display_overflows;
             let mut relative_dimensions = self.display_relative_dimensions;
@@ -128,8 +159,8 @@ impl Cursor {
                 let y = (location.1 - overflows.1) * relative_dimensions.1;
 
                 Some((
-                    (x * text_buffer.width as f32).floor() as i32,
-                    (y * text_buffer.height as f32).floor() as i32,
+                    (x * text_buffer.width as f32).floor() as u32,
+                    (y * text_buffer.height as f32).floor() as u32,
                 ))
             } else {
                 None

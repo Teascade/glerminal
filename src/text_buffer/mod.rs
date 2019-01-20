@@ -1,10 +1,13 @@
 #[cfg(feature = "parser")]
 pub mod parser;
 
+pub mod text_processing;
+
 use crate::font::Font;
 use crate::renderer::backgroundmesh::BackgroundMesh;
 use crate::renderer::textbuffermesh::TextBufferMesh;
 use crate::terminal::Terminal;
+use crate::text_processing::ProcessedChar;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -17,7 +20,8 @@ pub type RawCharacter = u16;
 static INDEX_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 /// The `TextBuffer` acts as a "state machine" where you can set foreground color, background color and shakiness for the cursor,
-/// move the cursor around, clear the screen and write with the cursor (using the cursor's styles).
+/// move the cursor around, clear the screen and write with the cursor (using the cursor's styles) (through [`TermCursor`](struct.TermCursor.html)),
+/// put, get characters or write strings.  
 /// It's often the most efficient way to write things, especially if you have a very structured way of displaying things, but for a more simple-to-use
 /// way of writing, that isn't as structured ie. for a dialogue, you might want to use the Parser.  
 ///
@@ -35,7 +39,7 @@ static INDEX_COUNTER: AtomicUsize = AtomicUsize::new(0);
 ///
 /// ### Example usage of `TextBuffer`:
 /// ```no_run
-/// use glerminal::{TerminalBuilder, TextBuffer};
+/// use glerminal::{TerminalBuilder, TextBuffer, TextStyle};
 ///
 /// let terminal = TerminalBuilder::new()
 ///     .with_title("Hello GLerminal!")
@@ -43,16 +47,18 @@ static INDEX_COUNTER: AtomicUsize = AtomicUsize::new(0);
 ///     .build();
 ///
 /// let mut text_buffer;
-/// match TextBuffer::new(&terminal, (80, 24)) {
+/// match TextBuffer::create(&terminal, (80, 24)) {
 ///   Ok(buffer) => text_buffer = buffer,
 ///   Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 /// }
 ///
 /// // Test TextBuffer
-/// text_buffer.change_cursor_fg_color([1.0, 0.0, 0.0, 1.0]);
-/// text_buffer.change_cursor_bg_color([1.0, 1.0, 1.0, 1.0]);
-/// text_buffer.change_cursor_shakiness(0.5);
-/// text_buffer.move_cursor(0, 0);
+/// text_buffer.cursor.style = TextStyle {
+///     fg_color: [1.0, 0.0, 0.0, 1.0],
+///     bg_color: [1.0; 4],
+///     shakiness: 0.5,
+/// };
+/// text_buffer.cursor.move_to(0, 0);
 /// text_buffer.write("This text is shaking in red in a white background!");
 ///
 /// // Flush to "apply changes"
@@ -69,7 +75,7 @@ static INDEX_COUNTER: AtomicUsize = AtomicUsize::new(0);
 ///     .build();
 ///
 /// let mut text_buffer;
-/// match TextBuffer::new(&terminal, (80, 24)) {
+/// match TextBuffer::create(&terminal, (80, 24)) {
 ///   Ok(buffer) => text_buffer = buffer,
 ///   Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 /// }
@@ -92,13 +98,13 @@ static INDEX_COUNTER: AtomicUsize = AtomicUsize::new(0);
 /// let terminal = TerminalBuilder::new().build();
 ///
 /// let mut background_text_buffer;
-/// match TextBuffer::new(&terminal, (80, 24)) {
+/// match TextBuffer::create(&terminal, (80, 24)) {
 ///   Ok(buffer) => background_text_buffer = buffer,
 ///   Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 /// }
 ///
 /// let mut foreground_text_buffer;
-/// match TextBuffer::new(&terminal, (80, 24)) {
+/// match TextBuffer::create(&terminal, (80, 24)) {
 ///   Ok(buffer) => foreground_text_buffer = buffer,
 ///   Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 /// }
@@ -122,34 +128,32 @@ pub struct TextBuffer {
     index: u32,
 
     pub(crate) chars: Vec<TermCharacter>,
-    pub(crate) height: i32,
-    pub(crate) width: i32,
+    pub(crate) height: u32,
+    pub(crate) width: u32,
     pub(crate) mesh: Option<TextBufferMesh>,
     pub(crate) background_mesh: Option<BackgroundMesh>,
 
     pub(crate) aspect_ratio: f32,
 
-    cursor: TermCursor,
+    /// The cursor of the TextBuffer, specifies where characters are written and in what style.
+    pub cursor: TermCursor,
 
-    limits: TermLimits,
     dirty: bool,
 }
 
 impl TextBuffer {
     /// Creates a new text buffer with the given dimensions (width in characters, height in characters)
-    pub fn new(terminal: &Terminal, dimensions: (i32, i32)) -> Result<TextBuffer, String> {
+    pub fn create(terminal: &Terminal, dimensions: (u32, u32)) -> Result<TextBuffer, String> {
         let (width, height) = dimensions;
 
-        if width <= 0 || height <= 0 {
+        if width == 0 || height == 0 {
             return Err(
                 "TextBuffer dimensions are erronous; either width or height is below 1".to_owned(),
             );
         }
 
-        let chars = vec![
-            TermCharacter::new(' ' as u16, [0.0; 4], [0.0; 4], 0.0);
-            (width * height) as usize
-        ];
+        let chars =
+            vec![TermCharacter::new(' ' as u16, Default::default()); (width * height) as usize];
         let (mesh, background_mesh) = if terminal.headless {
             (None, None)
         } else {
@@ -166,8 +170,8 @@ impl TextBuffer {
             )
         };
 
-        let true_height = height * terminal.font.line_height as i32;
-        let true_width = width * terminal.font.size as i32;
+        let true_height = height * terminal.font.line_height;
+        let true_width = (width as f32 * terminal.font.average_xadvance) as u32;
 
         let index = INDEX_COUNTER.fetch_add(1, Ordering::Relaxed) as u32;
         Ok(TextBuffer {
@@ -180,14 +184,12 @@ impl TextBuffer {
             cursor: TermCursor {
                 x: 0,
                 y: 0,
-                foreground_color: [1.0; 4],
-                background_color: [0.0; 4],
-                shakiness: 0.0,
+                style: Default::default(),
+                limits: TermLimits::new(width, height),
             },
 
             aspect_ratio: true_width as f32 / true_height as f32,
 
-            limits: TermLimits::new(width as u32, height as u32),
             dirty: true,
         })
     }
@@ -209,20 +211,20 @@ impl TextBuffer {
     }
 
     /// Get the dimensions of the text buffer (in characters). Returns (width, height)
-    pub fn get_dimensions(&self) -> (i32, i32) {
+    pub fn get_dimensions(&self) -> (u32, u32) {
         (self.width, self.height)
     }
 
     /// Sets the character at the specified position. It is the user's responsibility to check if such a position exists.
     pub fn set_char(&mut self, x: u32, y: u32, character: TermCharacter) {
-        self.chars[(y * self.width as u32 + x) as usize] = character;
+        self.chars[(y * self.width + x) as usize] = character;
     }
 
     /// Gets the TermChaacter in the given position
     ///
     /// Returns None if x/y are out of bounds
-    pub fn get_character(&self, x: i32, y: i32) -> Option<TermCharacter> {
-        if x < 0 || x >= self.width || y < 0 || y >= self.height {
+    pub fn get_character(&self, x: u32, y: u32) -> Option<TermCharacter> {
+        if x >= self.width || y >= self.height {
             None
         } else {
             Some(self.chars[(y * self.width + x) as usize])
@@ -232,7 +234,7 @@ impl TextBuffer {
     /// Clears the screen (makes every character empty and resets their style)
     pub fn clear(&mut self) {
         self.chars = vec![
-            TermCharacter::new(' ' as u16, [0.0; 4], [0.0; 4], 0.0);
+            TermCharacter::new(' ' as u16, Default::default());
             (self.width * self.height) as usize
         ];
     }
@@ -249,15 +251,11 @@ impl TextBuffer {
         }
     }
 
-    /// Puts a raw 16-bit character to the current position of the cursor with the cursor's style
+    /// Puts a raw 16-bit character to the current position of the cursor with the cursor's style (See text_buffer.cursor)
     pub fn put_raw_char(&mut self, character: RawCharacter) {
-        self.chars[(self.cursor.y * self.width + self.cursor.x) as usize] = TermCharacter::new(
-            character,
-            self.cursor.foreground_color,
-            self.cursor.background_color,
-            self.cursor.shakiness,
-        );
-        self.move_cursor_by(1);
+        self.chars[(self.cursor.y * self.width + self.cursor.x) as usize] =
+            TermCharacter::new(character, self.cursor.style);
+        self.cursor.move_by(1);
 
         self.dirty = true;
     }
@@ -270,53 +268,86 @@ impl TextBuffer {
         }
     }
 
-    /// Changes the foreground color for the cursor
-    pub fn change_cursor_fg_color(&mut self, color: Color) {
-        self.cursor.foreground_color = color;
-    }
-
-    /// Changes the background color of the cursor
-    pub fn change_cursor_bg_color(&mut self, color: Color) {
-        self.cursor.background_color = color;
-    }
-
-    /// Returns the current foreground color of the cursor
-    pub fn get_cursor_fg_color(&mut self) -> Color {
-        self.cursor.foreground_color
-    }
-
-    /// Returns the current background color of the cursor
-    pub fn get_cursor_bg_color(&mut self) -> Color {
-        self.cursor.background_color
-    }
-
-    /// Changes the shakiness of the cursor
-    pub fn change_cursor_shakiness(&mut self, shakiness: f32) {
-        self.cursor.shakiness = shakiness;
-    }
-
-    /// Gets the current shakiness of the cursor
-    pub fn get_cursor_shakiness(&mut self) -> f32 {
-        self.cursor.shakiness
-    }
-
-    /// Moves the cursor to a specified location in the terminal. If the location does not exist, nothing happens.
-    pub fn move_cursor(&mut self, x: i32, y: i32) {
-        let x = x
-            .max(self.limits.get_min_x() as i32)
-            .min(self.limits.get_max_x() as i32 - 1);
-        let y = y
-            .max(self.limits.get_min_y() as i32)
-            .min(self.limits.get_max_y() as i32 - 1);
-        self.cursor.x = x;
-        self.cursor.y = y;
+    /// Write a list of [`ProcessedChar`](text_processing/struct.ProcessedChar.html)s
+    pub fn write_processed(&mut self, char_list: &[ProcessedChar]) {
+        let default = self.cursor.style;
+        for character in char_list {
+            self.cursor.style.fg_color = character.style.fg_color.unwrap_or(default.fg_color);
+            self.cursor.style.bg_color = character.style.bg_color.unwrap_or(default.bg_color);
+            self.cursor.style.shakiness = character.style.shakiness.unwrap_or(default.shakiness);
+            self.put_char(character.character);
+        }
+        self.cursor.style = default;
     }
 
     /// Returns the current position of the cursor
-    pub fn get_cursor_position(&self) -> (i32, i32) {
+    pub fn get_cursor_position(&self) -> (u32, u32) {
         (self.cursor.x, self.cursor.y)
     }
 
+    /// Returns whether the TextBuffer is dirty or not (whether flush will have any effect or not)
+    pub fn is_dirty(&self) -> bool {
+        self.dirty
+    }
+}
+
+/// Represents a style that can be used to style text.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TextStyle {
+    /// Foreground color of the text
+    pub fg_color: Color,
+    /// Background color of the text
+    pub bg_color: Color,
+    /// "Shakiness" of the text, meaning how much it shakes (safe values are between around -1.0 and 1.0)
+    pub shakiness: f32,
+}
+
+impl Default for TextStyle {
+    fn default() -> TextStyle {
+        TextStyle {
+            fg_color: [1.0; 4],
+            bg_color: [0.0; 4],
+            shakiness: 0.0,
+        }
+    }
+}
+
+/// Represents a single character in a [`TextBuffer`](struct.TextBuffer.html)
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TermCharacter {
+    character: RawCharacter,
+    /// The styling of this character
+    pub style: TextStyle,
+}
+
+impl TermCharacter {
+    pub(crate) fn new(character: RawCharacter, style: TextStyle) -> TermCharacter {
+        TermCharacter { character, style }
+    }
+
+    /// Gets the RawCharacter (u16-point) in the TermCharacter
+    pub fn get_raw_char(&self) -> RawCharacter {
+        self.character
+    }
+
+    /// Get the char in the TermCharacter
+    pub fn get_char(&self) -> char {
+        String::from_utf16(&[self.character]).unwrap().remove(0)
+    }
+}
+
+/// The cursor on the TextBuffer that you can move around and change it's style.  
+/// Determines where and with what style the TextBuffer writes characters
+#[derive(Clone, Debug)]
+pub struct TermCursor {
+    x: u32,
+    y: u32,
+    /// The style of the cursor. Determines what style is used when writing characters.
+    pub style: TextStyle,
+    limits: TermLimits,
+}
+
+impl TermCursor {
     /// Set the limits for drawing, other than the current screen.
     /// None means no limit in this direction.
     pub fn set_limits(
@@ -332,90 +363,34 @@ impl TextBuffer {
         self.limits.y_max = y_max;
     }
 
-    /// Get the current term limits of the terminal.
+    /// Get the current term limits of the cursor.
     pub fn get_limits(&self) -> TermLimits {
         self.limits.clone()
     }
 
-    /// Returns whether the TextBuffer is dirty or not (whether flush will have any effect or not)
-    pub fn is_dirty(&self) -> bool {
-        self.dirty
+    /// Moves the cursor to a specified location in the terminal.
+    /// Clamp cursor location to current limits or text_buffer boundaries if limits do not exist.
+    pub fn move_to(&mut self, x: u32, y: u32) {
+        let x = x.max(self.limits.get_min_x()).min(self.limits.get_max_x());
+        let y = y.max(self.limits.get_min_y()).min(self.limits.get_max_y());
+        self.x = x;
+        self.y = y;
     }
 
-    fn move_cursor_by(&mut self, amount: i32) {
-        let new_pos = self.cursor.x + amount;
-        if new_pos >= 0 {
-            self.cursor.x += amount;
-            if self.cursor.x >= self.limits.get_max_x() as i32 {
-                self.cursor.x = self.limits.get_min_x() as i32;
-                self.cursor.y += 1;
-                if self.cursor.y >= self.limits.get_max_y() as i32 {
-                    self.cursor.y = self.limits.get_min_y() as i32;
-                }
+    fn move_by(&mut self, amount: u32) {
+        self.x += amount;
+        if self.x > self.limits.get_max_x() {
+            self.x = self.limits.get_min_x();
+            self.y += 1;
+            if self.y > self.limits.get_max_y() {
+                self.y = self.limits.get_min_y();
             }
         }
     }
 }
 
-/// Represents a single character in a [`TextBuffer`](struct.TextBuffer.html)
-#[derive(Clone, Copy)]
-pub struct TermCharacter {
-    character: RawCharacter,
-    fg_color: Color,
-    bg_color: Color,
-    shakiness: f32,
-}
-
-impl TermCharacter {
-    pub(crate) fn new(
-        character: RawCharacter,
-        fg_color: Color,
-        bg_color: Color,
-        shakiness: f32,
-    ) -> TermCharacter {
-        TermCharacter {
-            character,
-            fg_color,
-            bg_color,
-            shakiness,
-        }
-    }
-
-    /// Gets the char in the TermCharacter
-    pub fn get_raw_char(&self) -> RawCharacter {
-        self.character
-    }
-
-    pub fn get_char(&self) -> char {
-        String::from_utf16(&[self.character]).unwrap().remove(0)
-    }
-
-    /// Gets the foreground Color in the TermCharacter
-    pub fn get_fg_color(&self) -> Color {
-        self.fg_color
-    }
-
-    /// Gets the background Color in the TermCharacter
-    pub fn get_bg_color(&self) -> Color {
-        self.bg_color
-    }
-
-    /// Gets the shakiness of the TermCharacter, where shakiness is a value from 0.0 to 1.0 (other values are accepted, but these are suggested).
-    pub fn get_shakiness(&self) -> f32 {
-        self.shakiness
-    }
-}
-
-struct TermCursor {
-    x: i32,
-    y: i32,
-    foreground_color: Color,
-    background_color: Color,
-    shakiness: f32,
-}
-
 /// Represents the limits of the terminal.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TermLimits {
     width: u32,
     height: u32,
@@ -446,12 +421,12 @@ impl TermLimits {
         }
     }
 
-    /// Represents the largest x-coordinate, where you should not be able to write anymore. (e.g. screen width)
+    /// Represents the largest x-coordinate, where you should be able to write. (e.g. screen width - 1)
     pub fn get_max_x(&self) -> u32 {
         if let Some(x_max) = self.x_max {
-            x_max.min(self.width)
+            x_max.min(self.width - 1)
         } else {
-            self.width
+            self.width - 1
         }
     }
 
@@ -464,12 +439,12 @@ impl TermLimits {
         }
     }
 
-    /// Represents the largest y-coordinate, where you should not be able to write anymore. (e.g. screen height)
+    /// Represents the largest y-coordinate, where you should be able to write. (e.g. screen height - 1)
     pub fn get_max_y(&self) -> u32 {
         if let Some(y_max) = self.y_max {
-            y_max.min(self.height)
+            y_max.min(self.height - 1)
         } else {
-            self.height
+            self.height - 1
         }
     }
 }

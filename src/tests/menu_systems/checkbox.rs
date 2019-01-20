@@ -1,5 +1,6 @@
 use super::{random_text, run_multiple_times, test_setup_text_buffer};
 use crate::menu_systems::{Checkbox, CheckboxGroup, InterfaceItem};
+use crate::text_processing::DefaultProcessor;
 use crate::Events;
 use crate::VirtualKeyCode::{Return, A};
 
@@ -71,6 +72,7 @@ fn draw() {
             .with_suffix(suffix.clone())
             .with_checked_text(checked_text.clone());
 
+        item.update(0.0, &DefaultProcessor);
         item.draw(&mut text_buffer);
 
         let is_checked_text = if checked {
@@ -83,7 +85,7 @@ fn draw() {
         for (idx, c) in expected.chars().enumerate() {
             assert_eq!(
                 c,
-                text_buffer.get_character(idx as i32, 0).unwrap().get_char()
+                text_buffer.get_character(idx as u32, 0).unwrap().get_char()
             );
         }
     });

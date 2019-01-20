@@ -23,7 +23,7 @@
 //!         .with_dimensions((1280, 720))
 //!         .build();
 //!     let mut text_buffer;
-//!     match TextBuffer::new(&terminal, (80, 24)) {
+//!     match TextBuffer::create(&terminal, (80, 24)) {
 //!         Ok(buffer) => text_buffer = buffer,
 //!         Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 //!     }
@@ -66,6 +66,7 @@
 //! | menu_systems             | enables the [menu_systems](menu_systems/index.html) module. |
 #![warn(missing_docs)]
 #![warn(clippy::all)]
+#![allow(clippy::float_cmp)]
 
 #[cfg(test)]
 mod tests;
@@ -80,7 +81,8 @@ mod text_buffer;
 pub use crate::events::{Cursor, Events, Input};
 pub use crate::font::{CharacterData, Font};
 pub use crate::terminal::{Terminal, TerminalBuilder};
-pub use crate::text_buffer::{TermLimits, TextBuffer};
+pub use crate::text_buffer::text_processing;
+pub use crate::text_buffer::{Color, TermCharacter, TermCursor, TermLimits, TextBuffer, TextStyle};
 
 #[cfg(feature = "parser")]
 pub use crate::text_buffer::parser::Parser;
@@ -88,5 +90,6 @@ pub use crate::text_buffer::parser::Parser;
 #[cfg(feature = "menu_systems")]
 pub mod menu_systems;
 
+pub use bmfont_parser::Format as FontFormat;
 pub use glutin::MouseButton;
 pub use glutin::VirtualKeyCode;

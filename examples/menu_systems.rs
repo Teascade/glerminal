@@ -2,7 +2,7 @@ use glerminal::menu_systems::{
     Checkbox, CheckboxGroup, Dialog, Filter, FocusSelection, GrowthDirection, Menu, MenuList,
     MenuPosition, TextInput, TextItem, Window,
 };
-use glerminal::{MouseButton, TerminalBuilder, TextBuffer, VirtualKeyCode};
+use glerminal::{MouseButton, TerminalBuilder, TextBuffer, TextStyle, VirtualKeyCode};
 
 fn main() {
     let terminal = TerminalBuilder::new()
@@ -10,7 +10,7 @@ fn main() {
         .with_dimensions((1280, 720))
         .build();
     let mut text_buffer;
-    match TextBuffer::new(&terminal, (80, 24)) {
+    match TextBuffer::create(&terminal, (80, 24)) {
         Ok(buffer) => text_buffer = buffer,
         Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
     }
@@ -18,6 +18,8 @@ fn main() {
     let filter = Filter::empty_filter()
         .with_basic_latin_characters()
         .with_basic_numerals()
+        .with_latin_1_supplement()
+        .with_latin_extended_a()
         .with_basic_special_symbols();
 
     let mut text_label = TextItem::new("FPS: -").with_max_width(40);
@@ -26,13 +28,21 @@ fn main() {
         .with_prefix("Test your might: ")
         .with_filter(filter.clone())
         .with_character_limit(10)
-        .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.2, 0.8, 0.2, 1.0]));
+        .with_focused_style(TextStyle {
+            fg_color: [0.2, 0.2, 0.2, 1.0],
+            bg_color: [0.2, 0.8, 0.2, 1.0],
+            ..Default::default()
+        });
 
     let mut text_input_2 = TextInput::new(10, 10)
         .with_prefix("Test 2: [")
         .with_suffix("]")
         .with_filter(filter.clone())
-        .with_focused_colors(([0.8, 0.8, 0.8, 1.0], [0.8, 0.2, 0.2, 1.0]))
+        .with_focused_style(TextStyle {
+            fg_color: [0.8, 0.8, 0.8, 1.0],
+            bg_color: [0.8, 0.2, 0.2, 1.0],
+            ..Default::default()
+        })
         .with_caret(0.0);
 
     let mut checkbox =
@@ -60,7 +70,8 @@ fn main() {
 
     let test_window = Window::new(70, 20)
         .with_pos((1, 1))
-        .with_title("Hello, World!");
+        .with_title("Hello, World!")
+        .with_horizontal_split(5);
     test_window.set_limits(&mut text_buffer);
 
     let mut frames = 0;
@@ -110,17 +121,20 @@ fn main() {
             test_window.draw(&mut text_buffer);
             menu.draw(&mut text_buffer);
 
-            text_buffer.change_cursor_fg_color([0.8, 0.8, 0.8, 1.0]);
-            text_buffer.change_cursor_bg_color([0.0, 0.0, 0.0, 0.0]);
-            text_buffer.move_cursor(30, 15);
+            text_buffer.cursor.style = TextStyle {
+                fg_color: [0.8, 0.8, 0.8, 1.0],
+                bg_color: [0.0, 0.0, 0.0, 0.0],
+                ..Default::default()
+            };
+            text_buffer.cursor.move_to(42, 15);
             text_buffer.write(format!(
                 "Text: {} {}",
                 text_input.get_text(),
                 text_input_2.get_text()
             ));
-            text_buffer.move_cursor(40, 16);
+            text_buffer.cursor.move_to(43, 16);
             text_buffer.write(format!("Button presses: {}", button_presses));
-            text_buffer.move_cursor(40, 17);
+            text_buffer.cursor.move_to(43, 17);
             text_buffer.write(format!("Checked: {:?}", checkbox_group.get_selection_idx()));
 
             terminal.flush(&mut text_buffer);

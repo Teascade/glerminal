@@ -6,41 +6,61 @@ use std::time::SystemTime;
 use crate::display::Display;
 use crate::events::Events;
 use crate::font::Font;
-use crate::renderer;
 use crate::renderer::Program;
 use crate::text_buffer::TextBuffer;
+use crate::{renderer, FontFormat};
 
-static IOSEVKA_SFL: &'static str = include_str!("../fonts/iosevka.sfl");
-static IOSEVKA_PNG: &'static [u8] = include_bytes!("../fonts/iosevka.png");
+static SCP_FONT: &'static str = include_str!("../fonts/source_code_pro.sfl");
+static SCP_PNG: &'static [u8] = include_bytes!("../fonts/source_code_pro.png");
 
 /// A builder for the `Terminal`. Includes some settings that can be set before building.
 ///
 /// See [terminal mod](index.html) for examples and more detailed documentation.
 pub struct TerminalBuilder {
-    pub(crate) title: String,
-    pub(crate) dimensions: (u32, u32),
-    pub(crate) clear_color: (f32, f32, f32, f32),
-    pub(crate) font: Font,
-    pub(crate) visibility: bool,
-    pub(crate) headless: bool,
-    pub(crate) text_buffer_aspect_ratio: bool,
-    pub(crate) vsync: bool,
+    /// Title of the `Terminal` window
+    pub title: String,
+    /// The dimensions the window will open at
+    pub dimensions: (u32, u32),
+    /// The clear color of the terminal.
+    pub clear_color: (f32, f32, f32, f32),
+    /// The font that the terminal uses
+    pub font: Font,
+    /// Is the terminal visible/does it open when builded. It can be later opened/shown with [`show`](struct.Terminal.html#method.show)
+    pub visibility: bool,
+    /// Is the terminal headless, meaning there is no visual display for the terminal. Used for testing.
+    pub headless: bool,
+    /// Whether the aspect ratio should be retrieved from TextBuffer instead of the original resolution of the screen.
+    ///
+    /// If set to false, the aspect ratio used to make black bars for the screen will be fetched from the original resolution of the screen;
+    /// This will cause the fonts to strech a bit though.
+    ///
+    /// If set to true (default), the aspect ratio will be fetched from the TextBuffer, causing almost any resolution
+    /// to have black bars to make up for the missing spaces.
+    pub text_buffer_aspect_ratio: bool,
+    /// Enable/Disable Vsync
+    pub vsync: bool,
+}
+
+impl Default for TerminalBuilder {
+    fn default() -> TerminalBuilder {
+        TerminalBuilder {
+            title: "Hello, Glerminal!".to_owned(),
+            dimensions: (1280, 720),
+            clear_color: (0.14, 0.19, 0.28, 1.0),
+            font: Font::load_raw(&FontFormat::SFL, SCP_FONT, SCP_PNG),
+            visibility: true,
+            headless: false,
+            text_buffer_aspect_ratio: true,
+            vsync: true,
+        }
+    }
 }
 
 #[allow(dead_code)]
 impl TerminalBuilder {
     /// Creates a new terminal builder with default settings.
     pub fn new() -> TerminalBuilder {
-        TerminalBuilder {
-            title: "Hello, World ! ".to_owned(),
-            dimensions: (1280, 720),
-            clear_color: (0.14, 0.19, 0.28, 1.0),
-            font: Font::load_raw(IOSEVKA_SFL, IOSEVKA_PNG),
-            visibility: true,
-            headless: false,
-            text_buffer_aspect_ratio: true,
-            vsync: true,
-        }
+        Default::default()
     }
 
     /// Sets the title for the `Terminal`.
@@ -110,6 +130,8 @@ impl TerminalBuilder {
 ///
 /// **Note** when building with debug-mode, you are able to press `F3` to toggle between debug and non-debug. see ([`set_debug`](#method.set_debug)) for more information.
 ///
+/// The terminal can also be created with `Default::default` (see [Default creation example](#default-creation-example))
+///
 /// ### Terminal example:
 /// ```no_run
 /// use glerminal::TerminalBuilder;
@@ -133,6 +155,22 @@ impl TerminalBuilder {
 ///     .with_dimensions((1280, 720))
 ///     .with_visibility(false)
 ///     .build();
+///
+/// terminal.set_title("Changed title!");
+/// terminal.show();
+/// ```
+///
+/// #### Default creation example:
+/// ```no_run
+/// use glerminal::TerminalBuilder;
+///
+/// let mut terminal = TerminalBuilder {
+///     title: "Hello GLerminal".to_owned(),
+///     dimensions: (1280, 720),
+///     visibility: false,
+///     ..Default::default()
+/// }
+/// .build();
 ///
 /// terminal.set_title("Changed title!");
 /// terminal.show();

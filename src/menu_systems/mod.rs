@@ -5,7 +5,14 @@
 //! input text, do whatever you want with GUI items generally. You can even make your own `InterfaceItem`s if you want.  
 //! Selection in [`Menu`](struct.Menu.html)s works with keyboard and mouse, changeable with [`FocusSelection`](enum.FocusSelection.html).
 //!
-//! Current pre-implemented items to use in Menus are
+//! To add a [`TextProcessor`](../text_processing/struct.TextProcessor.html) to the menu, such as the Parser,
+//! use [`with_text_processor`](struct.Menu.html/#method.with_text_processor)
+//!
+//! If you wish to use [`InterfaceItem`](trait.InterfaceItem.html)s without the Menu struct,
+//! it is required to call `handle_events`, `update` and then `draw` for them, in that order.
+//! (See [Example InterfaceItem usage without Menu](#example-interfaceitem-usage-without-menu))
+//!
+//! Current pre-implemented items to use are
 //! - [TextItem](struct.TextItem.html), functions as a text label and a button.
 //! - [TextInput](struct.TextInput.html), can accept text input that can be get with `get_text`.
 //! - [Dialog](struct.Dialog.html), can be used to display large volumes of text compactly.
@@ -13,7 +20,7 @@
 //!
 //! **Note:** This module requires _menu_systems_ feature to be enabled.
 //!
-//! Example usage of menu-systems:
+//! ## Example usage of Menu:
 //! (Same example can be found in [`Menu`](struct.Menu.html))
 //! ```no_run
 //! use glerminal::menu_systems::{Filter, Menu, MenuList, MenuPosition, TextInput, TextItem};
@@ -22,7 +29,7 @@
 //! // Initialize terminal and text buffer
 //! let terminal = TerminalBuilder::new().build();
 //! let mut text_buffer;
-//! match TextBuffer::new(&terminal, (80, 24)) {
+//! match TextBuffer::create(&terminal, (80, 24)) {
 //!     Ok(buffer) => text_buffer = buffer,
 //!     Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
 //! }
@@ -59,37 +66,54 @@
 //!     terminal.draw(&text_buffer);
 //! }
 //! ```
+//!
+//!
+//! ## Example InterfaceItem usage without [`Menu`](struct.Menu.html)
+//! ```no_run
+//! use glerminal::menu_systems::{InterfaceItem, TextItem};
+//! use glerminal::{TerminalBuilder, TextBuffer};
+//!
+//! // Initialize terminal and text buffer
+//! let terminal = TerminalBuilder::new().build();
+//! let mut text_buffer;
+//! match TextBuffer::create(&terminal, (80, 24)) {
+//!     Ok(buffer) => text_buffer = buffer,
+//!     Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
+//! }
+//!
+//! // Create a button
+//! let mut button = TextItem::new("Press me")
+//!     .with_is_button(true)
+//!     .with_focused(true);
+//!
+//! let processor = glerminal::text_processing::DefaultProcessor;
+//!
+//! while terminal.refresh() {
+//!     button.handle_events(&terminal.get_current_events());
+//!     if button.was_just_pressed() {
+//!         button.set_text("Pressed!");
+//!     }
+//!     button.update(terminal.delta_time(), &processor);
+//!     if button.get_base().dirty {
+//!         button.draw(&mut text_buffer);
+//!         terminal.flush(&mut text_buffer);
+//!     }
+//!     terminal.draw(&text_buffer);
+//! }
+//! ```
 
-macro_rules! with_set_colors {
+macro_rules! with_style {
     ($name:ident) => {
-        /// Set the initial colors when it is unfocused
-        pub fn with_unfocused_colors(mut self, colors: (Color, Color)) -> $name {
-            let (fg, bg) = colors;
-            self.fg_color_unfocused = fg;
-            self.bg_color_unfocused = bg;
+        /// Set the style when this item is unfocused
+        pub fn with_unfocused_style(mut self, style: TextStyle) -> $name {
+            self.unfocused_style = style;
             self
         }
 
         /// Set the initial colors when it is focused
-        pub fn with_focused_colors(mut self, colors: (Color, Color)) -> $name {
-            let (fg, bg) = colors;
-            self.fg_color_focused = fg;
-            self.bg_color_focused = bg;
+        pub fn with_focused_style(mut self, style: TextStyle) -> $name {
+            self.focused_style = style;
             self
-        }
-
-        /// Set the colors when it is unfocused
-        pub fn set_unfocused_colors(&mut self, colors: (Color, Color)) {
-            let (fg, bg) = colors;
-            self.fg_color_unfocused = fg;
-            self.bg_color_unfocused = bg;
-        }
-
-        /// Set the colors when it is focused
-        pub fn set_focused_colors(&mut self, colors: (Color, Color)) {
-            let (fg, bg) = colors;
-            self.fg_color_focused = fg;
-            self.bg_color_focused = bg;
         }
     };
 }
@@ -145,6 +169,7 @@ macro_rules! with_base {
 mod checkbox;
 mod dialog;
 mod menu;
+mod menu_switcher;
 mod text_input;
 mod text_item;
 mod window;
@@ -152,15 +177,14 @@ mod window;
 pub use self::checkbox::{Checkbox, CheckboxGroup};
 pub use self::dialog::Dialog;
 pub use self::menu::{FocusSelection, GrowthDirection, Menu, MenuList, MenuPosition};
+pub use self::menu_switcher::{MenuSelectionMethod, MenuSwitcher};
 pub use self::text_input::TextInput;
 pub use self::text_item::TextItem;
-pub use self::window::Window;
-
-use std::collections::HashMap;
+pub use self::window::{BorderChars, Window};
 
 use crate::events::Events;
 use crate::text_buffer::TextBuffer;
-use glutin::VirtualKeyCode;
+use crate::text_processing::TextProcessor;
 
 /// Represents a single menu item: an item that is somewhere, can handle events and can be drawn.
 ///
@@ -176,7 +200,8 @@ use glutin::VirtualKeyCode;
 /// A simple example of how to make an InterfaceItem that you can use for Menus
 /// ```
 /// use glerminal::menu_systems::{InterfaceItem, InterfaceItemBase};
-/// use glerminal::{with_base, Events, TextBuffer};
+/// use glerminal::{with_base, Events, TextBuffer, TextStyle};
+/// use glerminal::text_processing::TextProcessor;
 ///
 /// #[derive(Clone)]
 /// struct TextLabel {
@@ -216,9 +241,12 @@ use glutin::VirtualKeyCode;
 ///         self.base.dirty = false;
 ///         let pos = self.base.get_pos();
 ///
-///         text_buffer.change_cursor_fg_color([0.2, 0.2, 0.2, 1.0]);
-///         text_buffer.change_cursor_bg_color([0.0; 4]);
-///         text_buffer.move_cursor(pos.0 as i32, pos.1 as i32);
+///         text_buffer.cursor.style = TextStyle {
+///             fg_color: [0.8, 0.8, 0.8, 1.0],
+///             bg_color: [0.0, 0.0, 0.0, 0.0],
+///             ..Default::default()
+///         };
+///         text_buffer.cursor.move_to(pos.0, pos.1);
 ///         text_buffer.write(self.text.clone());
 ///     }
 ///
@@ -226,7 +254,9 @@ use glutin::VirtualKeyCode;
 ///         false
 ///     }
 ///
-///     fn update(&mut self, _: f32) {}
+///     // If you want TextProcessor support, ie. Parser support, implement the processing here.
+///     // Also remember to not process every frame, but only when necessary.
+///     fn update(&mut self, _: f32, processor: &TextProcessor) {}
 /// }
 /// ```
 pub trait InterfaceItem: InterfaceItemClone {
@@ -248,8 +278,9 @@ pub trait InterfaceItem: InterfaceItemClone {
     ///
     /// Returns whether it handled any events.
     fn handle_events(&mut self, events: &Events) -> bool;
-    /// Update this InterfaceItem; delta is given in seconds. (see [Terminal.delta_time()](../terminal/struct.Terminal.html))
-    fn update(&mut self, delta: f32);
+    /// Update this InterfaceItem; delta is given in seconds. (see [Terminal.delta_time()](../terminal/struct.Terminal.html)).
+    /// Also process any text that has changed since last update.
+    fn update(&mut self, delta: f32, processor: &TextProcessor);
 }
 
 /// Represents a cloneable InterfaceItem; You should never implement this yourself, but instead
@@ -326,115 +357,199 @@ impl InterfaceItemBase {
     }
 }
 
-/// Represents a HashMap from VirtualKeyCode to character. Used to filter out which characters get registered by the textinput.
+/// Represents a list of characters that is used to filter which character are registered in a [`TextInput`](struct.TextInput.html).
 ///
 /// Use `Filter::empty_filter()` to create a new filter and for example `.with_basic_latin_characters` to add basic latin characters to the filter.  
-/// Use `.with_pair` or `insert` to create your own filters.
+/// Use `.with_char` or `add` to create your own filters, or `remove` to remove characters from pre-existing filters.
 #[derive(Clone, Debug)]
 pub struct Filter {
-    map: HashMap<VirtualKeyCode, char>,
+    chars: Vec<char>,
 }
 
 impl Filter {
-    /// Create an empty filter, where other filters can be added, such as basic_latin_keycode_filter
+    /// Create an empty filter, where other filters can be added, such as basic_latin_keycode_filter, or specific characters, with `with_char` or `add`
     pub fn empty_filter() -> Filter {
-        Filter {
-            map: HashMap::new(),
-        }
+        Filter { chars: Vec::new() }
     }
 
     /// Creates a Filter with basic latin characters
     ///
-    /// Includes characters a-z and spacebar.
+    /// Includes characters `A-z` and spacebar (upper and lowercase).
     pub fn with_basic_latin_characters(mut self) -> Filter {
-        self.map.insert(VirtualKeyCode::A, 'a');
-        self.map.insert(VirtualKeyCode::B, 'b');
-        self.map.insert(VirtualKeyCode::C, 'c');
-        self.map.insert(VirtualKeyCode::D, 'd');
-        self.map.insert(VirtualKeyCode::E, 'e');
-        self.map.insert(VirtualKeyCode::F, 'f');
-        self.map.insert(VirtualKeyCode::G, 'g');
-        self.map.insert(VirtualKeyCode::H, 'h');
-        self.map.insert(VirtualKeyCode::I, 'i');
-        self.map.insert(VirtualKeyCode::J, 'j');
-        self.map.insert(VirtualKeyCode::K, 'k');
-        self.map.insert(VirtualKeyCode::L, 'l');
-        self.map.insert(VirtualKeyCode::M, 'm');
-        self.map.insert(VirtualKeyCode::N, 'n');
-        self.map.insert(VirtualKeyCode::O, 'o');
-        self.map.insert(VirtualKeyCode::P, 'p');
-        self.map.insert(VirtualKeyCode::Q, 'q');
-        self.map.insert(VirtualKeyCode::R, 'r');
-        self.map.insert(VirtualKeyCode::S, 's');
-        self.map.insert(VirtualKeyCode::T, 't');
-        self.map.insert(VirtualKeyCode::U, 'u');
-        self.map.insert(VirtualKeyCode::V, 'v');
-        self.map.insert(VirtualKeyCode::W, 'w');
-        self.map.insert(VirtualKeyCode::X, 'x');
-        self.map.insert(VirtualKeyCode::Y, 'y');
-        self.map.insert(VirtualKeyCode::Z, 'z');
-        self.map.insert(VirtualKeyCode::Space, ' ');
+        let chars = "abcdefghijklmnopqrstuvwxyz";
+        self.add_all(&chars.to_uppercase());
+        self.add_all(chars);
+        self.add(' ');
         self
     }
 
     /// Creates a Filter with basic numerals
     ///
-    /// Includes numerals from 0-9
+    /// Includes numerals from `0-9`
     pub fn with_basic_numerals(mut self) -> Filter {
-        self.map.insert(VirtualKeyCode::Key0, '0');
-        self.map.insert(VirtualKeyCode::Key1, '1');
-        self.map.insert(VirtualKeyCode::Key2, '2');
-        self.map.insert(VirtualKeyCode::Key3, '3');
-        self.map.insert(VirtualKeyCode::Key4, '4');
-        self.map.insert(VirtualKeyCode::Key5, '5');
-        self.map.insert(VirtualKeyCode::Key6, '6');
-        self.map.insert(VirtualKeyCode::Key7, '7');
-        self.map.insert(VirtualKeyCode::Key8, '8');
-        self.map.insert(VirtualKeyCode::Key9, '9');
-
+        self.add_all("0123456789");
         self
     }
 
-    /// Creates a Filter with basic special symbols
+    /// Creates a Filter with all special symbols from
+    /// "basic latin", "latin-1 supplement" and "currency symbols" unicode blocks
     ///
-    /// Includes `'`, `\`, `:`, `.`, `;`, `,`, `=`, `-`, `*`, `_`, `/`, `[`, `]`
+    /// Includes the following characters:  
+    /// From basic latin:  
+    /// `!` `"` `#` `$` `%` `&` `'` `(` `)` `*` `+` `,` `-` `.` `/`  
+    /// `@` `:` `;` `<` `=` `>` `?`  
+    /// `` ` `` `[` `\` `]` `^` `_`   
+    /// `{` `|` `}` `~`
     ///
-    /// Unfortunately VirtualKeyCode doesn't seem to support other special characters currently.
+    /// From latin-1 supplement:  
+    /// `¡` `¢` `£` `¤` `¥` `¦` `§` `¨` `©` `ª` `«` `¬` `®` `¯`  
+    /// `°` `±` `²` `³` `´` `µ` `¶` `·` `¸` `¹` `º` `»` `¼` `½` `¾` `¿`  
+    /// `×` `÷`
+    ///
+    ///
+    /// From currency symbols:  
+    /// `₠` `₡` `₢` `₣` `₤` `₥` `₦` `₧` `₨` `₩` `₪` `₫` `€` `₭` `₮` `₯`  
+    /// `₰` `₱` `₲` `₳` `₴` `₵` `₶` `₷` `₸` `₹` `₺` `₻` `₼` `₽` `₾` `₿`
     pub fn with_basic_special_symbols(mut self) -> Filter {
-        self.map.insert(VirtualKeyCode::Apostrophe, '\'');
-        self.map.insert(VirtualKeyCode::Backslash, '\\');
-        self.map.insert(VirtualKeyCode::Colon, ':');
-        self.map.insert(VirtualKeyCode::Period, '.');
-        self.map.insert(VirtualKeyCode::Semicolon, ';');
-        self.map.insert(VirtualKeyCode::Comma, ',');
-        self.map.insert(VirtualKeyCode::Equals, '=');
-        self.map.insert(VirtualKeyCode::Subtract, '-');
-        self.map.insert(VirtualKeyCode::Multiply, '*');
-        self.map.insert(VirtualKeyCode::Underline, '_');
-        self.map.insert(VirtualKeyCode::Slash, '/');
-        self.map.insert(VirtualKeyCode::LBracket, '[');
-        self.map.insert(VirtualKeyCode::RBracket, ']');
+        // Basic latin -block
+        self.add_all("!\"#$%&'()*+,-./");
+        self.add_all("@:;<=>?");
+        self.add_all("`[\\]^_");
+        self.add_all("{|}~");
 
+        // latin-1 supplement -block
+        self.add_all("¡¢£¤¥¦§¨©ª«¬®¯");
+        self.add_all("°±²³´µ¶·¸¹º»¼½¾¿");
+        self.add_all("×÷");
+
+        // Currency symbols -block
+        self.add_all("₠₡₢₣₤₥₦₧₨₩₪₫€₭₮₯");
+        self.add_all("₰₱₲₳₴₵₶₷₸₹₺₻₼₽₾₿");
         self
     }
 
-    /// Add a specific VirtualKeyCode: char pair to this filter and return the current filter.
+    /// Creates a filter with all letter-like symbols from the latin-1 supplement unicode block
     ///
-    /// This would mean that when you press the keycode, the character specified will be typed.
-    pub fn with_pair(mut self, keycode: VirtualKeyCode, character: char) -> Filter {
-        self.map.insert(keycode, character);
+    /// Includes the following characters (upper and lowercase):  
+    /// `à` `á` `â` `ã` `ä` `å` `æ`  
+    /// `ç` `è` `é` `ê` `ë`  
+    /// `ì` `í` `î` `ï`  
+    /// `ð` `ñ` `ò` `ó` `ô` `õ` `ö` `ø`  
+    /// `ù` `ú` `û` `ü` `ý` `þ` `ß` `ÿ`
+    pub fn with_latin_1_supplement(mut self) -> Filter {
+        let mut chars = String::new();
+        chars += "àáâãäåæ";
+        chars += "çèéêë";
+        chars += "ìíîï";
+        chars += "ðñòóôõöø";
+        chars += "ùúûüýþßÿ";
+
+        self.add_all(&chars.to_uppercase());
+        self.add_all(&chars);
         self
     }
 
-    /// Insert a specific VirtualKeyCode: char pair to this filter.
+    /// Creates a filter with all letter-like symbols from the latin extended A unicode block
+    ///
+    /// Includes the following characters (upper and lowercase):  
+    /// `ā` `ă` `ą`  
+    /// `ć` `ĉ` `ċ` `č`  
+    /// `ď` `đ` `ē` `ĕ` `ė` `ę` `ě`  
+    /// `ĝ` `ğ` `ġ` `ģ` `ĥ` `ħ`  
+    /// `ĩ` `ī` `ĭ` `į` `i` `̇ı`  
+    /// `ĳ` `ĵ` `ķ` `ĸ`  
+    /// `ĺ` `ļ` `ľ` `ŀ` `ł`  
+    /// `ń` `ņ` `ň` `ŉ` `ŋ`  
+    /// `ō` `ŏ` `ő` `œ`  
+    /// `ŕ` `ŗ` `ř`  
+    /// `ś` `ŝ` `ş` `š` `ţ` `ť` `ŧ`  
+    /// `ũ` `ū` `ŭ` `ů` `ű` `ų`  
+    /// `ŵ` `ŷ` `ÿ` `ź` `ż` `ž` `ſ`
+    pub fn with_latin_extended_a(mut self) -> Filter {
+        let mut chars = String::new();
+        chars += "āăą";
+        chars += "ćĉċč";
+        chars += "ďđēĕėęě";
+        chars += "ĝğġģĥħ";
+        chars += "ĩīĭįi̇ı";
+        chars += "ĳĵķĸ";
+        chars += "ĺļľŀł";
+        chars += "ńņňŉŋ";
+        chars += "ōŏőœ";
+        chars += "ŕŗř";
+        chars += "śŝşšţťŧ";
+        chars += "ũūŭůűų";
+        chars += "ŵŷÿźżžſ";
+
+        self.add_all(&chars.to_uppercase());
+        self.add_all(&chars);
+        self
+    }
+
+    /// Add a specific character to be accepted in this filter, and return the filter.
+    pub fn with_char(mut self, character: char) -> Filter {
+        self.add(character);
+        self
+    }
+
+    /// Add a specific characters to be accepted in this filter, and return the filter.
+    /// The function will go through each character in the string, and add them seperately.
+    pub fn with_chars(mut self, characters: &str) -> Filter {
+        self.add_all(characters);
+        self
+    }
+
+    /// Insert a specific character to be accepted in this filter.
     ///
     /// Works similarly to with_pair
-    pub fn insert(&mut self, keycode: VirtualKeyCode, character: char) {
-        self.map.insert(keycode, character);
+    ///
+    /// Returns whether the character was added.
+    pub fn add(&mut self, character: char) -> bool {
+        if !self.has(character) {
+            self.chars.push(character);
+            true
+        } else {
+            false
+        }
     }
 
-    /// Get the character from the specified VirtualKeyCode, None if it doesn't exist.
-    pub fn get(&self, keycode: &VirtualKeyCode) -> Option<&char> {
-        self.map.get(keycode)
+    /// Insert a string of characters to be accepted in this filter.
+    /// The function will go through each character in the string, and add them seperately.
+    ///
+    /// Works similarly to with_pair
+    pub fn add_all(&mut self, characters: &str) {
+        for character in characters.chars() {
+            self.add(character);
+        }
+    }
+
+    /// Remove the given character from the filter, if it exists.
+    /// Returns whether the character was removed.
+    pub fn remove(&mut self, character: char) -> bool {
+        if !self.has(character) {
+            false
+        } else {
+            let mut idx = 0;
+            for c in self.chars.clone() {
+                if c == character {
+                    break;
+                }
+                idx += 1;
+            }
+            self.chars.remove(idx);
+            true
+        }
+    }
+
+    /// Remove all the characters in the given string of characters, if they exist in the filter.
+    pub fn remove_all(&mut self, characters: &str) {
+        for character in characters.chars() {
+            self.remove(character);
+        }
+    }
+
+    /// Whether the character specified exists in this filter or not.
+    pub fn has(&self, character: char) -> bool {
+        self.chars.contains(&character)
     }
 }

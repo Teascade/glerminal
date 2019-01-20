@@ -22,14 +22,11 @@ pub struct TextBufferDisplayData {
 }
 
 impl TextBufferDisplayData {
-    pub fn new(width: u32, height: u32, text_buffer: &TextBuffer) -> TextBufferDisplayData {
+    pub fn new(width: f32, height: f32, text_buffer: &TextBuffer) -> TextBufferDisplayData {
         let (overflows, relative_dimensions) =
             Display::calc_overflows_dimensions(width, height, text_buffer.aspect_ratio);
         TextBufferDisplayData {
-            proj_matrix: renderer::create_proj_matrix(
-                (width as f32, height as f32),
-                text_buffer.aspect_ratio,
-            ),
+            proj_matrix: renderer::create_proj_matrix((width, height), text_buffer.aspect_ratio),
             aspect_ratio: text_buffer.aspect_ratio,
             overflows: overflows,
             relative_dimensions: relative_dimensions,
@@ -44,8 +41,8 @@ pub struct Display {
     window: GlWindow,
     events: RefCell<Events>,
     events_loop: RefCell<EventsLoop>,
-    width: Cell<u32>,
-    height: Cell<u32>,
+    width: Cell<f32>,
+    height: Cell<f32>,
 }
 
 impl Display {
@@ -73,6 +70,9 @@ impl Display {
             Err(err) => panic!(err),
         };
 
+        let width = width as f32;
+        let height = height as f32;
+
         unsafe {
             let (r, g, b, a) = clear_color;
             if let Err(err) = window.make_current() {
@@ -89,7 +89,7 @@ impl Display {
             panic!("GL version too low: OpenGL {}", gl_version);
         }
 
-        let proj_matrix = renderer::create_proj_matrix((width as f32, height as f32), aspect_ratio);
+        let proj_matrix = renderer::create_proj_matrix((width, height), aspect_ratio);
 
         let mut events = Events::new(text_buffer_aspect_ratio);
         let (display_overflows, display_relative_dimensions) =
@@ -115,7 +115,7 @@ impl Display {
     pub fn refresh(&self) -> bool {
         let mut running = true;
 
-        let mut dimensions: Option<(u32, u32)> = None;
+        let mut dimensions: Option<(f32, f32)> = None;
 
         self.events.borrow_mut().clear_just_lists();
 
@@ -124,11 +124,14 @@ impl Display {
         self.events_loop.borrow_mut().poll_events(|event| {
             if let Event::WindowEvent { event, .. } = event {
                 match event {
-                    WindowEvent::Closed => {
+                    WindowEvent::CloseRequested => {
+                        running = false;
+                    }
+                    WindowEvent::Destroyed => {
                         running = false;
                     }
                     WindowEvent::Resized(width, height) => {
-                        dimensions = Some((width, height));
+                        dimensions = Some((width as f32, height as f32));
                     }
                     WindowEvent::KeyboardInput { input, .. } => {
                         if let (state, Some(keycode)) = (input.state, input.virtual_keycode) {
@@ -145,11 +148,14 @@ impl Display {
                         .update_button_press(button, state == ElementState::Pressed),
                     WindowEvent::CursorMoved { position, .. } => {
                         self.events.borrow_mut().cursor.update_location((
-                            position.0 as f32 / self.width.get() as f32,
-                            position.1 as f32 / self.height.get() as f32,
+                            position.0 as f32 / self.width.get(),
+                            position.1 as f32 / self.height.get(),
                         ));
                     }
                     WindowEvent::CursorLeft { .. } => self.events.borrow_mut().cursor.cursor_left(),
+                    WindowEvent::ReceivedCharacter(character) => {
+                        self.events.borrow_mut().chars.add_char(character);
+                    }
                     _ => (),
                 }
             }
@@ -220,7 +226,7 @@ impl Display {
 
         self.update_event_display_datas(self.display_datas.borrow().clone());
 
-        renderer::update_viewport((self.width.get(), self.height.get()));
+        renderer::update_viewport((self.width.get() as i32, self.height.get() as i32));
     }
 
     fn update_event_display_datas(&self, datas: HashMap<u32, TextBufferDisplayData>) {
@@ -238,13 +244,10 @@ impl Display {
     }
 
     fn calc_overflows_dimensions(
-        width: u32,
-        height: u32,
+        width: f32,
+        height: f32,
         aspect_ratio: f32,
     ) -> ((f32, f32), (f32, f32)) {
-        let width = width as f32;
-        let height = height as f32;
-
         let true_width = height * aspect_ratio;
         let true_height = width / aspect_ratio;
 

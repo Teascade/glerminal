@@ -1,5 +1,5 @@
 use super::{random_color, run_multiple_times, test_setup_text_buffer};
-use crate::text_buffer::parser::Parser;
+use crate::{Parser, TextStyle};
 
 #[test]
 fn add_color() {
@@ -8,7 +8,7 @@ fn add_color() {
 
         let color = random_color();
         parser.add_color("test", color);
-        assert_eq!(*parser.get_color("test".to_owned()).unwrap(), color);
+        assert_eq!(*parser.get_color("test").unwrap(), color);
     });
 }
 
@@ -27,16 +27,28 @@ fn write() {
         );
 
         let character = text_buffer.get_character(0, 0).unwrap();
-        assert_eq!(character.get_fg_color(), color);
-        assert_eq!(character.get_bg_color(), [0.0; 4]);
-        assert_eq!(character.get_shakiness(), 0.0);
+        assert_eq!(
+            character.style,
+            TextStyle {
+                fg_color: color,
+                ..Default::default()
+            }
+        );
         let character = text_buffer.get_character(1, 0).unwrap();
-        assert_eq!(character.get_fg_color(), [1.0; 4]);
-        assert_eq!(character.get_bg_color(), color);
-        assert_eq!(character.get_shakiness(), 0.0);
+        assert_eq!(
+            character.style,
+            TextStyle {
+                bg_color: color,
+                ..Default::default()
+            }
+        );
         let character = text_buffer.get_character(0, 1).unwrap();
-        assert_eq!(character.get_fg_color(), [1.0; 4]);
-        assert_eq!(character.get_bg_color(), [0.0; 4]);
-        assert_eq!(character.get_shakiness(), shake);
+        assert_eq!(
+            character.style,
+            TextStyle {
+                shakiness: shake,
+                ..Default::default()
+            }
+        );
     });
 }

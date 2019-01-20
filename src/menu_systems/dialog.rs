@@ -2,8 +2,8 @@ use glutin::VirtualKeyCode;
 
 use super::{InterfaceItem, InterfaceItemBase};
 
-use crate::events::Events;
-use crate::text_buffer::{Color, TextBuffer};
+use crate::text_processing::{OptTextStyle, ProcessedChar, TextProcessor};
+use crate::{Events, TextBuffer, TextStyle};
 
 use std::iter::repeat;
 
@@ -26,14 +26,10 @@ use std::iter::repeat;
 /// ```
 #[derive(Debug, Clone)]
 pub struct Dialog {
-    /// Background-color when the dialog is unfocused
-    pub fg_color_unfocused: Color,
-    /// Background-color when the dialog is unfocused
-    pub bg_color_unfocused: Color,
-    /// Background-color when the dialog is focused
-    pub fg_color_focused: Color,
-    /// Background-color when the dialog is focused
-    pub bg_color_focused: Color,
+    /// Style of this Dialog when it is unfocused
+    pub unfocused_style: TextStyle,
+    /// Style of this Dialog when it is focused
+    pub focused_style: TextStyle,
     /// The buttons that make the dialog scroll up when focused
     pub up_buttons: Vec<VirtualKeyCode>,
     /// The buttons that make the dialog scroll down when focused
@@ -46,7 +42,10 @@ pub struct Dialog {
     max_height: Option<u32>,
 
     text: String,
-    rows: Vec<String>,
+    rows: Vec<Vec<ProcessedChar>>,
+
+    processed_text: Vec<ProcessedChar>,
+    needs_processing: bool,
 
     scroll_idx: u32,
 }
@@ -59,10 +58,16 @@ impl Dialog {
         max_height: U,
     ) -> Dialog {
         Dialog {
-            fg_color_unfocused: [0.8, 0.8, 0.8, 1.0],
-            bg_color_unfocused: [0.0; 4],
-            fg_color_focused: [0.2, 0.2, 0.2, 1.0],
-            bg_color_focused: [0.8, 0.8, 0.8, 1.0],
+            unfocused_style: TextStyle {
+                bg_color: [0.0, 0.0, 0.0, 0.0],
+                fg_color: [0.8, 0.8, 0.8, 1.0],
+                ..Default::default()
+            },
+            focused_style: TextStyle {
+                bg_color: [0.8, 0.8, 0.8, 1.0],
+                fg_color: [0.2, 0.2, 0.2, 1.0],
+                ..Default::default()
+            },
             up_buttons: vec![VirtualKeyCode::Up],
             down_buttons: vec![VirtualKeyCode::Down],
 
@@ -75,17 +80,20 @@ impl Dialog {
             text: String::new(),
             rows: Vec::new(),
 
+            processed_text: Vec::new(),
+            needs_processing: true,
+
             scroll_idx: 0,
         }
     }
 
     with_base!(Dialog);
-    with_set_colors!(Dialog);
+    with_style!(Dialog);
 
     /// Sets the initial width of the dialog window
     pub fn with_width(mut self, width: u32) -> Dialog {
         self.width = width;
-        self.update_rows();
+        self.needs_processing = true;
         self
     }
 
@@ -104,7 +112,7 @@ impl Dialog {
     /// Sets the initial text of the dialog window
     pub fn with_text<T: Into<String>>(mut self, text: T) -> Dialog {
         self.text = text.into();
-        self.update_rows();
+        self.needs_processing = true;
         self
     }
 
@@ -123,7 +131,7 @@ impl Dialog {
     /// Sets the width of the dialog window
     pub fn set_width(&mut self, width: u32) {
         self.width = width;
-        self.update_rows();
+        self.needs_processing = true;
     }
 
     /// Sets the minimum height of the dialog window
@@ -139,7 +147,7 @@ impl Dialog {
     /// Sets the text of the dialog window
     pub fn set_text<T: Into<String>>(&mut self, text: T) {
         self.text = text.into();
-        self.update_rows();
+        self.needs_processing = true;
     }
 
     /// Attempt to scroll the dialog up. Returns true if successful, false if not.
@@ -177,31 +185,46 @@ impl Dialog {
     }
 
     fn update_rows(&mut self) {
-        self.rows = Vec::new();
-        let mut curr_row = String::new();
         let width = self.width;
 
-        let parts = self.text.split(' ').flat_map(|word| {
-            let mut word = word.to_owned();
-            let mut words = Vec::new();
-            while word.len() as u32 > width {
-                let part = word.split_off(width as usize);
-                words.push(word);
-                word = part;
+        let mut words = Vec::new();
+        let mut curr_word = Vec::new();
+        for c in self.processed_text.clone() {
+            if ((c.character == ' ' || c.character == '\n') && !curr_word.is_empty())
+                || curr_word.len() as u32 >= width
+            {
+                words.push(curr_word);
+                curr_word = Vec::new();
+            } else {
+                curr_word.push(c);
             }
-            words.push(word);
-            words
-        });
+        }
+        if !curr_word.is_empty() {
+            words.push(curr_word);
+        }
 
-        for word in parts {
-            if (curr_row.len() + word.len() + 1) as u32 <= width {
+        let mut last_style = OptTextStyle {
+            fg_color: None,
+            bg_color: None,
+            shakiness: None,
+        };
+        self.rows = Vec::new();
+        let mut curr_row = Vec::new();
+        for word in words.iter_mut() {
+            if ((curr_row.len() + word.len() + 1) as u32) <= width {
                 if !curr_row.is_empty() {
-                    curr_row += " ";
+                    curr_row.push(ProcessedChar {
+                        character: ' ',
+                        style: last_style.clone(),
+                    });
                 }
-                curr_row += &word;
+                curr_row.append(&mut word.clone());
             } else {
                 self.rows.push(curr_row);
-                curr_row = word.to_owned();
+                curr_row = word.clone();
+            }
+            if let Some(last) = word.last() {
+                last_style = last.style.clone();
             }
         }
         self.rows.push(curr_row);
@@ -233,25 +256,41 @@ impl InterfaceItem for Dialog {
 
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
         self.base.dirty = false;
-        if self.base.is_focused() {
-            text_buffer.change_cursor_bg_color(self.bg_color_focused);
-            text_buffer.change_cursor_fg_color(self.fg_color_focused);
+
+        text_buffer.cursor.style = if self.base.is_focused() {
+            self.focused_style
         } else {
-            text_buffer.change_cursor_bg_color(self.bg_color_unfocused);
-            text_buffer.change_cursor_fg_color(self.fg_color_unfocused);
-        }
+            self.unfocused_style
+        };
+        let none_style = OptTextStyle {
+            fg_color: None,
+            bg_color: None,
+            shakiness: None,
+        };
         for idx in 0..self.get_total_height() {
-            let text: String;
+            let text: Vec<ProcessedChar>;
             if let Some(row) = self.rows.get((self.scroll_idx + idx) as usize) {
-                text = row.to_owned()
-                    + &*repeat(' ')
-                        .take(self.width as usize - row.len())
-                        .collect::<String>();
+                text = row
+                    .iter()
+                    .cloned()
+                    .chain(
+                        repeat(ProcessedChar {
+                            character: ' ',
+                            style: none_style.clone(),
+                        })
+                        .take(self.width as usize - row.len()),
+                    )
+                    .collect();
             } else {
-                text = repeat(' ').take(self.width as usize).collect();
+                text = repeat(ProcessedChar {
+                    character: ' ',
+                    style: none_style.clone(),
+                })
+                .take(self.width as usize)
+                .collect();
             }
-            text_buffer.move_cursor(self.base.x as i32, self.base.y as i32 + idx as i32);
-            text_buffer.write(text);
+            text_buffer.cursor.move_to(self.base.x, self.base.y + idx);
+            text_buffer.write_processed(&text);
         }
     }
 
@@ -267,5 +306,11 @@ impl InterfaceItem for Dialog {
         handled
     }
 
-    fn update(&mut self, _: f32) {}
+    fn update(&mut self, _: f32, processor: &TextProcessor) {
+        if self.needs_processing {
+            self.processed_text = processor.process(vec![self.text.clone().into()]);
+            self.update_rows();
+            self.needs_processing = false;
+        }
+    }
 }

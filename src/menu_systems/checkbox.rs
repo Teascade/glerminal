@@ -1,9 +1,8 @@
 use std::iter::repeat;
 
 use super::{InterfaceItem, InterfaceItemBase};
-use crate::events::Events;
-use crate::text_buffer::{Color, TextBuffer};
-use crate::{MouseButton, VirtualKeyCode};
+use crate::text_processing::{ProcessedChar, TextProcessor};
+use crate::{Events, MouseButton, TextBuffer, TextStyle, VirtualKeyCode};
 
 /// Represents a group of checkboxes that can be managed like they were radio buttons.
 ///
@@ -11,6 +10,7 @@ use crate::{MouseButton, VirtualKeyCode};
 /// unless force one selected is toggled on, in which case the index given with it will be selected at first, and the group will disallow having none selected.
 ///
 /// Updating this CheckboxGroup with the given Checkboxes will ensure that the functionality explained above will be enforced.
+#[derive(Default)]
 pub struct CheckboxGroup {
     selected_idx: Option<u32>,
     force_one_checked: Option<u32>,
@@ -115,14 +115,10 @@ impl CheckboxGroup {
 /// ```
 #[derive(Debug, Clone)]
 pub struct Checkbox {
-    /// Foreground color for when the checkbox is not focused
-    pub fg_color_unfocused: Color,
-    /// Background color for when the checkbox is not focused
-    pub bg_color_unfocused: Color,
-    /// Foreground color for when the checkbox is focused
-    pub fg_color_focused: Color,
-    /// Background color for when the checkbox is focused
-    pub bg_color_focused: Color,
+    /// Style of this Checkbox when it is unfocused
+    pub unfocused_style: TextStyle,
+    /// Style of this Checkbox when it is focused
+    pub focused_style: TextStyle,
 
     /// The keyboard inputs that trigger `was_just_pressed`
     pub button_press_inputs: Vec<VirtualKeyCode>,
@@ -136,6 +132,9 @@ pub struct Checkbox {
     suffix: String,
     checked_text: String,
 
+    processed_text: Vec<ProcessedChar>,
+    needs_processing: bool,
+
     checked: bool,
     was_just_pressed: bool,
 }
@@ -144,10 +143,16 @@ impl Checkbox {
     /// Intiailizes a Checkbox with the given text and max width
     pub fn new<T: Into<String>>(text: T) -> Checkbox {
         Checkbox {
-            bg_color_unfocused: [0.0, 0.0, 0.0, 0.0],
-            fg_color_unfocused: [0.8, 0.8, 0.8, 1.0],
-            bg_color_focused: [0.8, 0.8, 0.8, 1.0],
-            fg_color_focused: [0.2, 0.2, 0.2, 1.0],
+            unfocused_style: TextStyle {
+                bg_color: [0.0, 0.0, 0.0, 0.0],
+                fg_color: [0.8, 0.8, 0.8, 1.0],
+                ..Default::default()
+            },
+            focused_style: TextStyle {
+                bg_color: [0.8, 0.8, 0.8, 1.0],
+                fg_color: [0.2, 0.2, 0.2, 1.0],
+                ..Default::default()
+            },
 
             base: InterfaceItemBase::new(true),
 
@@ -155,6 +160,9 @@ impl Checkbox {
             prefix: "[".to_owned(),
             suffix: "]".to_owned(),
             checked_text: "X".to_owned(),
+
+            processed_text: Vec::new(),
+            needs_processing: true,
 
             checked: false,
             was_just_pressed: false,
@@ -165,7 +173,7 @@ impl Checkbox {
 
     with_base!(Checkbox);
     with_set_pressable!(Checkbox);
-    with_set_colors!(Checkbox);
+    with_style!(Checkbox);
 
     /// Sets the initial text of the Checkbox
     pub fn with_text<T: Into<String>>(mut self, text: T) -> Checkbox {
@@ -201,23 +209,27 @@ impl Checkbox {
     pub fn set_text<T: Into<String>>(&mut self, text: T) {
         self.text = text.into();
         self.base.dirty = true;
+        self.needs_processing = true;
     }
 
     /// Sets the prefix of the Checkbox
     pub fn set_prefix<T: Into<String>>(&mut self, prefix: T) {
         self.prefix = prefix.into();
         self.base.dirty = true;
+        self.needs_processing = true;
     }
 
     /// Sets the suffix of the Checkbox
     pub fn set_suffix<T: Into<String>>(&mut self, suffix: T) {
         self.suffix = suffix.into();
         self.base.dirty = true;
+        self.needs_processing = true;
     }
 
     /// Sets the checked-text (text shown in between prefix and suffix) of the Checkbox
     pub fn set_checked_text<T: Into<String>>(mut self, checked_text: T) {
         self.checked_text = checked_text.into();
+        self.needs_processing = true;
     }
 
     /// Return the current text of the Checkbox
@@ -239,6 +251,7 @@ impl Checkbox {
     pub fn set_checked(&mut self, checked: bool) {
         if self.checked != checked {
             self.base.dirty = true;
+            self.needs_processing = true;
         }
         self.checked = checked;
     }
@@ -259,7 +272,10 @@ impl InterfaceItem for Checkbox {
     }
 
     fn get_total_width(&self) -> u32 {
-        (self.text.len() + self.prefix.len() + self.checked_text.len() + self.suffix.len()) as u32
+        (self.text.chars().count()
+            + self.prefix.chars().count()
+            + self.checked_text.chars().count()
+            + self.suffix.chars().count()) as u32
     }
 
     fn get_total_height(&self) -> u32 {
@@ -268,21 +284,14 @@ impl InterfaceItem for Checkbox {
 
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
         self.base.dirty = false;
-        if self.base.is_focused() {
-            text_buffer.change_cursor_fg_color(self.fg_color_focused);
-            text_buffer.change_cursor_bg_color(self.bg_color_focused);
+
+        text_buffer.cursor.style = if self.base.is_focused() {
+            self.focused_style
         } else {
-            text_buffer.change_cursor_fg_color(self.fg_color_unfocused);
-            text_buffer.change_cursor_bg_color(self.bg_color_unfocused);
-        }
-        text_buffer.move_cursor(self.base.x as i32, self.base.y as i32);
-        let checked_text = if self.checked {
-            (&self.checked_text).to_owned()
-        } else {
-            repeat(" ").take(self.checked_text.len()).collect()
+            self.unfocused_style
         };
-        let text = (&self.text).to_owned() + &self.prefix + &checked_text + &self.suffix;
-        text_buffer.write(text);
+        text_buffer.cursor.move_to(self.base.x, self.base.y);
+        text_buffer.write_processed(&self.processed_text);
     }
 
     fn handle_events(&mut self, events: &Events) -> bool {
@@ -290,21 +299,33 @@ impl InterfaceItem for Checkbox {
         for curr in &self.button_press_inputs {
             if events.keyboard.was_just_pressed(*curr) {
                 self.was_just_pressed = true;
-                self.checked = !self.checked;
-                self.base.dirty = true;
+                self.set_checked(!self.checked);
                 return true;
             }
         }
         for curr in &self.mouse_button_press_inputs {
             if events.mouse.was_just_pressed(*curr) {
                 self.was_just_pressed = true;
-                self.checked = !self.checked;
-                self.base.dirty = true;
+                self.set_checked(!self.checked);
                 return true;
             }
         }
         false
     }
 
-    fn update(&mut self, _: f32) {}
+    fn update(&mut self, _: f32, processor: &TextProcessor) {
+        if self.needs_processing {
+            let checked_text = if self.checked {
+                (&self.checked_text).to_owned()
+            } else {
+                repeat(" ")
+                    .take(self.checked_text.chars().count())
+                    .collect()
+            };
+            let text = (&self.text).to_owned() + &self.prefix + &checked_text + &self.suffix;
+
+            self.processed_text = processor.process(vec![text.into()]);
+            self.needs_processing = false;
+        }
+    }
 }
