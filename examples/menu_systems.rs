@@ -2,13 +2,12 @@ use glerminal::menu_systems::{
     Checkbox, CheckboxGroup, Dialog, Filter, FocusSelection, GrowthDirection, Menu, MenuList,
     MenuPosition, TextInput, TextItem, Window,
 };
-use glerminal::{MouseButton, Parser, TerminalBuilder, TextBuffer, TextStyle, VirtualKeyCode};
+use glerminal::{MouseButton, TerminalBuilder, TextBuffer, TextStyle, VirtualKeyCode};
 
 fn main() {
     let terminal = TerminalBuilder::new()
         .with_title("Simple window")
         .with_dimensions((1280, 720))
-        .with_vsync(false)
         .build();
     let mut text_buffer;
     match TextBuffer::create(&terminal, (80, 24)) {
@@ -23,7 +22,7 @@ fn main() {
         .with_latin_extended_a()
         .with_basic_special_symbols();
 
-    let mut text_label = TextItem::new("FPS: [fg=green]-[/fg]").with_max_width(40);
+    let mut text_label = TextItem::new("FPS: -").with_max_width(40);
 
     let mut text_input = TextInput::new(None, None)
         .with_prefix("Test your might: ")
@@ -32,14 +31,14 @@ fn main() {
         .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.2, 0.8, 0.2, 1.0]));
 
     let mut text_input_2 = TextInput::new(10, 10)
-        .with_prefix("Test 2: [[fg=green]")
-        .with_suffix("[/fg]]")
+        .with_prefix("Test 2: [")
+        .with_suffix("]")
         .with_filter(filter.clone())
         .with_focused_colors(([0.8, 0.8, 0.8, 1.0], [0.8, 0.2, 0.2, 1.0]))
         .with_caret(0.0);
 
-    let mut checkbox = Checkbox::new("[fg=green]Thing[/fg] 1: ")
-        .with_mouse_button_press_inputs(vec![MouseButton::Left]);
+    let mut checkbox =
+        Checkbox::new("Thing 1: ").with_mouse_button_press_inputs(vec![MouseButton::Left]);
     let mut checkbox_2 =
         Checkbox::new("Thing 2: ").with_mouse_button_press_inputs(vec![MouseButton::Left]);
     let mut checkbox_3 =
@@ -49,21 +48,16 @@ fn main() {
         .with_is_button(true)
         .with_mouse_button_press_inputs(vec![MouseButton::Left]);
 
-    let mut parser = Parser::new();
-    parser.add_color("green", [0.2, 1.0, 0.2, 1.0]);
-    parser.add_color("red", [1.0, 0.2, 0.2, 1.0]);
-
     let mut menu = Menu::new()
         .with_pos((5, 5))
         .with_focus(true)
         .with_growth_direction(GrowthDirection::Down)
-        .with_focus_selection(FocusSelection::MouseAndKeyboard(None, None))
-        .with_text_processor(parser);
+        .with_focus_selection(FocusSelection::MouseAndKeyboard(None, None));
 
     let mut checkbox_group = CheckboxGroup::new().with_force_one_checked(Some(0));
 
     let mut dialog = Dialog::new(30, 3, 3).with_text(
-        "Hello! This is a test text [fg=red][shake=0.5]with some stuff[/shake][/fg], this is supposed to test the dialog window. [fg=red]Testwordlongerthan30charactersfortest[/fg]",
+        "Hello! This is a test text with some stuff, this is supposed to test the dialog window. Testwordlongerthan30charactersfortest",
     ).with_up_buttons(vec!(VirtualKeyCode::O)).with_down_buttons(vec!(VirtualKeyCode::L));
 
     let test_window = Window::new(70, 20)
@@ -81,7 +75,7 @@ fn main() {
         if timer > 1.0 {
             timer -= 1.0;
             text_label.set_text(format!(
-                "FPS: [fg=green]{}[/fg], delta_time (ms): [fg=green]{:.6}[/fg]",
+                "FPS: {}, delta_time (ms): {:.6}",
                 frames,
                 terminal.delta_time() * 1000 as f32
             ));
