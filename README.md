@@ -1,5 +1,5 @@
 # GLerminal, an OpenGL terminal
-[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=0.2.1)](https://travis-ci.org/Teascade/glerminal)
+[![Build Status](https://travis-ci.org/Teascade/glerminal.svg?branch=0.3.0)](https://travis-ci.org/Teascade/glerminal)
 [![Docs](https://docs.rs/glerminal/badge.svg)](https://docs.rs/glerminal)
 [![Crates.io](https://img.shields.io/crates/v/glerminal.svg)](https://crates.io/crates/glerminal)
 
@@ -34,7 +34,7 @@ Extensive documentation can be found at: [docs.rs][docs].
 Just add the following line to your `Cargo.toml`:
 ```toml
 [dependencies]
-glerminal = "0.2"
+glerminal = "0.3"
 ```
 
 And then using this crate is quite simple:
