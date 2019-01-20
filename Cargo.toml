@@ -49,6 +49,10 @@ name = "menu_systems_grid"
 required-features = ["menu_systems"]
 
 [[example]]
+name = "menu_systems_parser"
+required-features = ["menu_systems", "parser"]
+
+[[example]]
 name = "multiple_text_buffers"
 
 [[example]]
