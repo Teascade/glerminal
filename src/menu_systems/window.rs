@@ -1,18 +1,30 @@
 use crate::text_buffer::{Color, TextBuffer, TextStyle};
 
+/// Represents all the different characters that are used in drawing the border for `Window`
 pub struct BorderChars {
+    /// The top left corner piece. Default is ╔
     pub top_left: char,
+    /// The bottom left corner piece. Default is ╚
     pub bottom_left: char,
+    /// The top right corner piece. Default is ╗
     pub top_right: char,
+    /// The bottom right corner piece. Default is ╝
     pub bottom_right: char,
 
+    /// A vertical line for non-corner borders and splits. Default is ║
     pub vertical_line: char,
+    /// A horizontal line for non-corner borders and splits. Default is ═
     pub horizontal_line: char,
 
+    /// The topmost character for a horizontal split. Default is ╦
     pub top_split: char,
+    /// The bottom-most character for a horizontal split. Default is ╩
     pub bottom_split: char,
+    /// The leftmost-most character for a vertial split. Default is ╠
     pub left_split: char,
+    /// The rightmost-most character for a vertial split. Default is ╣
     pub right_split: char,
+    /// The middle character where two splits intersect. Default is ╬
     pub middle_split: char,
 }
 
