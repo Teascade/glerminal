@@ -28,13 +28,21 @@ fn main() {
         .with_prefix("Test your might: ")
         .with_filter(filter.clone())
         .with_character_limit(10)
-        .with_focused_colors(([0.2, 0.2, 0.2, 1.0], [0.2, 0.8, 0.2, 1.0]));
+        .with_focused_style(TextStyle {
+            fg_color: [0.2, 0.2, 0.2, 1.0],
+            bg_color: [0.2, 0.8, 0.2, 1.0],
+            ..Default::default()
+        });
 
     let mut text_input_2 = TextInput::new(10, 10)
         .with_prefix("Test 2: [")
         .with_suffix("]")
         .with_filter(filter.clone())
-        .with_focused_colors(([0.8, 0.8, 0.8, 1.0], [0.8, 0.2, 0.2, 1.0]))
+        .with_focused_style(TextStyle {
+            fg_color: [0.8, 0.8, 0.8, 1.0],
+            bg_color: [0.8, 0.2, 0.2, 1.0],
+            ..Default::default()
+        })
         .with_caret(0.0);
 
     let mut checkbox =

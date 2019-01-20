@@ -1,8 +1,8 @@
 use super::{random_text, run_multiple_times, test_setup_text_buffer};
 use crate::menu_systems::{Checkbox, CheckboxGroup, InterfaceItem};
+use crate::text_processing::DefaultProcessor;
 use crate::Events;
 use crate::VirtualKeyCode::{Return, A};
-use crate::text_processing::DefaultProcessor;
 
 use rand::{thread_rng, Rng};
 use std::iter::repeat;

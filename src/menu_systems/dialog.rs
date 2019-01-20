@@ -2,9 +2,8 @@ use glutin::VirtualKeyCode;
 
 use super::{InterfaceItem, InterfaceItemBase};
 
-use crate::events::Events;
-use crate::text_buffer::{Color, TextBuffer};
 use crate::text_processing::{OptTextStyle, ProcessedChar, TextProcessor};
+use crate::{Events, TextBuffer, TextStyle};
 
 use std::iter::repeat;
 
@@ -27,14 +26,10 @@ use std::iter::repeat;
 /// ```
 #[derive(Debug, Clone)]
 pub struct Dialog {
-    /// Background-color when the dialog is unfocused
-    pub fg_color_unfocused: Color,
-    /// Background-color when the dialog is unfocused
-    pub bg_color_unfocused: Color,
-    /// Background-color when the dialog is focused
-    pub fg_color_focused: Color,
-    /// Background-color when the dialog is focused
-    pub bg_color_focused: Color,
+    /// Style of this Dialog when it is unfocused
+    pub unfocused_style: TextStyle,
+    /// Style of this Dialog when it is focused
+    pub focused_style: TextStyle,
     /// The buttons that make the dialog scroll up when focused
     pub up_buttons: Vec<VirtualKeyCode>,
     /// The buttons that make the dialog scroll down when focused
@@ -63,10 +58,16 @@ impl Dialog {
         max_height: U,
     ) -> Dialog {
         Dialog {
-            fg_color_unfocused: [0.8, 0.8, 0.8, 1.0],
-            bg_color_unfocused: [0.0; 4],
-            fg_color_focused: [0.2, 0.2, 0.2, 1.0],
-            bg_color_focused: [0.8, 0.8, 0.8, 1.0],
+            unfocused_style: TextStyle {
+                bg_color: [0.0, 0.0, 0.0, 0.0],
+                fg_color: [0.8, 0.8, 0.8, 1.0],
+                ..Default::default()
+            },
+            focused_style: TextStyle {
+                bg_color: [0.8, 0.8, 0.8, 1.0],
+                fg_color: [0.2, 0.2, 0.2, 1.0],
+                ..Default::default()
+            },
             up_buttons: vec![VirtualKeyCode::Up],
             down_buttons: vec![VirtualKeyCode::Down],
 
@@ -87,7 +88,7 @@ impl Dialog {
     }
 
     with_base!(Dialog);
-    with_set_colors!(Dialog);
+    with_style!(Dialog);
 
     /// Sets the initial width of the dialog window
     pub fn with_width(mut self, width: u32) -> Dialog {
@@ -255,13 +256,12 @@ impl InterfaceItem for Dialog {
 
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
         self.base.dirty = false;
-        if self.base.is_focused() {
-            text_buffer.cursor.style.bg_color = self.bg_color_focused;
-            text_buffer.cursor.style.fg_color = self.fg_color_focused;
+
+        text_buffer.cursor.style = if self.base.is_focused() {
+            self.focused_style
         } else {
-            text_buffer.cursor.style.bg_color = self.bg_color_unfocused;
-            text_buffer.cursor.style.fg_color = self.fg_color_unfocused;
-        }
+            self.unfocused_style
+        };
         let none_style = OptTextStyle {
             fg_color: None,
             bg_color: None,

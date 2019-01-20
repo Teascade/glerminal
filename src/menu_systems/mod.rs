@@ -102,36 +102,18 @@
 //! }
 //! ```
 
-macro_rules! with_set_colors {
+macro_rules! with_style {
     ($name:ident) => {
-        /// Set the initial colors when it is unfocused
-        pub fn with_unfocused_colors(mut self, colors: (Color, Color)) -> $name {
-            let (fg, bg) = colors;
-            self.fg_color_unfocused = fg;
-            self.bg_color_unfocused = bg;
+        /// Set the style when this item is unfocused
+        pub fn with_unfocused_style(mut self, style: TextStyle) -> $name {
+            self.unfocused_style = style;
             self
         }
 
         /// Set the initial colors when it is focused
-        pub fn with_focused_colors(mut self, colors: (Color, Color)) -> $name {
-            let (fg, bg) = colors;
-            self.fg_color_focused = fg;
-            self.bg_color_focused = bg;
+        pub fn with_focused_style(mut self, style: TextStyle) -> $name {
+            self.focused_style = style;
             self
-        }
-
-        /// Set the colors when it is unfocused
-        pub fn set_unfocused_colors(&mut self, colors: (Color, Color)) {
-            let (fg, bg) = colors;
-            self.fg_color_unfocused = fg;
-            self.bg_color_unfocused = bg;
-        }
-
-        /// Set the colors when it is focused
-        pub fn set_focused_colors(&mut self, colors: (Color, Color)) {
-            let (fg, bg) = colors;
-            self.fg_color_focused = fg;
-            self.bg_color_focused = bg;
         }
     };
 }

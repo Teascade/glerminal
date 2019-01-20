@@ -1,6 +1,6 @@
 use super::{InterfaceItem, InterfaceItemBase};
 use crate::text_processing::{ProcessedChar, TextProcessor};
-use crate::{Color, Events, MouseButton, TextBuffer, VirtualKeyCode};
+use crate::{Events, MouseButton, TextBuffer, TextStyle, VirtualKeyCode};
 
 #[derive(Debug, Clone)]
 /// Represents a simple text item that by default can not be selected,
@@ -14,14 +14,10 @@ use crate::{Color, Events, MouseButton, TextBuffer, VirtualKeyCode};
 /// TextItem::new("A button that can be pressed").with_is_button(true);
 /// ```
 pub struct TextItem {
-    /// Foreground color for when the button is not focused
-    pub fg_color_unfocused: Color,
-    /// Background color for when the button is not focused
-    pub bg_color_unfocused: Color,
-    /// Foreground color for when the button is focused
-    pub fg_color_focused: Color,
-    /// Background color for when the button is focused
-    pub bg_color_focused: Color,
+    /// Style of this TextItem when it is unfocused
+    pub unfocused_style: TextStyle,
+    /// Style of this TextItem when it is focused
+    pub focused_style: TextStyle,
 
     /// The keyboard inputs that trigger `was_just_pressed`
     pub button_press_inputs: Vec<VirtualKeyCode>,
@@ -46,10 +42,16 @@ impl TextItem {
     pub fn new<T: Into<String>>(text: T) -> TextItem {
         let text = text.into();
         TextItem {
-            bg_color_unfocused: [0.0, 0.0, 0.0, 0.0],
-            fg_color_unfocused: [0.8, 0.8, 0.8, 1.0],
-            bg_color_focused: [0.8, 0.8, 0.8, 1.0],
-            fg_color_focused: [0.2, 0.2, 0.2, 1.0],
+            unfocused_style: TextStyle {
+                bg_color: [0.0, 0.0, 0.0, 0.0],
+                fg_color: [0.8, 0.8, 0.8, 1.0],
+                ..Default::default()
+            },
+            focused_style: TextStyle {
+                bg_color: [0.8, 0.8, 0.8, 1.0],
+                fg_color: [0.2, 0.2, 0.2, 1.0],
+                ..Default::default()
+            },
 
             base: InterfaceItemBase::new(false),
             max_width: text.chars().count() as u32,
@@ -67,7 +69,7 @@ impl TextItem {
 
     with_base!(TextItem);
     with_set_pressable!(TextItem);
-    with_set_colors!(TextItem);
+    with_style!(TextItem);
 
     /// Sets the initial max width of the TextItem
     pub fn with_max_width(mut self, max_width: u32) -> TextItem {
@@ -137,12 +139,10 @@ impl InterfaceItem for TextItem {
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
         self.base.dirty = false;
 
-        if self.base.is_focused() {
-            text_buffer.cursor.style.fg_color = self.fg_color_focused;
-            text_buffer.cursor.style.bg_color = self.bg_color_focused;
+        text_buffer.cursor.style = if self.base.is_focused() {
+            self.focused_style
         } else {
-            text_buffer.cursor.style.fg_color = self.fg_color_unfocused;
-            text_buffer.cursor.style.bg_color = self.bg_color_unfocused;
+            self.unfocused_style
         };
         text_buffer.cursor.move_to(self.base.x, self.base.y);
         text_buffer.write_processed(

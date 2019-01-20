@@ -1,10 +1,8 @@
 use std::iter::repeat;
 
 use super::{InterfaceItem, InterfaceItemBase};
-use crate::events::Events;
-use crate::text_buffer::{Color, TextBuffer};
 use crate::text_processing::{ProcessedChar, TextProcessor};
-use crate::{MouseButton, VirtualKeyCode};
+use crate::{Events, MouseButton, TextBuffer, TextStyle, VirtualKeyCode};
 
 /// Represents a group of checkboxes that can be managed like they were radio buttons.
 ///
@@ -117,14 +115,10 @@ impl CheckboxGroup {
 /// ```
 #[derive(Debug, Clone)]
 pub struct Checkbox {
-    /// Foreground color for when the checkbox is not focused
-    pub fg_color_unfocused: Color,
-    /// Background color for when the checkbox is not focused
-    pub bg_color_unfocused: Color,
-    /// Foreground color for when the checkbox is focused
-    pub fg_color_focused: Color,
-    /// Background color for when the checkbox is focused
-    pub bg_color_focused: Color,
+    /// Style of this Checkbox when it is unfocused
+    pub unfocused_style: TextStyle,
+    /// Style of this Checkbox when it is focused
+    pub focused_style: TextStyle,
 
     /// The keyboard inputs that trigger `was_just_pressed`
     pub button_press_inputs: Vec<VirtualKeyCode>,
@@ -149,10 +143,16 @@ impl Checkbox {
     /// Intiailizes a Checkbox with the given text and max width
     pub fn new<T: Into<String>>(text: T) -> Checkbox {
         Checkbox {
-            bg_color_unfocused: [0.0, 0.0, 0.0, 0.0],
-            fg_color_unfocused: [0.8, 0.8, 0.8, 1.0],
-            bg_color_focused: [0.8, 0.8, 0.8, 1.0],
-            fg_color_focused: [0.2, 0.2, 0.2, 1.0],
+            unfocused_style: TextStyle {
+                bg_color: [0.0, 0.0, 0.0, 0.0],
+                fg_color: [0.8, 0.8, 0.8, 1.0],
+                ..Default::default()
+            },
+            focused_style: TextStyle {
+                bg_color: [0.8, 0.8, 0.8, 1.0],
+                fg_color: [0.2, 0.2, 0.2, 1.0],
+                ..Default::default()
+            },
 
             base: InterfaceItemBase::new(true),
 
@@ -173,7 +173,7 @@ impl Checkbox {
 
     with_base!(Checkbox);
     with_set_pressable!(Checkbox);
-    with_set_colors!(Checkbox);
+    with_style!(Checkbox);
 
     /// Sets the initial text of the Checkbox
     pub fn with_text<T: Into<String>>(mut self, text: T) -> Checkbox {
@@ -284,13 +284,12 @@ impl InterfaceItem for Checkbox {
 
     fn draw(&mut self, text_buffer: &mut TextBuffer) {
         self.base.dirty = false;
-        if self.base.is_focused() {
-            text_buffer.cursor.style.bg_color = self.bg_color_focused;
-            text_buffer.cursor.style.fg_color = self.fg_color_focused;
+
+        text_buffer.cursor.style = if self.base.is_focused() {
+            self.focused_style
         } else {
-            text_buffer.cursor.style.bg_color = self.bg_color_unfocused;
-            text_buffer.cursor.style.fg_color = self.fg_color_unfocused;
-        }
+            self.unfocused_style
+        };
         text_buffer.cursor.move_to(self.base.x, self.base.y);
         text_buffer.write_processed(&self.processed_text);
     }
