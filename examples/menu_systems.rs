@@ -117,7 +117,7 @@ fn main() {
                 bg_color: [0.0, 0.0, 0.0, 0.0],
                 ..Default::default()
             };
-            text_buffer.cursor.move_to(30, 15);
+            text_buffer.cursor.move_to(40, 15);
             text_buffer.write(format!(
                 "Text: {} {}",
                 text_input.get_text(),

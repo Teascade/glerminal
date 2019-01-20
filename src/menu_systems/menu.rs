@@ -1,6 +1,7 @@
 use super::InterfaceItem;
 use crate::events::Events;
 use crate::text_buffer::TextBuffer;
+use crate::text_processing::{DefaultProcessor, TextProcessor};
 use glutin::VirtualKeyCode;
 
 /// Represents a list of InterfaceItems that is passed to the Menu when updating
@@ -98,6 +99,8 @@ pub enum FocusSelection {
 /// By default selection through Menus is done with a keyboard. It is possible to make selection with a mouse possible by changing [`FocusSelection`](enum.FocusSelection.html)
 /// with [`with_focus_selection`](#method.with_focus_selection) or [`set_focus_selection`](#method.set_focus_selection)
 ///
+/// To add a [`TextProcessor`](../text_processing/struct.TextProcessor.html) to the menu, such as the Parser, use [`with_text_processor`](#method.with_text_processor)
+///
 /// Example menu usage:
 /// ```no_run
 /// use glerminal::menu_systems::{Filter, Menu, MenuList, MenuPosition, TextInput, TextItem};
@@ -155,6 +158,8 @@ pub struct Menu {
 
     growth_direction: GrowthDirection,
     focus_selection: FocusSelection,
+
+    text_processor: Box<dyn TextProcessor>,
 }
 
 impl Default for Menu {
@@ -171,6 +176,8 @@ impl Default for Menu {
 
             growth_direction: GrowthDirection::Down,
             focus_selection: FocusSelection::Keyboard(None, None),
+
+            text_processor: Box::new(DefaultProcessor),
         }
     }
 }
@@ -207,6 +214,12 @@ impl Menu {
         self
     }
 
+    /// Set the text processor for this menu, or in other words, the `TextProcessor` that is given to each `InterfaceItem` in their `update`.
+    pub fn with_text_processor<T: 'static + TextProcessor>(mut self, processor: T) -> Menu {
+        self.text_processor = Box::new(processor);
+        self
+    }
+
     /// Sets the position of the menu
     pub fn set_pos(&mut self, pos: (u32, u32)) {
         let (x, y) = pos;
@@ -227,6 +240,11 @@ impl Menu {
     /// Sets the way the menu is browsed
     pub fn set_focus_selection(&mut self, focus_selection: FocusSelection) {
         self.focus_selection = focus_selection;
+    }
+
+    /// Set the text processor for this menu, or in other words, the `TextProcessor` that is given to each `InterfaceItem` in their `update`.
+    pub fn set_text_processor<T: 'static + TextProcessor>(&mut self, processor: T) {
+        self.text_processor = Box::new(processor);
     }
 
     /// Get the position of the Menu
@@ -350,7 +368,7 @@ impl Menu {
         for (idx, item) in (&mut list.items_ref).iter_mut().enumerate() {
             item.get_mut_base()
                 .set_focused((self.select_idx == idx as u32) && self.focused);
-            item.update(delta);
+            item.update(delta, &*self.text_processor);
         }
 
         // Check if the children are dirty, if they are then update them to be drawn

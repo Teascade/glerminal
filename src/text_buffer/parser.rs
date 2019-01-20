@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 
-use super::{Color, TextBuffer, TextStyle};
+use super::{Color, TextBuffer};
 use regex::Regex;
-use std::convert::From;
-use std::iter::{IntoIterator, Iterator};
-use std::vec::IntoIter;
 
-/// Represents a parser, that is able to read given texts and use [`TextBuffer`](struct.TextBuffer.html) accordingly, to write text and styles matching to the text.
+use crate::text_processing::{OptTextStyle, Processable, ProcessedChar, TextProcessor};
+
+/// Represents a parser (A [`TextProcessor`](text_processing/struct.TextProcessor.html)), that is able to read given texts and use [`TextBuffer`](struct.TextBuffer.html) accordingly, to write text and styles matching to the text.
 ///
 ///**Note:** This struct requires _parser_ feature to be enabled.
 ///
@@ -39,7 +38,7 @@ use std::vec::IntoIter;
 /// ```
 ///
 /// See [TextBuffer](struct.TextBuffer.html) for examples and more detailed documentation.
-#[derive(Default)]
+#[derive(Default, Debug, Clone)]
 pub struct Parser {
     colors: HashMap<String, Color>,
 }
@@ -59,86 +58,14 @@ impl Parser {
 
     /// Parses the given text and immediately writes it to the text buffer
     pub fn write<T: Into<String>>(&self, text_buffer: &mut TextBuffer, text: T) {
-        Parser::write_parsed(text_buffer, self.parse(text, text_buffer.cursor.style));
+        text_buffer.write_processed(&self.parse(text));
     }
 
-    /// Writes any parsed text (for example the struct that is passed from `parser.parse`), or just a list of `ParsedChar`s
-    pub fn write_parsed<T: IntoIterator<Item = ParsedChar>>(
-        text_buffer: &mut TextBuffer,
-        parsed: T,
-    ) {
-        let mut curr_style = Default::default();
-        for character in parsed {
-            if character.style != curr_style {
-                curr_style = character.style;
-                text_buffer.cursor.style = curr_style;
-            }
-            text_buffer.put_char(character.character);
-        }
-    }
-
-    /// Parse any text into a `ParsedText` struct
-    pub fn parse<T: Into<String>>(&self, text: T, default_style: TextStyle) -> ParsedText {
+    /// Parse any text into a `ProcessedChar`s, alias for `parser.process`
+    pub fn parse<T: Into<String>>(&self, text: T) -> Vec<ProcessedChar> {
         let text = text.into();
 
-        let default_fg = default_style.fg_color;
-        let default_bg = default_style.bg_color;
-        let default_shakiness = default_style.shakiness;
-        let mut fg_stack = Vec::new();
-        let mut bg_stack = Vec::new();
-        let mut shakiness_stack = Vec::new();
-        let mut current_style = default_style;
-
-        let regex = Regex::new(r"\[(/)?((fg|bg|shake)(=([A-z]+|\d+(\.\d+)?))?)\]").unwrap();
-        let mut parts = regex.split(&text);
-
-        let mut parsed = ParsedText { list: Vec::new() };
-
-        for capture in regex.captures_iter(&text) {
-            parsed.list.push(ParsedTextPart {
-                text: parts.next().unwrap().to_owned(),
-                style: current_style,
-            });
-
-            if let Some(target) = capture.get(3) {
-                if capture.get(1).is_some() {
-                    if target.as_str() == "shake" {
-                        current_style.shakiness =
-                            shakiness_stack.pop().unwrap_or(default_shakiness);
-                    } else if target.as_str() == "fg" {
-                        current_style.fg_color = fg_stack.pop().unwrap_or(default_fg);
-                    } else if target.as_str() == "bg" {
-                        current_style.bg_color = bg_stack.pop().unwrap_or(default_bg);
-                    }
-                }
-                if let Some(value) = capture.get(5) {
-                    if target.as_str() == "shake" {
-                        let value = match value.as_str().parse::<f32>() {
-                            Ok(val) => val,
-                            Err(e) => panic!("Failed to parse shake-number: {}", e),
-                        };
-                        shakiness_stack.push(current_style.shakiness);
-                        current_style.shakiness = value;
-                    } else if let Some(color) = self.colors.get(value.as_str()) {
-                        if target.as_str() == "fg" {
-                            fg_stack.push(current_style.fg_color);
-                            current_style.fg_color = *color;
-                        } else {
-                            bg_stack.push(current_style.bg_color);
-                            current_style.bg_color = *color;
-                        }
-                    }
-                }
-            }
-        }
-        if let Some(last_part) = parts.next() {
-            parsed.list.push(ParsedTextPart {
-                text: last_part.to_owned(),
-                style: current_style,
-            });
-        }
-
-        parsed
+        self.process(vec![text.into()])
     }
 
     /// Gets the color specified, not compiled in a non-testing environment.
@@ -148,67 +75,98 @@ impl Parser {
     }
 }
 
-/// Represents a text that has been parsed, consisting of `ParsedTextPart`s
-pub struct ParsedText {
-    /// The list of `ParsedTextPart`s
-    pub list: Vec<ParsedTextPart>,
-}
+impl TextProcessor for Parser {
+    fn process(&self, processables: Vec<Processable>) -> Vec<ProcessedChar> {
+        let mut fg_stack = Vec::new();
+        let mut bg_stack = Vec::new();
+        let mut shakiness_stack = Vec::new();
+        let mut current_style = OptTextStyle {
+            fg_color: None,
+            bg_color: None,
+            shakiness: None,
+        };
 
-impl From<ParsedText> for Vec<ParsedChar> {
-    fn from(text: ParsedText) -> Vec<ParsedChar> {
-        let mut list: Vec<ParsedChar> = Vec::new();
-        for part in text.list {
-            list.append(&mut Vec::from(part));
+        let regex = Regex::new(r"\[(/)?((fg|bg|shake)(=([A-z]+|\d+(\.\d+)?))?)\]").unwrap();
+
+        let mut parsed = Vec::new();
+
+        for processable in processables {
+            match processable {
+                Processable::ToProcess(text) => {
+                    let mut parts = regex.split(&text);
+                    for capture in regex.captures_iter(&text) {
+                        parsed.push(ParsedText {
+                            text: parts.next().unwrap().to_owned(),
+                            style: current_style.clone(),
+                        });
+
+                        if let Some(target) = capture.get(3) {
+                            if capture.get(1).is_some() {
+                                if target.as_str() == "shake" {
+                                    current_style.shakiness = shakiness_stack.pop();
+                                } else if target.as_str() == "fg" {
+                                    current_style.fg_color = fg_stack.pop();
+                                } else if target.as_str() == "bg" {
+                                    current_style.bg_color = bg_stack.pop();
+                                }
+                            }
+                            if let Some(value) = capture.get(5) {
+                                if target.as_str() == "shake" {
+                                    let value = match value.as_str().parse::<f32>() {
+                                        Ok(val) => val,
+                                        Err(e) => panic!("Failed to parse shake-number: {}", e),
+                                    };
+                                    if let Some(shakiness) = current_style.shakiness {
+                                        shakiness_stack.push(shakiness);
+                                    }
+                                    current_style.shakiness = Some(value);
+                                } else if let Some(color) = self.colors.get(value.as_str()) {
+                                    if target.as_str() == "fg" {
+                                        if let Some(fg) = current_style.fg_color {
+                                            fg_stack.push(fg);
+                                        }
+                                        current_style.fg_color = Some(*color);
+                                    } else {
+                                        if let Some(bg) = current_style.bg_color {
+                                            bg_stack.push(bg);
+                                        }
+                                        current_style.bg_color = Some(*color);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if let Some(last_part) = parts.next() {
+                        parsed.push(ParsedText {
+                            text: last_part.to_owned(),
+                            style: current_style.clone(),
+                        });
+                    }
+                }
+                Processable::NoProcess(text) => {
+                    parsed.push(ParsedText {
+                        text: text,
+                        style: current_style.clone(),
+                    });
+                }
+            }
         }
-        list
-    }
-}
 
-impl IntoIterator for ParsedText {
-    type Item = ParsedChar;
-    type IntoIter = IntoIter<ParsedChar>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        Vec::from(self).into_iter()
-    }
-}
-
-/// Represents any given number of consecutive ParsedChars that were parsed in `parser.parse` that weren't interrupted by style changes
-#[derive(Clone, Debug)]
-pub struct ParsedTextPart {
-    /// The text
-    pub text: String,
-    /// The style this text is in
-    pub style: TextStyle,
-}
-
-impl From<ParsedTextPart> for Vec<ParsedChar> {
-    fn from(word: ParsedTextPart) -> Vec<ParsedChar> {
         let mut list = Vec::new();
-        for character in word.text.chars() {
-            list.push(ParsedChar {
-                character: character,
-                style: word.style,
-            });
+        for text in parsed {
+            for character in text.text.chars() {
+                list.push(ProcessedChar {
+                    character: character,
+                    style: text.style.clone(),
+                });
+            }
         }
         list
     }
 }
 
-impl IntoIterator for ParsedTextPart {
-    type Item = ParsedChar;
-    type IntoIter = IntoIter<ParsedChar>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        Vec::from(self).into_iter()
-    }
-}
-
-/// A single parsed character from a [`ParsedText`](struct.ParsedText.html)
 #[derive(Clone, Debug)]
-pub struct ParsedChar {
-    /// The character
-    pub character: char,
-    /// The style this character is in
-    pub style: TextStyle,
+struct ParsedText {
+    pub text: String,
+    pub style: OptTextStyle,
 }

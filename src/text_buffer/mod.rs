@@ -1,10 +1,13 @@
 #[cfg(feature = "parser")]
 pub mod parser;
 
+pub mod text_processing;
+
 use crate::font::Font;
 use crate::renderer::backgroundmesh::BackgroundMesh;
 use crate::renderer::textbuffermesh::TextBufferMesh;
 use crate::terminal::Terminal;
+use crate::text_processing::ProcessedChar;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -263,6 +266,18 @@ impl TextBuffer {
         for c in text.to_owned().encode_utf16() {
             self.put_raw_char(c);
         }
+    }
+
+    /// Write a list of [`ProcessedChar`](text_processing/struct.ProcessedChar.html)s
+    pub fn write_processed(&mut self, char_list: &[ProcessedChar]) {
+        let default = self.cursor.style;
+        for character in char_list {
+            self.cursor.style.fg_color = character.style.fg_color.unwrap_or(default.fg_color);
+            self.cursor.style.bg_color = character.style.bg_color.unwrap_or(default.bg_color);
+            self.cursor.style.shakiness = character.style.shakiness.unwrap_or(default.shakiness);
+            self.put_char(character.character);
+        }
+        self.cursor.style = default;
     }
 
     /// Returns the current position of the cursor

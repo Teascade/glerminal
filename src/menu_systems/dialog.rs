@@ -4,6 +4,7 @@ use super::{InterfaceItem, InterfaceItemBase};
 
 use crate::events::Events;
 use crate::text_buffer::{Color, TextBuffer};
+use crate::text_processing::{OptTextStyle, ProcessedChar, TextProcessor};
 
 use std::iter::repeat;
 
@@ -46,7 +47,10 @@ pub struct Dialog {
     max_height: Option<u32>,
 
     text: String,
-    rows: Vec<String>,
+    rows: Vec<Vec<ProcessedChar>>,
+
+    processed_text: Vec<ProcessedChar>,
+    needs_processing: bool,
 
     scroll_idx: u32,
 }
@@ -75,6 +79,9 @@ impl Dialog {
             text: String::new(),
             rows: Vec::new(),
 
+            processed_text: Vec::new(),
+            needs_processing: true,
+
             scroll_idx: 0,
         }
     }
@@ -85,7 +92,7 @@ impl Dialog {
     /// Sets the initial width of the dialog window
     pub fn with_width(mut self, width: u32) -> Dialog {
         self.width = width;
-        self.update_rows();
+        self.needs_processing = true;
         self
     }
 
@@ -104,7 +111,7 @@ impl Dialog {
     /// Sets the initial text of the dialog window
     pub fn with_text<T: Into<String>>(mut self, text: T) -> Dialog {
         self.text = text.into();
-        self.update_rows();
+        self.needs_processing = true;
         self
     }
 
@@ -123,7 +130,7 @@ impl Dialog {
     /// Sets the width of the dialog window
     pub fn set_width(&mut self, width: u32) {
         self.width = width;
-        self.update_rows();
+        self.needs_processing = true;
     }
 
     /// Sets the minimum height of the dialog window
@@ -139,7 +146,7 @@ impl Dialog {
     /// Sets the text of the dialog window
     pub fn set_text<T: Into<String>>(&mut self, text: T) {
         self.text = text.into();
-        self.update_rows();
+        self.needs_processing = true;
     }
 
     /// Attempt to scroll the dialog up. Returns true if successful, false if not.
@@ -177,31 +184,46 @@ impl Dialog {
     }
 
     fn update_rows(&mut self) {
-        self.rows = Vec::new();
-        let mut curr_row = String::new();
         let width = self.width;
 
-        let parts = self.text.split(' ').flat_map(|word| {
-            let mut word = word.to_owned();
-            let mut words = Vec::new();
-            while word.chars().count() as u32 > width {
-                let part = word.split_off(width as usize);
-                words.push(word);
-                word = part;
+        let mut words = Vec::new();
+        let mut curr_word = Vec::new();
+        for c in self.processed_text.clone() {
+            if ((c.character == ' ' || c.character == '\n') && !curr_word.is_empty())
+                || curr_word.len() as u32 >= width
+            {
+                words.push(curr_word);
+                curr_word = Vec::new();
+            } else {
+                curr_word.push(c);
             }
-            words.push(word);
-            words
-        });
+        }
+        if !curr_word.is_empty() {
+            words.push(curr_word);
+        }
 
-        for word in parts {
-            if (curr_row.chars().count() + word.chars().count() + 1) as u32 <= width {
+        let mut last_style = OptTextStyle {
+            fg_color: None,
+            bg_color: None,
+            shakiness: None,
+        };
+        self.rows = Vec::new();
+        let mut curr_row = Vec::new();
+        for word in words.iter_mut() {
+            if ((curr_row.len() + word.len() + 1) as u32) <= width {
                 if !curr_row.is_empty() {
-                    curr_row += " ";
+                    curr_row.push(ProcessedChar {
+                        character: ' ',
+                        style: last_style.clone(),
+                    });
                 }
-                curr_row += &word;
+                curr_row.append(&mut word.clone());
             } else {
                 self.rows.push(curr_row);
-                curr_row = word.to_owned();
+                curr_row = word.clone();
+            }
+            if let Some(last) = word.last() {
+                last_style = last.style.clone();
             }
         }
         self.rows.push(curr_row);
@@ -240,18 +262,35 @@ impl InterfaceItem for Dialog {
             text_buffer.cursor.style.bg_color = self.bg_color_unfocused;
             text_buffer.cursor.style.fg_color = self.fg_color_unfocused;
         }
+        let none_style = OptTextStyle {
+            fg_color: None,
+            bg_color: None,
+            shakiness: None,
+        };
         for idx in 0..self.get_total_height() {
-            let text: String;
+            let text: Vec<ProcessedChar>;
             if let Some(row) = self.rows.get((self.scroll_idx + idx) as usize) {
-                text = row.to_owned()
-                    + &*repeat(' ')
-                        .take(self.width as usize - row.len())
-                        .collect::<String>();
+                text = row
+                    .iter()
+                    .cloned()
+                    .chain(
+                        repeat(ProcessedChar {
+                            character: ' ',
+                            style: none_style.clone(),
+                        })
+                        .take(self.width as usize - row.len()),
+                    )
+                    .collect();
             } else {
-                text = repeat(' ').take(self.width as usize).collect();
+                text = repeat(ProcessedChar {
+                    character: ' ',
+                    style: none_style.clone(),
+                })
+                .take(self.width as usize)
+                .collect();
             }
             text_buffer.cursor.move_to(self.base.x, self.base.y + idx);
-            text_buffer.write(text);
+            text_buffer.write_processed(&text);
         }
     }
 
@@ -267,5 +306,11 @@ impl InterfaceItem for Dialog {
         handled
     }
 
-    fn update(&mut self, _: f32) {}
+    fn update(&mut self, _: f32, processor: &TextProcessor) {
+        if self.needs_processing {
+            self.processed_text = processor.process(vec![self.text.clone().into()]);
+            self.update_rows();
+            self.needs_processing = false;
+        }
+    }
 }

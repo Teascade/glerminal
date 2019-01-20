@@ -5,7 +5,14 @@
 //! input text, do whatever you want with GUI items generally. You can even make your own `InterfaceItem`s if you want.  
 //! Selection in [`Menu`](struct.Menu.html)s works with keyboard and mouse, changeable with [`FocusSelection`](enum.FocusSelection.html).
 //!
-//! Current pre-implemented items to use in Menus are
+//! To add a [`TextProcessor`](../text_processing/struct.TextProcessor.html) to the menu, such as the Parser,
+//! use [`with_text_processor`](struct.Menu.html/#method.with_text_processor)
+//!
+//! If you wish to use [`InterfaceItem`](trait.InterfaceItem.html)s without the Menu struct,
+//! it is required to call `handle_events`, `update` and then `draw` for them, in that order.
+//! (See [Example InterfaceItem usage without Menu](#example-interfaceitem-usage-without-menu))
+//!
+//! Current pre-implemented items to use are
 //! - [TextItem](struct.TextItem.html), functions as a text label and a button.
 //! - [TextInput](struct.TextInput.html), can accept text input that can be get with `get_text`.
 //! - [Dialog](struct.Dialog.html), can be used to display large volumes of text compactly.
@@ -13,7 +20,7 @@
 //!
 //! **Note:** This module requires _menu_systems_ feature to be enabled.
 //!
-//! Example usage of menu-systems:
+//! ## Example usage of Menu:
 //! (Same example can be found in [`Menu`](struct.Menu.html))
 //! ```no_run
 //! use glerminal::menu_systems::{Filter, Menu, MenuList, MenuPosition, TextInput, TextItem};
@@ -56,6 +63,41 @@
 //!         terminal.flush(&mut text_buffer); // Apply changes; flush
 //!     }
 //!
+//!     terminal.draw(&text_buffer);
+//! }
+//! ```
+//!
+//!
+//! ## Example InterfaceItem usage without [`Menu`](struct.Menu.html)
+//! ```no_run
+//! use glerminal::menu_systems::{InterfaceItem, TextItem};
+//! use glerminal::{TerminalBuilder, TextBuffer};
+//!
+//! // Initialize terminal and text buffer
+//! let terminal = TerminalBuilder::new().build();
+//! let mut text_buffer;
+//! match TextBuffer::create(&terminal, (80, 24)) {
+//!     Ok(buffer) => text_buffer = buffer,
+//!     Err(error) => panic!(format!("Failed to initialize text buffer: {}", error)),
+//! }
+//!
+//! // Create a button
+//! let mut button = TextItem::new("Press me")
+//!     .with_is_button(true)
+//!     .with_focused(true);
+//!
+//! let processor = glerminal::text_processing::DefaultProcessor;
+//!
+//! while terminal.refresh() {
+//!     button.handle_events(&terminal.get_current_events());
+//!     if button.was_just_pressed() {
+//!         button.set_text("Pressed!");
+//!     }
+//!     button.update(terminal.delta_time(), &processor);
+//!     if button.get_base().dirty {
+//!         button.draw(&mut text_buffer);
+//!         terminal.flush(&mut text_buffer);
+//!     }
 //!     terminal.draw(&text_buffer);
 //! }
 //! ```
@@ -160,6 +202,7 @@ pub use self::window::Window;
 
 use crate::events::Events;
 use crate::text_buffer::TextBuffer;
+use crate::text_processing::TextProcessor;
 
 /// Represents a single menu item: an item that is somewhere, can handle events and can be drawn.
 ///
@@ -176,6 +219,7 @@ use crate::text_buffer::TextBuffer;
 /// ```
 /// use glerminal::menu_systems::{InterfaceItem, InterfaceItemBase};
 /// use glerminal::{with_base, Events, TextBuffer, TextStyle};
+/// use glerminal::text_processing::TextProcessor;
 ///
 /// #[derive(Clone)]
 /// struct TextLabel {
@@ -228,7 +272,9 @@ use crate::text_buffer::TextBuffer;
 ///         false
 ///     }
 ///
-///     fn update(&mut self, _: f32) {}
+///     // If you want TextProcessor support, ie. Parser support, implement the processing here.
+///     // Also remember to not process every frame, but only when necessary.
+///     fn update(&mut self, _: f32, processor: &TextProcessor) {}
 /// }
 /// ```
 pub trait InterfaceItem: InterfaceItemClone {
@@ -250,8 +296,9 @@ pub trait InterfaceItem: InterfaceItemClone {
     ///
     /// Returns whether it handled any events.
     fn handle_events(&mut self, events: &Events) -> bool;
-    /// Update this InterfaceItem; delta is given in seconds. (see [Terminal.delta_time()](../terminal/struct.Terminal.html))
-    fn update(&mut self, delta: f32);
+    /// Update this InterfaceItem; delta is given in seconds. (see [Terminal.delta_time()](../terminal/struct.Terminal.html)).
+    /// Also process any text that has changed since last update.
+    fn update(&mut self, delta: f32, processor: &TextProcessor);
 }
 
 /// Represents a cloneable InterfaceItem; You should never implement this yourself, but instead

@@ -2,9 +2,8 @@ use super::{Filter, InterfaceItem, InterfaceItemBase};
 
 use std::iter::repeat;
 
-use crate::text_buffer::Color;
-use crate::text_buffer::TextBuffer;
-use crate::{Events, MouseButton, VirtualKeyCode};
+use crate::text_processing::{Processable, ProcessedChar, TextProcessor};
+use crate::{Color, Events, MouseButton, TextBuffer, VirtualKeyCode};
 
 /// Represents a text-input field, that can be focused, takes in events (keyboard events as text),
 /// and it's possible to get the input text with get_text
@@ -47,6 +46,9 @@ pub struct TextInput {
     text: String,
     prefix: String,
     suffix: String,
+
+    processed_text: Vec<ProcessedChar>,
+    needs_processing: bool,
 
     // Cache text.chars().count() for optimization
     text_width: u32,
@@ -93,6 +95,9 @@ impl TextInput {
             prefix: String::new(),
             suffix: String::new(),
             filter: Filter::empty_filter(),
+
+            processed_text: Vec::new(),
+            needs_processing: true,
 
             text_width: 0,
 
@@ -184,6 +189,9 @@ impl TextInput {
         }
         self.min_width = actual_min_width;
         self.max_width = actual_max_width;
+
+        self.needs_processing = true;
+        self.base.dirty = true;
     }
 
     /// Limtis the amount of characters that the TextInput will accept.
@@ -195,6 +203,8 @@ impl TextInput {
     pub fn set_text<T: Into<String>>(&mut self, text: T) {
         self.text = text.into();
         self.text_width = self.text.chars().count() as u32;
+        self.needs_processing = true;
+        self.base.dirty = true;
     }
 
     /// Returns the current text in the input
@@ -237,53 +247,14 @@ impl InterfaceItem for TextInput {
         self.base.dirty = false;
 
         if self.base.is_focused() {
-            text_buffer.cursor.style.bg_color = self.bg_color_focused;
             text_buffer.cursor.style.fg_color = self.fg_color_focused;
+            text_buffer.cursor.style.bg_color = self.bg_color_focused;
         } else {
-            text_buffer.cursor.style.bg_color = self.bg_color_unfocused;
             text_buffer.cursor.style.fg_color = self.fg_color_unfocused;
-        }
+            text_buffer.cursor.style.bg_color = self.bg_color_unfocused;
+        };
         text_buffer.cursor.move_to(self.base.x, self.base.y);
-
-        let text_w_offset: u32;
-        if self.base.is_focused() && self.caret != 0.0 {
-            text_w_offset = 1
-        } else {
-            text_w_offset = 0
-        }
-        let space_offset = if self.caret_showing { 1 } else { 0 };
-
-        let text_width;
-        let field_width;
-        if let (Some(min_width), Some(max_width)) = (self.min_width, self.max_width) {
-            // Max width and min width
-            text_width = (max_width - text_w_offset).min(self.text_width);
-            field_width = min_width.max(self.text_width).min(max_width);
-        } else if let Some(min_width) = self.min_width {
-            // Only min width
-            text_width = self.text_width;
-            field_width = min_width.max(self.text_width + text_w_offset);
-        } else if let Some(max_width) = self.max_width {
-            // Only max width
-            text_width = (max_width - text_w_offset).min(self.text_width);
-            field_width = max_width.min(self.text_width + 1);
-        } else {
-            // Neither
-            text_width = self.text_width;
-            field_width = (self.text_width + text_w_offset).max(1);
-        }
-
-        let mut text: String = self.text.chars().take(text_width as usize).collect();
-        if self.caret_showing {
-            text.push('_');
-        }
-
-        let spaces: String = repeat(" ")
-            .take((field_width - text_width - space_offset) as usize)
-            .collect();
-        let text = text + &*spaces;
-
-        text_buffer.write(format!("{}{}{}", self.prefix, text, self.suffix));
+        text_buffer.write_processed(&self.processed_text);
     }
 
     fn handle_events(&mut self, events: &Events) -> bool {
@@ -317,6 +288,7 @@ impl InterfaceItem for TextInput {
                 }
 
                 self.base.dirty = true;
+                self.needs_processing = true;
                 handled = true;
 
                 self.text_width = self.text.chars().count() as u32;
@@ -325,8 +297,11 @@ impl InterfaceItem for TextInput {
         handled
     }
 
-    fn update(&mut self, delta: f32) {
+    fn update(&mut self, delta: f32, processor: &TextProcessor) {
         if !self.base.is_focused() || self.caret == 0.0 {
+            if self.caret_showing {
+                self.needs_processing = true;
+            }
             self.caret_timer = 0.0;
             self.caret_showing = false;
         } else {
@@ -335,7 +310,56 @@ impl InterfaceItem for TextInput {
                 self.caret_timer -= self.caret;
                 self.caret_showing = !self.caret_showing;
                 self.base.dirty = true;
+                self.needs_processing = true;
             }
+        }
+
+        if self.needs_processing {
+            let text_w_offset: u32;
+            if self.base.is_focused() && self.caret != 0.0 {
+                text_w_offset = 1
+            } else {
+                text_w_offset = 0
+            }
+            let space_offset = if self.caret_showing { 1 } else { 0 };
+
+            let text_width;
+            let field_width;
+            if let (Some(min_width), Some(max_width)) = (self.min_width, self.max_width) {
+                // Max width and min width
+                text_width = (max_width - text_w_offset).min(self.text_width);
+                field_width = min_width.max(self.text_width).min(max_width);
+            } else if let Some(min_width) = self.min_width {
+                // Only min width
+                text_width = self.text_width;
+                field_width = min_width.max(self.text_width + text_w_offset);
+            } else if let Some(max_width) = self.max_width {
+                // Only max width
+                text_width = (max_width - text_w_offset).min(self.text_width);
+                field_width = max_width.min(self.text_width + 1);
+            } else {
+                // Neither
+                text_width = self.text_width;
+                field_width = (self.text_width + text_w_offset).max(1);
+            }
+
+            let mut text: String = self.text.chars().take(text_width as usize).collect();
+            if self.caret_showing {
+                text.push('_');
+            }
+
+            let spaces: String = repeat(" ")
+                .take((field_width - text_width - space_offset) as usize)
+                .collect();
+            let text = text + &*spaces;
+
+            self.processed_text = processor.process(vec![
+                self.prefix.clone().into(),
+                Processable::NoProcess(text),
+                self.suffix.clone().into(),
+            ]);
+
+            self.needs_processing = false;
         }
     }
 }

@@ -3,6 +3,7 @@ use std::iter::repeat;
 use super::{InterfaceItem, InterfaceItemBase};
 use crate::events::Events;
 use crate::text_buffer::{Color, TextBuffer};
+use crate::text_processing::{ProcessedChar, TextProcessor};
 use crate::{MouseButton, VirtualKeyCode};
 
 /// Represents a group of checkboxes that can be managed like they were radio buttons.
@@ -137,6 +138,9 @@ pub struct Checkbox {
     suffix: String,
     checked_text: String,
 
+    processed_text: Vec<ProcessedChar>,
+    needs_processing: bool,
+
     checked: bool,
     was_just_pressed: bool,
 }
@@ -156,6 +160,9 @@ impl Checkbox {
             prefix: "[".to_owned(),
             suffix: "]".to_owned(),
             checked_text: "X".to_owned(),
+
+            processed_text: Vec::new(),
+            needs_processing: true,
 
             checked: false,
             was_just_pressed: false,
@@ -202,23 +209,27 @@ impl Checkbox {
     pub fn set_text<T: Into<String>>(&mut self, text: T) {
         self.text = text.into();
         self.base.dirty = true;
+        self.needs_processing = true;
     }
 
     /// Sets the prefix of the Checkbox
     pub fn set_prefix<T: Into<String>>(&mut self, prefix: T) {
         self.prefix = prefix.into();
         self.base.dirty = true;
+        self.needs_processing = true;
     }
 
     /// Sets the suffix of the Checkbox
     pub fn set_suffix<T: Into<String>>(&mut self, suffix: T) {
         self.suffix = suffix.into();
         self.base.dirty = true;
+        self.needs_processing = true;
     }
 
     /// Sets the checked-text (text shown in between prefix and suffix) of the Checkbox
     pub fn set_checked_text<T: Into<String>>(mut self, checked_text: T) {
         self.checked_text = checked_text.into();
+        self.needs_processing = true;
     }
 
     /// Return the current text of the Checkbox
@@ -240,6 +251,7 @@ impl Checkbox {
     pub fn set_checked(&mut self, checked: bool) {
         if self.checked != checked {
             self.base.dirty = true;
+            self.needs_processing = true;
         }
         self.checked = checked;
     }
@@ -280,15 +292,7 @@ impl InterfaceItem for Checkbox {
             text_buffer.cursor.style.fg_color = self.fg_color_unfocused;
         }
         text_buffer.cursor.move_to(self.base.x, self.base.y);
-        let checked_text = if self.checked {
-            (&self.checked_text).to_owned()
-        } else {
-            repeat(" ")
-                .take(self.checked_text.chars().count())
-                .collect()
-        };
-        let text = (&self.text).to_owned() + &self.prefix + &checked_text + &self.suffix;
-        text_buffer.write(text);
+        text_buffer.write_processed(&self.processed_text);
     }
 
     fn handle_events(&mut self, events: &Events) -> bool {
@@ -296,21 +300,33 @@ impl InterfaceItem for Checkbox {
         for curr in &self.button_press_inputs {
             if events.keyboard.was_just_pressed(*curr) {
                 self.was_just_pressed = true;
-                self.checked = !self.checked;
-                self.base.dirty = true;
+                self.set_checked(!self.checked);
                 return true;
             }
         }
         for curr in &self.mouse_button_press_inputs {
             if events.mouse.was_just_pressed(*curr) {
                 self.was_just_pressed = true;
-                self.checked = !self.checked;
-                self.base.dirty = true;
+                self.set_checked(!self.checked);
                 return true;
             }
         }
         false
     }
 
-    fn update(&mut self, _: f32) {}
+    fn update(&mut self, _: f32, processor: &TextProcessor) {
+        if self.needs_processing {
+            let checked_text = if self.checked {
+                (&self.checked_text).to_owned()
+            } else {
+                repeat(" ")
+                    .take(self.checked_text.chars().count())
+                    .collect()
+            };
+            let text = (&self.text).to_owned() + &self.prefix + &checked_text + &self.suffix;
+
+            self.processed_text = processor.process(vec![text.into()]);
+            self.needs_processing = false;
+        }
+    }
 }
