@@ -19,7 +19,7 @@ fn main() {
 
     let mut frames = 0;
     let mut timer = 0.0;
-    let fps_update = 1.0 / 20.0;
+    let fps_update = 1.0 / 1.0;
 
     while terminal.refresh() {
         timer += terminal.delta_time();
@@ -29,8 +29,6 @@ fn main() {
             text_buffer.write(format!("{:.6}", frames as f32 / fps_update));
             timer -= fps_update;
             frames = 0;
-
-            terminal.flush(&mut text_buffer);
         }
 
         terminal.draw(&text_buffer);
