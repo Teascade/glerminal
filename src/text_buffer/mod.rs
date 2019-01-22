@@ -253,13 +253,11 @@ impl TextBuffer {
 
     /// Puts a raw 16-bit character to the current position of the cursor with the cursor's style (See text_buffer.cursor)
     pub fn put_raw_char(&mut self, character: RawCharacter) {
-        let termchar = self.chars[(self.cursor.y * self.width + self.cursor.x) as usize];
-        if termchar.character != character || termchar.style != self.cursor.style {
-            self.chars[(self.cursor.y * self.width + self.cursor.x) as usize] =
-                TermCharacter::new(character, self.cursor.style);
-            self.dirty = true;
-        }
+        self.chars[(self.cursor.y * self.width + self.cursor.x) as usize] =
+            TermCharacter::new(character, self.cursor.style);
         self.cursor.move_by(1);
+
+        self.dirty = true;
     }
 
     /// Puts the given text the same way as put_char
