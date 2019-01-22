@@ -224,14 +224,11 @@ impl Window {
 
     /// Draws the window
     pub fn draw(&self, text_buffer: &mut TextBuffer) {
-        let empty_style = TextStyle {
-            bg_color: self.background_color,
-            ..Default::default()
-        };
+        let title_max_size = (self.title.chars().count() as u32).min(self.width);
+        text_buffer.cursor.style = self.border_style;
         for y in 0..(self.height + 2) {
             text_buffer.cursor.move_to(self.x, self.y + y);
             for x in 0..(self.width + 2) {
-                text_buffer.cursor.style = self.border_style;
                 if x == 0 {
                     if y == 0 {
                         text_buffer.put_char(self.border_chars.top_left);
@@ -243,7 +240,10 @@ impl Window {
                         text_buffer.put_char(self.border_chars.vertical_line);
                     }
                 } else if y == 0 {
-                    if self.v_split(x) {
+                    if x > 0 && x <= title_max_size {
+                        text_buffer.cursor.move_by(1);
+                        continue; // Title is going here
+                    } else if self.v_split(x) {
                         text_buffer.put_char(self.border_chars.top_split);
                     } else if x == self.width + 1 {
                         text_buffer.put_char(self.border_chars.top_right);
@@ -274,13 +274,11 @@ impl Window {
                     text_buffer.put_char(self.border_chars.vertical_line);
                 } else {
                     // Inside the window
-                    text_buffer.cursor.style = empty_style;
-                    text_buffer.put_char(' ');
+                    text_buffer.clear_char();
                 }
             }
         }
         text_buffer.cursor.move_to(self.x + 1, self.y);
-        text_buffer.cursor.style = self.border_style;
         text_buffer.write(
             self.title
                 .chars()

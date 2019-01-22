@@ -253,7 +253,7 @@ impl TextBuffer {
         (self.width, self.height)
     }
 
-    /// Sets the character at the specified position. It is the user's responsibility to check if such a position exists.
+    /// Sets the character at the specified position. Panics if position does not exist.
     pub fn set_char(&mut self, x: u32, y: u32, character: TermCharacter) {
         self.chars[(y * self.width + x) as usize] = character;
     }
@@ -265,7 +265,12 @@ impl TextBuffer {
         if x >= self.width || y >= self.height {
             None
         } else {
-            Some(self.chars[(y * self.width + x) as usize])
+            let character = self.chars[(y * self.width + x) as usize];
+            if !character.clear {
+                Some(character)
+            } else {
+                Some(TermCharacter::new(32, Default::default()))
+            }
         }
     }
 
@@ -274,6 +279,12 @@ impl TextBuffer {
         for i in 0..((self.width * self.height) as usize) {
             self.chars[i].clear = true;
         }
+    }
+
+    /// Clear the character at the cursor's position.
+    pub fn clear_char(&mut self) {
+        self.chars[(self.cursor.y * self.width + self.cursor.x) as usize].clear = true;
+        self.cursor.move_by(1);
     }
 
     /// Puts a regular character to the current position of the cursor with the cursor's style
@@ -434,7 +445,8 @@ impl TermCursor {
         self.y = y;
     }
 
-    fn move_by(&mut self, amount: u32) {
+    /// Move the cursor by a given amount. This is also called when writing stuff.
+    pub fn move_by(&mut self, amount: u32) {
         self.x += amount;
         if self.x > self.limits.get_max_x() {
             self.x = self.limits.get_min_x();
