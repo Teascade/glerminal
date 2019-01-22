@@ -8,6 +8,7 @@ fn main() {
     let terminal = TerminalBuilder::new()
         .with_title("Simple window")
         .with_dimensions((1280, 720))
+        .with_vsync(false)
         .build();
     let mut text_buffer;
     match TextBuffer::create(&terminal, (80, 24)) {

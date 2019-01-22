@@ -138,6 +138,10 @@ pub struct TextBuffer {
     /// The cursor of the TextBuffer, specifies where characters are written and in what style.
     pub cursor: TermCursor,
 
+    // Segment size in rows
+    pub(crate) segment_rows: u32,
+    pub(crate) dirty_segments: Vec<bool>,
+
     dirty: bool,
 }
 
@@ -154,6 +158,10 @@ impl TextBuffer {
 
         let chars =
             vec![TermCharacter::new(' ' as u16, Default::default()); (width * height) as usize];
+
+        let segment_rows = ((width as f32 / 100.0).floor() as u32).max(1);
+        let dirty_segments = vec![false; (height as f32 / segment_rows as f32).ceil() as usize];
+
         let (mesh, background_mesh) = if terminal.headless {
             (None, None)
         } else {
@@ -161,11 +169,13 @@ impl TextBuffer {
                 Some(TextBufferMesh::new(
                     terminal.get_program(),
                     dimensions,
+                    segment_rows,
                     &terminal.font,
                 )),
                 Some(BackgroundMesh::new(
                     terminal.get_background_program(),
                     dimensions,
+                    segment_rows,
                 )),
             )
         };
@@ -190,6 +200,9 @@ impl TextBuffer {
 
             aspect_ratio: true_width as f32 / true_height as f32,
 
+            segment_rows,
+            dirty_segments,
+
             dirty: true,
         })
     }
@@ -200,12 +213,37 @@ impl TextBuffer {
 
     pub(crate) fn swap_buffers(&mut self, font: &Font) {
         if self.dirty {
+            let empty_char = TermCharacter::new(32, Default::default());
+            for i in 0..((self.width * self.height) as usize) {
+                if self.chars[i].clear && self.chars[i] != empty_char {
+                    self.chars[i] = empty_char;
+                    self.dirty_segments
+                        [(i as f32 / ((self.segment_rows * self.width) as f32)).floor() as usize] =
+                        true;
+                }
+            }
+
+            let mut adjacent = Vec::new();
+            let mut curr_rows = Vec::new();
+            for (i, val) in self.dirty_segments.iter().enumerate() {
+                if *val {
+                    curr_rows.push(i as u32);
+                } else if !curr_rows.is_empty() {
+                    adjacent.push(curr_rows);
+                    curr_rows = Vec::new();
+                }
+            }
+            if !curr_rows.is_empty() {
+                adjacent.push(curr_rows);
+            }
+
             if let (&Some(ref mesh), &Some(ref background_mesh)) =
                 (&self.mesh, &self.background_mesh)
             {
-                mesh.update(&self, font);
-                background_mesh.update(&self);
+                mesh.update(&self, &adjacent, font);
+                background_mesh.update(&self, &adjacent);
             }
+            self.dirty_segments = vec![false; self.dirty_segments.len()];
             self.dirty = false;
         }
     }
@@ -233,10 +271,9 @@ impl TextBuffer {
 
     /// Clears the screen (makes every character empty and resets their style)
     pub fn clear(&mut self) {
-        self.chars = vec![
-            TermCharacter::new(' ' as u16, Default::default());
-            (self.width * self.height) as usize
-        ];
+        for i in 0..((self.width * self.height) as usize) {
+            self.chars[i].clear = true;
+        }
     }
 
     /// Puts a regular character to the current position of the cursor with the cursor's style
@@ -257,7 +294,13 @@ impl TextBuffer {
         if termchar.character != character || termchar.style != self.cursor.style {
             self.chars[(self.cursor.y * self.width + self.cursor.x) as usize] =
                 TermCharacter::new(character, self.cursor.style);
+
+            self.dirty_segments
+                [(self.cursor.y as f32 / self.segment_rows as f32).floor() as usize] = true;
+
             self.dirty = true;
+        } else {
+            self.chars[(self.cursor.y * self.width + self.cursor.x) as usize].clear = false;
         }
         self.cursor.move_by(1);
     }
@@ -315,16 +358,22 @@ impl Default for TextStyle {
 }
 
 /// Represents a single character in a [`TextBuffer`](struct.TextBuffer.html)
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct TermCharacter {
     character: RawCharacter,
+    // Should this character be cleared at flush
+    clear: bool,
     /// The styling of this character
     pub style: TextStyle,
 }
 
 impl TermCharacter {
     pub(crate) fn new(character: RawCharacter, style: TextStyle) -> TermCharacter {
-        TermCharacter { character, style }
+        TermCharacter {
+            clear: false,
+            character,
+            style,
+        }
     }
 
     /// Gets the RawCharacter (u16-point) in the TermCharacter
@@ -335,6 +384,12 @@ impl TermCharacter {
     /// Get the char in the TermCharacter
     pub fn get_char(&self) -> char {
         String::from_utf16(&[self.character]).unwrap().remove(0)
+    }
+}
+
+impl PartialEq for TermCharacter {
+    fn eq(&self, other: &TermCharacter) -> bool {
+        self.character == other.character && self.style == other.style
     }
 }
 

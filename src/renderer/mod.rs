@@ -202,13 +202,14 @@ pub(crate) fn create_texture(pixels: &[u8], width: u32, height: u32) -> Texture 
     }
 }
 
-pub(crate) fn upload_buffer(vbo: Vbo, vertex_buffer: &[f32]) {
+pub(crate) fn update_buffer(vbo: Vbo, offset: u32, vertex_buffer: &[f32]) {
+    let data_offset = (offset as usize * mem::size_of::<f32>()) as gl::types::GLintptr;
     let data_length = (vertex_buffer.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr;
     let data_pointer = vertex_buffer.as_ptr() as *const c_void;
 
     unsafe {
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl::BufferData(gl::ARRAY_BUFFER, data_length, data_pointer, gl::STREAM_DRAW);
+        gl::BufferSubData(gl::ARRAY_BUFFER, data_offset, data_length, data_pointer);
     }
 }
 
