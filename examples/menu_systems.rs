@@ -72,8 +72,10 @@ fn main() {
     let test_window = Window::new(70, 20)
         .with_pos((1, 1))
         .with_title("Hello, World!")
-        .with_horizontal_split(5);
+        .with_horizontal_split(4)
+        .with_vertical_split(39);
     test_window.set_limits(&mut text_buffer);
+    test_window.draw(&mut text_buffer);
 
     let mut frames = 0;
     let mut timer = 0.0;
@@ -117,9 +119,7 @@ fn main() {
         }
 
         if dirty {
-            text_buffer.clear();
-
-            test_window.draw(&mut text_buffer);
+            test_window.clear(&mut text_buffer);
             menu.draw(&mut text_buffer);
 
             text_buffer.cursor.style = TextStyle {

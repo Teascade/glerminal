@@ -222,7 +222,9 @@ impl Window {
         }
     }
 
-    /// Draws the window
+    /// Draws the window. Call `clear` after this.
+    ///
+    /// This is a very heavy function and is not recommended to be run every frame.
     pub fn draw(&self, text_buffer: &mut TextBuffer) {
         let title_max_size = (self.title.chars().count() as u32).min(self.width);
         text_buffer.cursor.style = self.border_style;
@@ -232,7 +234,7 @@ impl Window {
                 if x == 0 {
                     if y == 0 {
                         text_buffer.put_char(self.border_chars.top_left);
-                    } else if self.h_split(y) {
+                    } else if self.h_split(y - 1) {
                         text_buffer.put_char(self.border_chars.left_split);
                     } else if y == self.height + 1 {
                         text_buffer.put_char(self.border_chars.bottom_left);
@@ -243,7 +245,7 @@ impl Window {
                     if x > 0 && x <= title_max_size {
                         text_buffer.cursor.move_by(1);
                         continue; // Title is going here
-                    } else if self.v_split(x) {
+                    } else if self.v_split(x - 1) {
                         text_buffer.put_char(self.border_chars.top_split);
                     } else if x == self.width + 1 {
                         text_buffer.put_char(self.border_chars.top_right);
@@ -253,28 +255,20 @@ impl Window {
                 } else if x == self.width + 1 && y == self.height + 1 {
                     text_buffer.put_char(self.border_chars.bottom_right);
                 } else if x == self.width + 1 {
-                    if self.h_split(y) {
+                    if self.h_split(y - 1) {
                         text_buffer.put_char(self.border_chars.right_split);
                     } else {
                         text_buffer.put_char(self.border_chars.vertical_line);
                     }
                 } else if y == self.height + 1 {
-                    if self.v_split(x) {
+                    if self.v_split(x - 1) {
                         text_buffer.put_char(self.border_chars.bottom_split);
                     } else {
                         text_buffer.put_char(self.border_chars.horizontal_line);
                     }
-                } else if self.h_split(y) {
-                    if self.v_split(x) {
-                        text_buffer.put_char(self.border_chars.middle_split);
-                    } else {
-                        text_buffer.put_char(self.border_chars.horizontal_line);
-                    }
-                } else if self.v_split(x) {
-                    text_buffer.put_char(self.border_chars.vertical_line);
                 } else {
                     // Inside the window
-                    text_buffer.clear_char();
+                    text_buffer.cursor.move_by(1);
                 }
             }
         }
@@ -285,6 +279,30 @@ impl Window {
                 .take(self.width as usize)
                 .collect::<String>(),
         );
+    }
+
+    /// Clear the window area, meaning the area inside the window and draws the splits inside the window. Required to be called after `draw`.
+    pub fn clear(&self, text_buffer: &mut TextBuffer) {
+        for y in 0..self.height {
+            text_buffer.cursor.move_to(self.x + 1, self.y + y + 1);
+            if self.h_split(y) {
+                for x in 0..self.width {
+                    if self.v_split(x) {
+                        text_buffer.put_char(self.border_chars.middle_split);
+                    } else {
+                        text_buffer.put_char(self.border_chars.horizontal_line);
+                    }
+                }
+            } else {
+                for x in 0..self.width {
+                    if self.v_split(x) {
+                        text_buffer.put_char(self.border_chars.vertical_line);
+                    } else {
+                        text_buffer.clear_char();
+                    }
+                }
+            }
+        }
     }
 
     /// Set limits for the TextBuffer so that nothing can be written outside the window.
