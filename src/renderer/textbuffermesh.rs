@@ -99,7 +99,12 @@ impl TextBufferMesh {
 
             for seg in adjacent_segments {
                 let seg_off = seg * text_buffer.segment_rows;
-                for y in 0..text_buffer.segment_rows {
+                let row_amount = if *seg == (text_buffer.segment_amount - 1) {
+                    text_buffer.last_seg_size
+                } else {
+                    text_buffer.segment_rows
+                };
+                for y in 0..row_amount {
                     for x in 0..text_buffer.width {
                         let character = text_buffer.get_character(x, y + seg_off).unwrap();
                         TextBufferMesh::append_char_data(

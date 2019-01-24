@@ -161,8 +161,11 @@ impl TextBuffer {
         let chars =
             vec![TermCharacter::new(' ' as u16, Default::default()); (width * height) as usize];
 
-        let segment_rows = ((width as f32 / 100.0).floor() as u32).max(1);
-        let last_seg_size = height % segment_rows;
+        let segment_rows = ((100.0 / width as f32).floor() as u32).max(1);
+        let mut last_seg_size = height % segment_rows;
+        if last_seg_size == 0 {
+            last_seg_size = segment_rows;
+        }
         let segment_amount = (height as f32 / segment_rows as f32).ceil() as u32;
 
         let (mesh, background_mesh) = if terminal.headless {
