@@ -144,7 +144,7 @@ pub struct TextBuffer {
     pub(crate) last_seg_size: u32,
     pub(crate) segment_amount: u32,
 
-    dirty_segments: Vec<bool>,
+    dirty_segments: Vec<Vec<u32>>,
 }
 
 impl TextBuffer {
@@ -208,7 +208,7 @@ impl TextBuffer {
             last_seg_size,
             segment_amount,
 
-            dirty_segments: vec![false; segment_amount as usize],
+            dirty_segments: vec![Vec::new(); segment_amount as usize],
         })
     }
 
@@ -220,7 +220,7 @@ impl TextBuffer {
         let mut dirty_segs = Vec::new();
         let mut any_dirty = false;
         for seg in 0..self.segment_amount {
-            if !self.dirty_segments[seg as usize] {
+            if self.dirty_segments[seg as usize].is_empty() {
                 dirty_segs.push(false);
                 continue;
             }
@@ -261,7 +261,7 @@ impl TextBuffer {
             }
         }
 
-        self.dirty_segments = vec![false; self.segment_amount as usize];
+        self.dirty_segments = vec![Vec::new(); self.segment_amount as usize];
         self.swap_chars = self.chars.clone();
     }
 
@@ -288,17 +288,49 @@ impl TextBuffer {
 
     /// Clears the screen (makes every character empty and resets their style)
     pub fn clear(&mut self) {
-        self.cursor.move_to(0, 0);
-        self.cursor.style = Default::default();
-        for _ in 0..(self.width * self.height) {
-            self.put_raw_char(32);
+        let empty = TermCharacter::new(32, Default::default());
+        for i in 0..((self.width * self.height) as usize) {
+            if !self.swap_chars[i].is_empty() {
+                self.chars[i] = empty;
+                self.dirty_segments
+                    [((i as f32 / self.width as f32) / self.segment_rows as f32).floor() as usize]
+                    .push(i as u32);
+            } else if !self.chars[i].is_empty() {
+                self.chars[i] = empty;
+
+                let seg =
+                    ((i as f32 / self.width as f32) / self.segment_rows as f32).floor() as usize;
+
+                if let Some(idx) = self.dirty_segments[seg]
+                    .iter()
+                    .position(|x| *x == (i as u32))
+                {
+                    self.dirty_segments[seg].remove(idx);
+                }
+            }
         }
     }
 
     /// Clear the character at the cursor's position.
     pub fn clear_char(&mut self) {
-        self.cursor.style = Default::default();
-        self.put_raw_char(32);
+        let empty = TermCharacter::new(32, Default::default());
+        let pos = (self.cursor.y * self.width + self.cursor.x) as usize;
+        if !self.swap_chars[pos].is_empty() {
+            self.chars[pos] = empty;
+            self.dirty_segments[(self.cursor.y as f32 / self.segment_rows as f32).floor() as usize]
+                .push(pos as u32);
+        } else if !self.chars[pos].is_empty() {
+            self.chars[pos] = empty;
+            let seg = (self.cursor.y as f32 / self.segment_rows as f32).floor() as usize;
+
+            if let Some(idx) = self.dirty_segments[seg]
+                .iter()
+                .position(|x| *x == (pos as u32))
+            {
+                self.dirty_segments[seg].remove(idx);
+            }
+        }
+        self.cursor.move_by(1);
     }
 
     /// Puts a regular character to the current position of the cursor with the cursor's style
@@ -315,13 +347,18 @@ impl TextBuffer {
 
     /// Puts a raw 16-bit character to the current position of the cursor with the cursor's style (See text_buffer.cursor)
     pub fn put_raw_char(&mut self, character: RawCharacter) {
-        let termchar = self.chars[(self.cursor.y * self.width + self.cursor.x) as usize];
-        if termchar.character != character || termchar.style != self.cursor.style {
-            self.chars[(self.cursor.y * self.width + self.cursor.x) as usize] =
-                TermCharacter::new(character, self.cursor.style);
+        let pos = self.cursor.y * self.width + self.cursor.x;
+        let seg = (self.cursor.y as f32 / self.segment_rows as f32).floor() as usize;
+        let swapchar = self.swap_chars[pos as usize];
+        if swapchar.character != character || swapchar.style != self.cursor.style {
+            self.chars[pos as usize] = TermCharacter::new(character, self.cursor.style);
 
-            self.dirty_segments
-                [(self.cursor.y as f32 / self.segment_rows as f32).floor() as usize] = true;
+            self.dirty_segments[seg].push(pos);
+        } else if self.dirty_segments[seg].contains(&pos) {
+            self.chars[pos as usize] = self.swap_chars[pos as usize];
+            if let Some(idx) = self.dirty_segments[seg].iter().position(|x| *x == pos) {
+                self.dirty_segments[seg].remove(idx);
+            }
         }
         self.cursor.move_by(1);
     }
@@ -354,7 +391,7 @@ impl TextBuffer {
     /// Returns whether the TextBuffer is dirty or not (whether flush will have any effect or not)
     pub fn is_dirty(&self) -> bool {
         for seg in &self.dirty_segments {
-            if *seg {
+            if !seg.is_empty() {
                 return true;
             }
         }
@@ -404,6 +441,16 @@ impl TermCharacter {
     /// Get the char in the TermCharacter
     pub fn get_char(&self) -> char {
         String::from_utf16(&[self.character]).unwrap().remove(0)
+    }
+
+    /// Check if this character is empty.
+    fn is_empty(&self) -> bool {
+        self.character == 32
+            && (self.style.bg_color[0]
+                + self.style.bg_color[1]
+                + self.style.bg_color[2]
+                + self.style.bg_color[3])
+                == 0.0
     }
 }
 
