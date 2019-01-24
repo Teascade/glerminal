@@ -144,7 +144,7 @@ pub struct TextBuffer {
     pub(crate) last_seg_size: u32,
     pub(crate) segment_amount: u32,
 
-    dirty: bool,
+    dirty_segments: Vec<bool>,
 }
 
 impl TextBuffer {
@@ -208,7 +208,7 @@ impl TextBuffer {
             last_seg_size,
             segment_amount,
 
-            dirty: true,
+            dirty_segments: vec![false; segment_amount as usize],
         })
     }
 
@@ -217,50 +217,52 @@ impl TextBuffer {
     }
 
     pub(crate) fn swap_buffers(&mut self, font: &Font) {
-        if self.dirty {
-            let mut dirty_segs = Vec::new();
-            let mut any_dirty = false;
-            for seg in 0..self.segment_amount {
-                let row_amount = if seg == (self.segment_amount - 1) {
-                    self.last_seg_size
-                } else {
-                    self.segment_rows
-                };
-                let start = ((seg * self.segment_rows) * self.width) as usize;
-                let end = ((seg * self.segment_rows + row_amount) * self.width) as usize;
-                if self.chars[start..end] != self.swap_chars[start..end] {
-                    dirty_segs.push(true);
-                    any_dirty = true;
-                } else {
-                    dirty_segs.push(false);
-                }
+        let mut dirty_segs = Vec::new();
+        let mut any_dirty = false;
+        for seg in 0..self.segment_amount {
+            if !self.dirty_segments[seg as usize] {
+                dirty_segs.push(false);
+                continue;
             }
-            if any_dirty {
-                let mut adjacent = Vec::new();
-                let mut curr_rows = Vec::new();
-                for (i, dirty) in dirty_segs.iter().enumerate() {
-                    if *dirty {
-                        curr_rows.push(i as u32);
-                    } else if !curr_rows.is_empty() {
-                        adjacent.push(curr_rows);
-                        curr_rows = Vec::new();
-                    }
-                }
-                if !curr_rows.is_empty() {
-                    adjacent.push(curr_rows);
-                }
-
-                if let (&Some(ref mesh), &Some(ref background_mesh)) =
-                    (&self.mesh, &self.background_mesh)
-                {
-                    mesh.update(&self, &adjacent, font);
-                    background_mesh.update(&self, &adjacent);
-                }
+            let row_amount = if seg == (self.segment_amount - 1) {
+                self.last_seg_size
+            } else {
+                self.segment_rows
+            };
+            let start = ((seg * self.segment_rows) * self.width) as usize;
+            let end = ((seg * self.segment_rows + row_amount) * self.width) as usize;
+            if self.chars[start..end] != self.swap_chars[start..end] {
+                dirty_segs.push(true);
+                any_dirty = true;
+            } else {
+                dirty_segs.push(false);
             }
-
-            self.dirty = false;
-            self.swap_chars = self.chars.clone();
         }
+        if any_dirty {
+            let mut adjacent = Vec::new();
+            let mut curr_rows = Vec::new();
+            for (i, dirty) in dirty_segs.iter().enumerate() {
+                if *dirty {
+                    curr_rows.push(i as u32);
+                } else if !curr_rows.is_empty() {
+                    adjacent.push(curr_rows);
+                    curr_rows = Vec::new();
+                }
+            }
+            if !curr_rows.is_empty() {
+                adjacent.push(curr_rows);
+            }
+
+            if let (&Some(ref mesh), &Some(ref background_mesh)) =
+                (&self.mesh, &self.background_mesh)
+            {
+                mesh.update(&self, &adjacent, font);
+                background_mesh.update(&self, &adjacent);
+            }
+        }
+
+        self.dirty_segments = vec![false; self.segment_amount as usize];
+        self.swap_chars = self.chars.clone();
     }
 
     /// Get the dimensions of the text buffer (in characters). Returns (width, height)
@@ -294,9 +296,8 @@ impl TextBuffer {
 
     /// Clear the character at the cursor's position.
     pub fn clear_char(&mut self) {
-        self.chars[(self.cursor.y * self.width + self.cursor.x) as usize] =
-            TermCharacter::new(32, Default::default());
-        self.cursor.move_by(1);
+        self.cursor.style = Default::default();
+        self.put_raw_char(32);
     }
 
     /// Puts a regular character to the current position of the cursor with the cursor's style
@@ -318,7 +319,8 @@ impl TextBuffer {
             self.chars[(self.cursor.y * self.width + self.cursor.x) as usize] =
                 TermCharacter::new(character, self.cursor.style);
 
-            self.dirty = true;
+            self.dirty_segments
+                [(self.cursor.y as f32 / self.segment_rows as f32).floor() as usize] = true;
         }
         self.cursor.move_by(1);
     }
@@ -350,7 +352,12 @@ impl TextBuffer {
 
     /// Returns whether the TextBuffer is dirty or not (whether flush will have any effect or not)
     pub fn is_dirty(&self) -> bool {
-        self.dirty
+        for seg in &self.dirty_segments {
+            if *seg {
+                return true;
+            }
+        }
+        false
     }
 }
 
