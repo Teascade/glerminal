@@ -288,10 +288,11 @@ impl TextBuffer {
 
     /// Clears the screen (makes every character empty and resets their style)
     pub fn clear(&mut self) {
-        self.chars = vec![
-            TermCharacter::new(' ' as u16, Default::default());
-            (self.width * self.height) as usize
-        ];
+        self.cursor.move_to(0, 0);
+        self.cursor.style = Default::default();
+        for _ in 0..(self.width * self.height) {
+            self.put_raw_char(32);
+        }
     }
 
     /// Clear the character at the cursor's position.
