@@ -262,10 +262,11 @@ impl TextBuffer {
                 mesh.update(&self, &adjacent, font);
                 background_mesh.update(&self, &adjacent);
             }
+            
+            self.swap_chars = self.chars.clone();
         }
 
         self.dirty_segments = vec![Vec::new(); self.segment_amount as usize];
-        self.swap_chars = self.chars.clone();
     }
 
     /// Get the dimensions of the text buffer (in characters). Returns (width, height)
