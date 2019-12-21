@@ -187,21 +187,7 @@ impl Dialog {
     fn update_rows(&mut self) {
         let width = self.width;
 
-        let mut words = Vec::new();
         let mut curr_word = Vec::new();
-        for c in self.processed_text.clone() {
-            if ((c.character == ' ' || c.character == '\n') && !curr_word.is_empty())
-                || curr_word.len() as u32 >= width
-            {
-                words.push(curr_word);
-                curr_word = Vec::new();
-            } else {
-                curr_word.push(c);
-            }
-        }
-        if !curr_word.is_empty() {
-            words.push(curr_word);
-        }
 
         let mut last_style = OptTextStyle {
             fg_color: None,
@@ -210,21 +196,44 @@ impl Dialog {
         };
         self.rows = Vec::new();
         let mut curr_row = Vec::new();
-        for word in words.iter_mut() {
-            if ((curr_row.len() + word.len() + 1) as u32) <= width {
-                if !curr_row.is_empty() {
-                    curr_row.push(ProcessedChar {
-                        character: ' ',
-                        style: last_style.clone(),
-                    });
+
+        // Add an empty character at the end, so that every word is added processed properly.
+        let empty = ProcessedChar {
+            character: ' ',
+            style: last_style.clone(),
+        };
+        let mut text = self.processed_text.clone();
+        text.push(empty);
+
+        // Process each letter
+        for c in text {
+            if ((c.character == ' ' || c.character == '\n') && !curr_word.is_empty())
+                || curr_word.len() as u32 >= width
+            {
+                // A word breaker found, this is a separate word now.
+                if ((curr_row.len() + curr_word.len() + 1) as u32) <= self.width {
+                    if !curr_row.is_empty() {
+                        curr_row.push(ProcessedChar {
+                            character: ' ',
+                            style: last_style.clone(),
+                        });
+                    }
+                    curr_row.append(&mut curr_word.clone());
+                } else {
+                    self.rows.push(curr_row);
+                    curr_row = curr_word.clone();
                 }
-                curr_row.append(&mut word.clone());
+                if let Some(last) = curr_word.last() {
+                    last_style = last.style.clone()
+                }
+                // Found \n => make new row
+                if c.character == '\n' {
+                    self.rows.push(curr_row.clone());
+                    curr_row.clear();
+                }
+                curr_word = Vec::new();
             } else {
-                self.rows.push(curr_row);
-                curr_row = word.clone();
-            }
-            if let Some(last) = word.last() {
-                last_style = last.style.clone();
+                curr_word.push(c);
             }
         }
         self.rows.push(curr_row);
